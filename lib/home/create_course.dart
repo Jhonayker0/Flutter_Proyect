@@ -26,17 +26,6 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
       setState(() => _deadline = picked);
     }
   }
-
-  void _clearAll() {
-    _formKey.currentState?.reset();
-    _nameCtrl.clear();
-    _descCtrl.clear();
-    setState(() {
-      _deadline = null;
-      _category = null;
-    });
-  }
-
   void _createCourse() {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(

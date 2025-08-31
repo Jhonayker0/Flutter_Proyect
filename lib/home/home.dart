@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application/home/create_activity.dart';
 import 'package:flutter_application/home/create_category.dart';
 import 'package:flutter_application/home/create_course.dart';
+import 'package:flutter_application/home/profile.dart';
 import 'package:flutter_application/login/login.dart';
 
 class HomePage extends StatelessWidget {
@@ -9,7 +10,6 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -29,12 +29,17 @@ class HomePage extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const LoginPage()),
                 );
-              } else {
+              } else if(value == "perfil"){
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsPage()),
+                );
+              }
+              else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("$value seleccionado")),
                 );
               }
-            },
+            },             
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: "perfil",
@@ -139,7 +144,7 @@ class HomePage extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CreateCategoryPage()),
+              MaterialPageRoute(builder: (_) => const CreateActivityPage()),
             );
         },
         label: const Text("Crear curso"),

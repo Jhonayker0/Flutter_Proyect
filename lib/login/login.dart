@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/home/home.dart';
+import 'package:flutter_application/login/sing_up.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -241,7 +242,11 @@ class _LoginPageState extends State<LoginPage> {
                               children: [
                                 const Text('¿No tienes cuenta?'),
                                 TextButton(
-                                  onPressed: _loading ? null : () {},
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const SignUpPage()),
+                                    );  
+                                  },
                                   child: const Text('Crear una cuenta'),
                                 ),
                               ],

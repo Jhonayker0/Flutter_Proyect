@@ -27,16 +27,6 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
     }
   }
 
-  void _clearAll() {
-    _formKey.currentState?.reset();
-    _nameCtrl.clear();
-    _descCtrl.clear();
-    setState(() {
-      _deadline = null;
-      _category = null;
-    });
-  }
-
   void _createActivity() {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
