@@ -20,7 +20,6 @@ class SignUpController extends GetxController {
     loading.value = true;
     error.value = '';
 
-    // Ejecuta el use case, devuelve un User? en vez de bool
     final User? user = await signUpUseCase.execute(name, email, password);
 
     if (user != null) {

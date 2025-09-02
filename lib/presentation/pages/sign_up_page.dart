@@ -36,7 +36,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   style: TextStyle(fontSize: 16)),
               const SizedBox(height: 20),
 
-              // campos (los de tu código)
+              // Campos de formulario
               _buildField(
                 label: "Nombre",
                 example: "Juan Pérez",
@@ -63,8 +63,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 controller: _passCtrl,
                 obscure: _obscure1,
                 suffix: IconButton(
-                  onPressed: () =>
-                      setState(() => _obscure1 = !_obscure1),
+                  onPressed: () => setState(() => _obscure1 = !_obscure1),
                   icon: Icon(
                       _obscure1 ? Icons.visibility_off : Icons.visibility),
                 ),
@@ -80,8 +79,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 controller: _confirmPassCtrl,
                 obscure: _obscure2,
                 suffix: IconButton(
-                  onPressed: () =>
-                      setState(() => _obscure2 = !_obscure2),
+                  onPressed: () => setState(() => _obscure2 = !_obscure2),
                   icon: Icon(
                       _obscure2 ? Icons.visibility_off : Icons.visibility),
                 ),
@@ -105,7 +103,23 @@ class _SignUpPageState extends State<SignUpPage> {
                 ],
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 10),
+
+              // **Mensaje de error reactivo**
+              Obx(() {
+                if (controller.error.value.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    controller.error.value,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                );
+              }),
 
               // Botón crear cuenta
               Obx(() => SizedBox(
@@ -117,8 +131,8 @@ class _SignUpPageState extends State<SignUpPage> {
                           : () {
                               if (!_agree) {
                                 Get.snackbar("Error",
-                                    "Debes aceptar los términos y condiciones"
-                                    ,duration: const Duration(seconds: 1));
+                                    "Debes aceptar los términos y condiciones",
+                                    duration: const Duration(seconds: 1));
                                 return;
                               }
                               if (_formKey.currentState!.validate()) {
