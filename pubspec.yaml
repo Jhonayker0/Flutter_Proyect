@@ -12,11 +12,15 @@ dependencies:
   get: ^4.7.2
   get_storage: ^2.1.1
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
 
 flutter:
+  assets:
+    - assets/mockup.json
   uses-material-design: true
+  
 

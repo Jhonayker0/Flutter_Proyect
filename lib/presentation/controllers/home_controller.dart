@@ -1,3 +1,4 @@
+import 'package:flutter_application/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 import '../../routes.dart';
 
@@ -8,11 +9,9 @@ class Course {
 }
 
 class HomeController extends GetxController {
-  // Lista maestra (no reactiva) y lista filtrada (reactiva)
   final List<Course> _allCourses = [];
   final RxList<Course> courses = <Course>[].obs;
 
-  // Filtro de rol activo y búsqueda
   final RxnString activeRoleFilter = RxnString(); // 'Professor' o 'Student'
   final RxString searchQuery = ''.obs;
 
@@ -53,7 +52,11 @@ class HomeController extends GetxController {
     activeRoleFilter.value = null;
     applyFilters();
   }
-
+  
+  RxString get currentUserName {
+    final authController = Get.find<AuthController>();
+    return (authController.currentUser.value?.name ?? 'Usuario').obs;
+  }
   void applyFilters() {
     final role = activeRoleFilter.value;
     final query = searchQuery.value.trim().toLowerCase();
@@ -85,9 +88,10 @@ class HomeController extends GetxController {
     Get.toNamed(Routes.settings);
   }
 
-  void logout() {
-    Get.offAllNamed(Routes.login);
-  }
+void logout() {
+  final authController = Get.find<AuthController>();
+  authController.logout(); 
+}
 
   void onOptionSelected(String value) {
     if (value == "perfil") {

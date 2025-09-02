@@ -1,10 +1,17 @@
+import 'package:flutter_application/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 import '../../../domain/use_cases/sign_up_case.dart';
 import '../../../routes.dart';
+import '../../../domain/models/user.dart';
 
 class SignUpController extends GetxController {
   final SignUpUseCase signUpUseCase;
-  SignUpController({required this.signUpUseCase});
+  final AuthController authController;
+
+  SignUpController({
+    required this.signUpUseCase,
+    required this.authController,
+  });
 
   var loading = false.obs;
   var error = ''.obs;
@@ -13,10 +20,12 @@ class SignUpController extends GetxController {
     loading.value = true;
     error.value = '';
 
-    final success = await signUpUseCase.execute(name, email, password);
+    // Ejecuta el use case, devuelve un User? en vez de bool
+    final User? user = await signUpUseCase.execute(name, email, password);
 
-    if (success) {
-      Get.offAllNamed(Routes.home);
+    if (user != null) {
+      authController.currentUser.value = user;  // guarda el usuario logueado
+      Get.offAllNamed(Routes.home);             // navega a Home
     } else {
       error.value = 'Ese correo ya está registrado';
     }

@@ -11,6 +11,13 @@ class LoginPage extends StatelessWidget {
     final controller = Get.find<AuthController>();
     final cs = Theme.of(context).colorScheme;
 
+    final formKey = GlobalKey<FormState>();
+
+    final emailCtrl = TextEditingController();
+    final passCtrl = TextEditingController();
+    final obscure = true.obs;
+    final rememberMe = false.obs;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -34,7 +41,7 @@ class LoginPage extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Form(
-                    key: controller.formKey,
+                    key: formKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -68,7 +75,7 @@ class LoginPage extends StatelessWidget {
 
                         // Email
                         TextFormField(
-                          controller: controller.emailCtrl,
+                          controller: emailCtrl,
                           keyboardType: TextInputType.emailAddress,
                           autofillHints: const [AutofillHints.username],
                           decoration: const InputDecoration(
@@ -77,28 +84,30 @@ class LoginPage extends StatelessWidget {
                             prefixIcon: Icon(Icons.email_outlined),
                             border: OutlineInputBorder(),
                           ),
-                          validator: controller.validateEmail,
+                          validator: (v) =>
+                              v == null || v.isEmpty ? 'Ingresa tu email' : null,
                         ),
                         const SizedBox(height: 14),
 
                         // Password
                         Obx(() => TextFormField(
-                              controller: controller.passCtrl,
-                              obscureText: controller.obscure.value,
+                              controller: passCtrl,
+                              obscureText: obscure.value,
                               decoration: InputDecoration(
                                 labelText: 'Contraseña',
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 border: const OutlineInputBorder(),
                                 suffixIcon: IconButton(
-                                  onPressed: controller.toggleObscure,
+                                  onPressed: () => obscure.value = !obscure.value,
                                   icon: Icon(
-                                    controller.obscure.value
+                                    obscure.value
                                         ? Icons.visibility_off
                                         : Icons.visibility,
                                   ),
                                 ),
                               ),
-                              validator: controller.validatePassword,
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? 'Ingresa tu contraseña' : null,
                             )),
                         const SizedBox(height: 6),
 
@@ -106,23 +115,23 @@ class LoginPage extends StatelessWidget {
                         Obx(() => Row(
                               children: [
                                 Checkbox(
-                                  value: controller.rememberMe.value,
-                                  onChanged: controller.toggleRememberMe,
+                                  value: rememberMe.value,
+                                  onChanged: (v) => rememberMe.value = v ?? false,
                                 ),
                                 const Text('Recordarme'),
                                 const Spacer(),
                                 TextButton(
-                                  onPressed: controller.loading.value
-                                      ? null
-                                      : () {},
+                                  onPressed: () {},
                                   child:
                                       const Text('¿Olvidaste tu contraseña?'),
                                 ),
                               ],
                             )),
 
+                        const SizedBox(height: 6),
+
                         // Error
-                        Obx(() => controller.error.value.isNotEmpty
+                        Obx(() => controller.error.value != null
                             ? Row(
                                 children: [
                                   Icon(Icons.error_outline,
@@ -130,7 +139,7 @@ class LoginPage extends StatelessWidget {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      controller.error.value,
+                                      controller.error.value ?? '',
                                       style: TextStyle(
                                         color: cs.error,
                                         fontWeight: FontWeight.w500,
@@ -146,10 +155,16 @@ class LoginPage extends StatelessWidget {
                               width: double.infinity,
                               height: 52,
                               child: FilledButton(
-                                onPressed: controller.loading.value
+                                onPressed: controller.isLoading.value
                                     ? null
-                                    : controller.login,
-                                child: controller.loading.value
+                                    : () async {
+                                        if (!formKey.currentState!.validate()) return;
+                                        await controller.login(
+                                          emailCtrl.text.trim(),
+                                          passCtrl.text,
+                                        );
+                                      },
+                                child: controller.isLoading.value
                                     ? const SizedBox(
                                         width: 22,
                                         height: 22,
@@ -170,8 +185,7 @@ class LoginPage extends StatelessWidget {
                           children: [
                             const Text('¿No tienes cuenta?'),
                             TextButton(
-                              onPressed: () =>
-                                  Get.toNamed(Routes.signup),
+                              onPressed: () => Get.toNamed(Routes.signup),
                               child: const Text('Crear una cuenta'),
                             ),
                           ],
@@ -181,7 +195,7 @@ class LoginPage extends StatelessWidget {
                         const Text("o continúa con"),
                         const SizedBox(height: 10),
                         OutlinedButton.icon(
-                          onPressed: controller.loading.value ? null : () {},
+                          onPressed: () {},
                           icon: const Icon(Icons.g_mobiledata),
                           label: const Text('Google'),
                         )

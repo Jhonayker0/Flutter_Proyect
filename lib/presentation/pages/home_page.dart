@@ -83,16 +83,18 @@ class HomePage extends GetView<HomeController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  children: const [
-                    CircleAvatar(
+                  children: [
+                    const CircleAvatar(
                       radius: 28,
                       backgroundImage: AssetImage("assets/profile.jpg"),
                     ),
-                    SizedBox(width: 12),
-                    Text(
-                      "Alicia",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
+                    const SizedBox(width: 12),
+                    Obx(() {
+                      return Text(
+                        controller.currentUserName.value,
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      );
+                    }),
                   ],
                 ),
                 const SizedBox(height: 20),

@@ -1,19 +1,20 @@
+import 'package:flutter_application/data/services/auth_service.dart';
 import 'package:get/get.dart';
 
 import '../../data/repositories/auth_repository_impl.dart';
-import '../../domain/use_cases/login_use_case.dart';
 import '../controllers/auth_controller.dart';
 
 class AuthBinding extends Bindings {
   @override
   void dependencies() {
-    // Repo
-    final repo = AuthRepositoryImpl();
+    // Service
+    final service = AuthService();
 
-    // Use cases
-    final loginUC = LoginUseCase(repo);
+    // Repository
+    final repo = AuthRepositoryImpl(service);
 
-    // Controller
-    Get.put(AuthController(loginUseCase: loginUC));
+    // UseCase
+    // Controller: AuthController global
+    Get.put(AuthController(repo));
   }
 }

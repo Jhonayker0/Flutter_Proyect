@@ -1,54 +1,61 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../domain/use_cases/login_use_case.dart';
-import '../../routes.dart';
+import '../../domain/models/user.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 class AuthController extends GetxController {
-  final LoginUseCase loginUseCase;
+  final AuthRepository _repository;
 
-  AuthController({required this.loginUseCase});
+  AuthController(this._repository);
 
-  final formKey = GlobalKey<FormState>();
-  final emailCtrl = TextEditingController();
-  final passCtrl = TextEditingController();
+  Rxn<User> currentUser = Rxn<User>();
+  final isLoading = false.obs;
+  final error = RxnString();
 
-  var obscure = true.obs;
-  var rememberMe = true.obs;
-  var loading = false.obs;
-  var error = ''.obs;
+  // Login
+  Future<void> login(String email, String password) async {
+    isLoading.value = true;
+    error.value = null;
 
-  void toggleObscure() => obscure.value = !obscure.value;
-  void toggleRememberMe(bool? v) => rememberMe.value = v ?? false;
-
-  String? validateEmail(String? v) {
-    final text = v?.trim() ?? '';
-    if (text.isEmpty) return 'Ingresa tu email';
-    final emailReg = RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[a-zA-Z]{2,}$');
-    if (!emailReg.hasMatch(text)) return 'Email no válido';
-    return null;
-  }
-
-  String? validatePassword(String? v) {
-    if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
-    if (v.length < 6) return 'Mínimo 6 caracteres';
-    return null;
-  }
-
-  Future<void> login() async {
-    if (!formKey.currentState!.validate()) return;
-
-    loading.value = true;
-    error.value = '';
-
-    final success =
-        await loginUseCase.execute(emailCtrl.text.trim(), passCtrl.text);
-
-    if (success) {
-      Get.offAllNamed(Routes.home);
-    } else {
-      error.value = 'Credenciales inválidas. Prueba demo@correo.com / 123456';
+    try {
+      final user = await _repository.login(email, password);
+      if (user == null) {
+        error.value = 'Correo o contraseña incorrectos';
+      } else {
+        currentUser.value = user;
+        Get.offAllNamed('/home'); // navegar a home
+      }
+    } catch (e) {
+      error.value = 'Error en login';
+    } finally {
+      isLoading.value = false;
     }
-
-    loading.value = false;
   }
+
+  // SignUp
+  Future<void> signUp(String name, String email, String password) async {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      final user = await _repository.signUp(name, email, password);
+      if (user == null) {
+        error.value = 'El correo ya está registrado';
+      } else {
+        currentUser.value = user;
+        Get.offAllNamed('/home'); // navegar a home
+      }
+    } catch (e) {
+      error.value = 'Error en registro';
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Logout global
+  void logout() {
+    currentUser.value = null;       // limpiar usuario en memoria
+    Get.offAllNamed('/login');      // eliminar stack y navegar a login
+  }
+
+  bool get isLoggedIn => currentUser.value != null;
 }

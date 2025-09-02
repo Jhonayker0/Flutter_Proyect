@@ -1,3 +1,4 @@
+import 'package:flutter_application/presentation/controllers/auth_controller.dart';
 import 'package:flutter_application/presentation/theme.dart';
 import 'package:get/get.dart';
 
@@ -13,7 +14,8 @@ class SettingsController extends GetxController {
   
   void selectOption(String title) {
     if (title == "Cerrar sesión") {
-      Get.offAllNamed('/login'); // navegar a login y limpiar stack
+      final authController = Get.find<AuthController>();
+      authController.logout(); 
     } else {
       Get.snackbar("Opción seleccionada", title,
           snackPosition: SnackPosition.BOTTOM);
