@@ -1,12 +1,16 @@
 import 'package:flutter_application/presentation/bindings/auth_binding.dart';
+import 'package:flutter_application/presentation/bindings/categories_binding.dart';
 import 'package:flutter_application/presentation/bindings/create_activity_binding.dart';
 import 'package:flutter_application/presentation/bindings/create_category_binding.dart';
 import 'package:flutter_application/presentation/bindings/create_course_binding.dart';
+import 'package:flutter_application/presentation/bindings/edit_category_binding.dart';
 import 'package:flutter_application/presentation/bindings/home_binding.dart';
 import 'package:flutter_application/presentation/bindings/settings_binding.dart';
+import 'package:flutter_application/presentation/pages/categories_page.dart';
 import 'package:flutter_application/presentation/pages/create_activity_page.dart';
 import 'package:flutter_application/presentation/pages/create_category_page.dart';
 import 'package:flutter_application/presentation/pages/create_course.dart';
+import 'package:flutter_application/presentation/pages/edit_category_page.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application/presentation/pages/login_page.dart';
 import 'package:flutter_application/presentation/pages/sign_up_page.dart';
@@ -23,6 +27,8 @@ class Routes {
   static const String createActivity = '/create-activity';
   static const String createCategory = '/create-category';
   static const String createCourse = '/create-course';
+  static const String categories = '/categories';
+  static const String editCategory = '/edit-category';
 
   static List<GetPage> pages = [
     GetPage(
@@ -37,8 +43,8 @@ class Routes {
     ),
     GetPage(
       name: home,
-      page: () => HomePage(),
-      binding: HomeBinding(),
+      page: () => const CategoriesPage(),
+      binding: CategoriesBinding(),
     ),
     GetPage(
       name: createActivity,
@@ -54,6 +60,16 @@ class Routes {
       name: createCourse,
       page: () => CreateCoursePage(),
       binding: CreateCourseBinding(),
+    ),
+    /*GetPage(
+      name: categories,
+      page: () => const CategoriesPage(),
+      binding: CategoriesBinding(),
+    ),*/
+    GetPage(
+      name: '$editCategory/:id',
+      page: () => EditCategoryPage(),
+      binding: EditCategoryBinding(),
     ),
     GetPage(
       name: settings,

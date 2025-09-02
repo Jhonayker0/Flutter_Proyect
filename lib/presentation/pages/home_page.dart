@@ -65,12 +65,15 @@ class HomePage extends GetView<HomeController> {
                 Get.offAllNamed('/login'); // limpia la pila y va a login
               } else if (value == "perfil") {
                 Get.toNamed('/settings');
+              } else if (value == "categories") {
+                Get.toNamed('/categories');
               } else {
                 Get.snackbar("Info", "Opción no implementada");
               }
             },
             itemBuilder: (context) => const [
               PopupMenuItem(value: "perfil", child: Text("Perfil")),
+              PopupMenuItem(value: "categories", child: Text("Categorías")),
               PopupMenuItem(value: "notificaciones", child: Text("Notificaciones")),
               PopupMenuItem(value: "logout", child: Text("Cerrar sesión")),
             ],
