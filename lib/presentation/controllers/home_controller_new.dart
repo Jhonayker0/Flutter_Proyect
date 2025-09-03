@@ -3,20 +3,16 @@ import 'package:get/get.dart';
 import '../../routes.dart';
 
 class Course {
-  final int? id;
   final String title;
-  final String role; // 'Profesor' | 'Estudiante'
+  final String role; // 'Professor' | 'Student'
   final DateTime createdAt;
   final int students; // Número de estudiantes
-  final String? description;
   
   Course({
-    this.id,
     required this.title, 
     required this.role,
     DateTime? createdAt,
     this.students = 0,
-    this.description,
   }) : createdAt = createdAt ?? DateTime.now();
 }
 
@@ -39,8 +35,8 @@ class HomeController extends GetxController {
   final Rx<SortOption> currentSort = SortOption.nameAsc.obs;
   final RxInt activeFilters = 0.obs;
 
-  static const String roleProfessor = 'Profesor';
-  static const String roleStudent = 'Estudiante';
+  static const String roleProfessor = 'Professor';
+  static const String roleStudent = 'Student';
 
   @override
   void onInit() {
@@ -53,52 +49,40 @@ class HomeController extends GetxController {
     _allCourses.clear();
     _allCourses.addAll([
       Course(
-        id: 1,
         title: "Alicia's Course", 
         role: roleStudent,
         createdAt: DateTime.now().subtract(const Duration(days: 5)),
         students: 25,
-        description: "Curso introductorio de programación",
       ),
       Course(
-        id: 2,
         title: "UI/UX Design", 
         role: roleStudent,
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
         students: 18,
-        description: "Fundamentos de diseño de interfaces",
       ),
       Course(
-        id: 3,
         title: "DATA STRUCTURE II", 
         role: roleStudent,
         createdAt: DateTime.now().subtract(const Duration(days: 10)),
         students: 30,
-        description: "Estructuras de datos avanzadas",
       ),
       Course(
-        id: 4,
-        title: "Desarrollo Móvil", 
+        title: "Mobile Development", 
         role: roleProfessor,
         createdAt: DateTime.now().subtract(const Duration(days: 1)),
         students: 22,
-        description: "Desarrollo de aplicaciones móviles nativas",
       ),
       Course(
-        id: 5,
-        title: "Flutter Avanzado", 
+        title: "Flutter Advanced", 
         role: roleProfessor,
         createdAt: DateTime.now().subtract(const Duration(days: 7)),
         students: 15,
-        description: "Desarrollo avanzado con Flutter",
       ),
       Course(
-        id: 6,
-        title: "JavaScript Básico", 
+        title: "JavaScript Basics", 
         role: roleStudent,
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
         students: 35,
-        description: "Fundamentos de JavaScript",
       ),
     ]);
     applyFilters();
@@ -138,17 +122,17 @@ class HomeController extends GetxController {
   String get sortLabel {
     switch (currentSort.value) {
       case SortOption.nameAsc:
-        return 'Nombre A-Z';
+        return 'Name A-Z';
       case SortOption.nameDesc:
-        return 'Nombre Z-A';
+        return 'Name Z-A';
       case SortOption.dateAsc:
-        return 'Más antiguos';
+        return 'Oldest First';
       case SortOption.dateDesc:
-        return 'Más recientes';
+        return 'Newest First';
       case SortOption.studentsAsc:
-        return 'Menos estudiantes';
+        return 'Less Students';
       case SortOption.studentsDesc:
-        return 'Más estudiantes';
+        return 'More Students';
     }
   }
 
@@ -202,9 +186,9 @@ class HomeController extends GetxController {
   String get activeRoleFilterLabel {
     switch (activeRoleFilter.value) {
       case roleProfessor:
-        return 'Profesor';
+        return 'Professor';
       case roleStudent:
-        return 'Estudiante';
+        return 'Student';
       default:
         return '';
     }

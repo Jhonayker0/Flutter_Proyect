@@ -108,7 +108,7 @@ class HomePage extends GetView<HomeController> {
                       child: TextField(
                         onChanged: controller.setSearchQuery,
                         decoration: InputDecoration(
-                          hintText: "Search courses...",
+                          hintText: "Buscar cursos...",
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),

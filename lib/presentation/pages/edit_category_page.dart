@@ -49,7 +49,7 @@ class EditCategoryPage extends GetView<EditCategoryController> {
                     labelText: 'Tipo',
                     border: OutlineInputBorder(),
                   ),
-                  value: controller.type.value,
+                  initialValue: controller.type.value,
                   items: const [
                     DropdownMenuItem(
                       value: 'Auto-asignado',
