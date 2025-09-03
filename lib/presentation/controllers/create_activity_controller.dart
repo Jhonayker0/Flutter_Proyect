@@ -37,15 +37,15 @@ class CreateActivityController extends GetxController {
     error.value = null;
     try {
       final activity = Activity(
-        name: nameCtrl.text.trim(),
-        description: descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim(),
-        deadline: deadline.value,
-        category: category.value!,
-        attachmentPath: attachmentPath.value,
+        title: nameCtrl.text.trim(),
+        description: descCtrl.text.trim().isEmpty ? 'Sin descripción' : descCtrl.text.trim(),
+        dueDate: deadline.value ?? DateTime.now().add(Duration(days: 7)),
+        type: category.value ?? 'Tarea',
+        courseId: 1, // TODO: Obtener el courseId actual
       );
       
       await createActivityUC(activity);
-      Get.snackbar('exito', 'Actividad creada');
+      Get.snackbar('Éxito', 'Actividad creada');
       Get.back(); // o navegación custom
     } catch (e) {
       error.value = 'No se pudo crear la actividad';

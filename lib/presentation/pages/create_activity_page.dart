@@ -79,7 +79,7 @@ class CreateActivityPage extends GetView<CreateActivityController> {
                       labelText: 'Categoría',
                       border: OutlineInputBorder(),
                     ),
-                    value: controller.category.value,
+                    initialValue: controller.category.value,
                     items: const [
                       DropdownMenuItem(
                           value: 'Category 1', child: Text('Categoría 1')),

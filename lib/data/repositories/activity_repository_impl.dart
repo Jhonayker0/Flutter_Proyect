@@ -10,11 +10,11 @@ class ActivityRepositoryImpl implements ActivityRepository {
   @override
   Future<void> create(Activity activity) async {
     final dto = {
-      'name': activity.name,
+      'title': activity.title,
       'description': activity.description,
-      'deadline': activity.deadline?.toIso8601String(),
-      'category': activity.category,
-      'attachmentPath': activity.attachmentPath,
+      'dueDate': activity.dueDate.toIso8601String(),
+      'type': activity.type,
+      'courseId': activity.courseId,
     };
     await service.postActivity(dto);
   }

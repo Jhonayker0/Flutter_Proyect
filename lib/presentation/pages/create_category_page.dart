@@ -47,7 +47,7 @@ class CreateCategoryPage extends GetView<CreateCategoryController> {
                       labelText: 'Tipo',
                       border: OutlineInputBorder(),
                     ),
-                    value: controller.type.value,
+                    initialValue: controller.type.value,
                     items: const [
                       DropdownMenuItem(
                         value: 'Auto-asignado',

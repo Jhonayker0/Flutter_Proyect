@@ -1,4 +1,3 @@
-import 'package:flutter_application/presentation/bindings/auth_binding.dart';
 import 'package:flutter_application/presentation/bindings/categories_binding.dart';
 import 'package:flutter_application/presentation/bindings/create_activity_binding.dart';
 import 'package:flutter_application/presentation/bindings/create_category_binding.dart';
@@ -14,9 +13,11 @@ import 'package:flutter_application/presentation/pages/create_course.dart';
 import 'package:flutter_application/presentation/pages/edit_category_page.dart';
 import 'package:flutter_application/presentation/pages/main_page.dart';
 import 'package:get/get.dart';
-import 'package:flutter_application/presentation/pages/login_page.dart';
 import 'package:flutter_application/presentation/pages/sign_up_page.dart';
 import 'package:flutter_application/presentation/bindings/sign_up_binding.dart';
+
+import 'package:flutter_application/presentation/bindings/course_detail_binding.dart';
+import 'package:flutter_application/presentation/pages/course_detail_page.dart';
 
 import 'presentation/pages/settings_page.dart';
 
@@ -31,6 +32,7 @@ class Routes {
   static const String createCourse = '/create-course';
   static const String categories = '/categories';
   static const String editCategory = '/edit-category';
+  static const String courseDetail = '/course-detail';
 
   static List<GetPage> pages = [
     //Temp for Home without login
@@ -101,6 +103,11 @@ class Routes {
       name: settings,
       page: () => SettingsPage(),
       binding: SettingsBinding()
+    ),
+    GetPage(
+      name: courseDetail,
+      page: () => const CourseDetailPage(),
+      binding: CourseDetailBinding(),
     ),
   ];
 }

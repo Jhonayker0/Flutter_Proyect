@@ -191,77 +191,82 @@ class CoursesPage extends GetView<HomeController> {
                       itemCount: controller.courses.length,
                       itemBuilder: (context, index) {
                         final course = controller.courses[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.shade200,
-                                offset: const Offset(0, 2),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              // Imagen del curso
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade100,
-                                  borderRadius: BorderRadius.circular(8),
+                        return GestureDetector(
+                          onTap: () {
+                            Get.toNamed('/course-detail', arguments: {'course': course});
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.shade200,
+                                  offset: const Offset(0, 2),
+                                  blurRadius: 8,
                                 ),
-                                child: Icon(
-                                  Icons.image,
-                                  color: Colors.blue.shade300,
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                // Imagen del curso
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.image,
+                                    color: Colors.blue.shade300,
+                                    size: 24,
+                                  ),
+                                ),
+                                
+                                const SizedBox(width: 16),
+                                
+                                // Información del curso
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        course.title,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Rol: ${course.role}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Estudiantes: ${course.students}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                
+                                // Flecha
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.grey.shade400,
                                   size: 24,
                                 ),
-                              ),
-                              
-                              const SizedBox(width: 16),
-                              
-                              // Información del curso
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      course.title,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Rol: ${course.role}',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Estudiantes: ${course.students}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              
-                              // Flecha
-                              Icon(
-                                Icons.chevron_right,
-                                color: Colors.grey.shade400,
-                                size: 24,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       },
