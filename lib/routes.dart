@@ -5,17 +5,18 @@ import 'package:flutter_application/presentation/bindings/create_category_bindin
 import 'package:flutter_application/presentation/bindings/create_course_binding.dart';
 import 'package:flutter_application/presentation/bindings/edit_category_binding.dart';
 import 'package:flutter_application/presentation/bindings/home_binding.dart';
+import 'package:flutter_application/presentation/bindings/main_navigation_binding.dart';
 import 'package:flutter_application/presentation/bindings/settings_binding.dart';
 import 'package:flutter_application/presentation/pages/categories_page.dart';
 import 'package:flutter_application/presentation/pages/create_activity_page.dart';
 import 'package:flutter_application/presentation/pages/create_category_page.dart';
 import 'package:flutter_application/presentation/pages/create_course.dart';
 import 'package:flutter_application/presentation/pages/edit_category_page.dart';
+import 'package:flutter_application/presentation/pages/main_page.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application/presentation/pages/login_page.dart';
 import 'package:flutter_application/presentation/pages/sign_up_page.dart';
 import 'package:flutter_application/presentation/bindings/sign_up_binding.dart';
-import 'package:flutter_application/presentation/pages/home_page.dart';
 
 import 'presentation/pages/settings_page.dart';
 
@@ -23,6 +24,7 @@ class Routes {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String home = '/home';
+  static const String main = '/main';
   static const String settings = '/settings';
   static const String createActivity = '/create-activity';
   static const String createCategory = '/create-category';
@@ -31,11 +33,26 @@ class Routes {
   static const String editCategory = '/edit-category';
 
   static List<GetPage> pages = [
+    //Temp for Home without login
+    /*
     GetPage(
       name: login,
       page: () => LoginPage(),
       binding: AuthBinding(),
+    ),*/
+
+    //Borrar de aquí
+    GetPage(
+      name: login,
+      page: () => const MainPage(),
+      bindings: [
+        HomeBinding(),
+        MainNavigationBinding(),
+        SettingsBinding(),
+      ],
     ),
+    // Hasta aquí
+
     GetPage(
       name: signup,
       page: () =>  SignUpPage(),
@@ -43,8 +60,12 @@ class Routes {
     ),
     GetPage(
       name: home,
-      page: () => const CategoriesPage(),
-      binding: CategoriesBinding(),
+      page: () => const MainPage(),
+      bindings: [
+        HomeBinding(),
+        MainNavigationBinding(),
+        SettingsBinding(),
+      ],
     ),
     GetPage(
       name: createActivity,
@@ -66,6 +87,11 @@ class Routes {
       page: () => const CategoriesPage(),
       binding: CategoriesBinding(),
     ),*/
+    GetPage(
+      name: categories,
+      page: () => const CategoriesPage(),
+      binding: CategoriesBinding(),
+    ),
     GetPage(
       name: '$editCategory/:id',
       page: () => EditCategoryPage(),

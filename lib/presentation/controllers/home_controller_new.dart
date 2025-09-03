@@ -4,7 +4,7 @@ import '../../routes.dart';
 
 class Course {
   final String title;
-  final String role; // 'Profesor' | 'Estudiante'
+  final String role; // 'Professor' | 'Student'
   final DateTime createdAt;
   final int students; // Número de estudiantes
   
@@ -35,8 +35,8 @@ class HomeController extends GetxController {
   final Rx<SortOption> currentSort = SortOption.nameAsc.obs;
   final RxInt activeFilters = 0.obs;
 
-  static const String roleProfessor = 'Profesor';
-  static const String roleStudent = 'Estudiante';
+  static const String roleProfessor = 'Professor';
+  static const String roleStudent = 'Student';
 
   @override
   void onInit() {
@@ -67,19 +67,19 @@ class HomeController extends GetxController {
         students: 30,
       ),
       Course(
-        title: "Desarrollo Móvil", 
+        title: "Mobile Development", 
         role: roleProfessor,
         createdAt: DateTime.now().subtract(const Duration(days: 1)),
         students: 22,
       ),
       Course(
-        title: "Flutter Avanzado", 
+        title: "Flutter Advanced", 
         role: roleProfessor,
         createdAt: DateTime.now().subtract(const Duration(days: 7)),
         students: 15,
       ),
       Course(
-        title: "JavaScript Básico", 
+        title: "JavaScript Basics", 
         role: roleStudent,
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
         students: 35,
@@ -122,17 +122,17 @@ class HomeController extends GetxController {
   String get sortLabel {
     switch (currentSort.value) {
       case SortOption.nameAsc:
-        return 'Nombre A-Z';
+        return 'Name A-Z';
       case SortOption.nameDesc:
-        return 'Nombre Z-A';
+        return 'Name Z-A';
       case SortOption.dateAsc:
-        return 'Más antiguos';
+        return 'Oldest First';
       case SortOption.dateDesc:
-        return 'Más recientes';
+        return 'Newest First';
       case SortOption.studentsAsc:
-        return 'Menos estudiantes';
+        return 'Less Students';
       case SortOption.studentsDesc:
-        return 'Más estudiantes';
+        return 'More Students';
     }
   }
 
@@ -186,9 +186,9 @@ class HomeController extends GetxController {
   String get activeRoleFilterLabel {
     switch (activeRoleFilter.value) {
       case roleProfessor:
-        return 'Profesor';
+        return 'Professor';
       case roleStudent:
-        return 'Estudiante';
+        return 'Student';
       default:
         return '';
     }
