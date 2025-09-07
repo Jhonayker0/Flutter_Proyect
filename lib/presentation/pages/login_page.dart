@@ -1,22 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../controllers/auth_controller.dart';
 import '../../routes.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final formKey = GlobalKey<FormState>();
+  final emailCtrl = TextEditingController();
+  final passCtrl = TextEditingController();
+  final obscure = true.obs;
+  final rememberMe = false.obs;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSaved();
+  }
+
+  Future<void> _loadSaved() async {
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('remember_email');
+    final pass = prefs.getString('remember_pass');
+
+    if (email != null && pass != null) {
+      emailCtrl.text = email;
+      passCtrl.text = pass;
+      rememberMe.value = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<AuthController>();
     final cs = Theme.of(context).colorScheme;
-
-    final formKey = GlobalKey<FormState>();
-
-    final emailCtrl = TextEditingController();
-    final passCtrl = TextEditingController();
-    final obscure = true.obs;
-    final rememberMe = false.obs;
 
     return Scaffold(
       body: Container(
@@ -122,8 +145,7 @@ class LoginPage extends StatelessWidget {
                                 const Spacer(),
                                 TextButton(
                                   onPressed: () {},
-                                  child:
-                                      const Text('¿Olvidaste tu contraseña?'),
+                                  child: const Text('¿Olvidaste tu contraseña?'),
                                 ),
                               ],
                             )),
@@ -162,6 +184,7 @@ class LoginPage extends StatelessWidget {
                                         await controller.login(
                                           emailCtrl.text.trim(),
                                           passCtrl.text,
+                                          remember: rememberMe.value,
                                         );
                                       },
                                 child: controller.isLoading.value

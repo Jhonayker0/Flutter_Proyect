@@ -23,9 +23,8 @@ class SignUpController extends GetxController {
     // Ejecuta el use case, devuelve un User? en vez de bool
     final User? user = await signUpUseCase.execute(name, email, password);
 
-    if (user != null) {
-      authController.currentUser.value = user;  // guarda el usuario logueado
-      Get.offAllNamed(Routes.home);             // navega a Home
+    if (user != null) {// guarda el usuario logueado
+      Get.offAllNamed(Routes.login);             // navega a Home
     } else {
       error.value = 'Ese correo ya está registrado';
     }

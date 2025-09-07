@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -11,8 +12,7 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
   final error = RxnString();
 
-  // Login
-  Future<void> login(String email, String password) async {
+  Future<void> login(String email, String password, {bool remember = false}) async {
     isLoading.value = true;
     error.value = null;
 
@@ -22,7 +22,17 @@ class AuthController extends GetxController {
         error.value = 'Correo o contraseña incorrectos';
       } else {
         currentUser.value = user;
-        Get.offAllNamed('/home'); // navegar a home
+
+        final prefs = await SharedPreferences.getInstance();
+        if (remember) {
+          await prefs.setString('remember_email', email);
+          await prefs.setString('remember_pass', password);
+        } else {
+          await prefs.remove('remember_email');
+          await prefs.remove('remember_pass');
+        }
+
+        Get.offAllNamed('/home');
       }
     } catch (e) {
       error.value = 'Error en login';
@@ -31,30 +41,20 @@ class AuthController extends GetxController {
     }
   }
 
-  // SignUp
-  Future<void> signUp(String name, String email, String password) async {
-    isLoading.value = true;
-    error.value = null;
-
-    try {
-      final user = await _repository.signUp(name, email, password);
-      if (user == null) {
-        error.value = 'El correo ya está registrado';
-      } else {
-        currentUser.value = user;
-        Get.offAllNamed('/home'); // navegar a home
-      }
-    } catch (e) {
-      error.value = 'Error en registro';
-    } finally {
-      isLoading.value = false;
-    }
+  Future<Map<String, String?>> getSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'email': prefs.getString('remember_email'),
+      'password': prefs.getString('remember_pass'),
+    };
   }
 
-  // Logout global
-  void logout() {
-    currentUser.value = null;       // limpiar usuario en memoria
-    Get.offAllNamed('/login');      // eliminar stack y navegar a login
+  Future<void> logout() async {
+    currentUser.value = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('remember_email');
+    await prefs.remove('remember_pass');
+    Get.offAllNamed('/login');
   }
 
   bool get isLoggedIn => currentUser.value != null;

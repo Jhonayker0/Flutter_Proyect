@@ -27,7 +27,14 @@ class AuthService {
   /// Agrega un nuevo usuario
   Future<int> addUser(Map<String, dynamic> user) async {
     final db = await _dbService.database;
-    return await db.insert('persona', user);
+    final id = await db.insert('persona', user);
+  
+  // DEBUG: muestra todos los usuarios después de la inserción
+    final all = await db.query('persona');
+    print('Usuarios en DB: $all');
+
+    return id;
+    
   }
 
   /// Elimina un usuario

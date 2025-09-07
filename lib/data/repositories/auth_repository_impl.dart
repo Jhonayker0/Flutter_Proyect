@@ -35,8 +35,7 @@ class AuthRepositoryImpl implements AuthRepository {
     };
 
     final id = await _service.addUser(newUser);
-
-    // Devolvemos el User con su id generado
     return User.fromMap({...newUser, 'id': id});
   }
+  
 }
