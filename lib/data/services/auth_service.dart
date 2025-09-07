@@ -1,35 +1,49 @@
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+import '../datasources/database.dart'; 
 
 class AuthService {
-  List<Map<String, dynamic>> _users = [];
-  bool _loaded = false;
+  final DatabaseService _dbService = DatabaseService();
 
-  Future<void> _load() async {
-    if (_loaded) return;
-
-    try {
-      final raw = await rootBundle.loadString('assets/mockup.json');
-      final data = json.decode(raw);
-      if (data is List) {
-        _users = List<Map<String, dynamic>>.from(data);
-      }
-    } catch (_) {
-      _users = [];
-    }
-
-    _loaded = true;
-    print(_users);
-  }
-
+  /// Obtiene todos los usuarios
   Future<List<Map<String, dynamic>>> getUsers() async {
-    await _load();
-    return _users;
+    final db = await _dbService.database;
+    return await db.query('persona');
   }
 
-  Future<void> addUser(Map<String, dynamic> user) async {
-    await _load();
-    _users.add(user);
-    print(_users);
+  /// Obtiene un usuario por email y contraseña
+  Future<Map<String, dynamic>?> getUserByCredentials(String email, String password) async {
+    final db = await _dbService.database;
+    final res = await db.query(
+      'persona',
+      where: 'correo = ? AND contrasena = ?',
+      whereArgs: [email.trim().toLowerCase(), password],
+    );
+
+    if (res.isNotEmpty) {
+      return res.first;
+    }
+    return null;
+  }
+
+  /// Agrega un nuevo usuario
+  Future<int> addUser(Map<String, dynamic> user) async {
+    final db = await _dbService.database;
+    return await db.insert('persona', user);
+  }
+
+  /// Elimina un usuario
+  Future<int> deleteUser(int id) async {
+    final db = await _dbService.database;
+    return await db.delete('persona', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Actualiza un usuario
+  Future<int> updateUser(Map<String, dynamic> user) async {
+    final db = await _dbService.database;
+    return await db.update(
+      'persona',
+      user,
+      where: 'id = ?',
+      whereArgs: [user['id']],
+    );
   }
 }

@@ -9,35 +9,34 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<User?> login(String email, String password) async {
-    final users = await _service.getUsers();
-    final e = email.trim().toLowerCase();
-    final p = password;
+    final userMap = await _service.getUserByCredentials(email, password);
 
-    final userMap = users.firstWhere(
-      (u) =>
-          (u['email'] as String?)?.toLowerCase() == e &&
-          (u['password'] as String?) == p,
-      orElse: () => {},
-    );
-
-    if (userMap.isEmpty) return null;
+    if (userMap == null) return null;
     return User.fromMap(userMap);
   }
 
   @override
   Future<User?> signUp(String name, String email, String password) async {
-    final users = await _service.getUsers();
+    // Normalizamos el correo
     final e = email.trim().toLowerCase();
-    final exists = users.any((u) => (u['email'] as String?)?.toLowerCase() == e);
+
+    // Verificamos si ya existe un usuario con ese correo
+    final users = await _service.getUsers();
+    final exists = users.any((u) => (u['correo'] as String?)?.toLowerCase() == e);
+
     if (exists) return null;
 
+    // Creamos el nuevo usuario
     final newUser = {
-      'id': users.length + 1,
-      'name': name,
-      'email': e,
-      'password': password,
+      'nombre': name,
+      'correo': e,
+      'contrasena': password,
+      'imagen': null, // opcional, por si más adelante manejas imagen
     };
-    await _service.addUser(newUser);
-    return User.fromMap(newUser);
+
+    final id = await _service.addUser(newUser);
+
+    // Devolvemos el User con su id generado
+    return User.fromMap({...newUser, 'id': id});
   }
 }
