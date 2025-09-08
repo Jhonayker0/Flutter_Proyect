@@ -11,7 +11,7 @@ class CourseDetailController extends GetxController {
   final RxList<User> students = <User>[].obs;
   final RxBool isLoading = false.obs;
   late Course course;
-
+  final RxInt studentCount = 0.obs;
   final CourseRepository repo;
   CourseDetailController({required this.repo});
   String get userRole => course.role;
@@ -101,6 +101,7 @@ class CourseDetailController extends GetxController {
       email: r['correo'] as String,
       imagepathh: r['imagen'] as String?, // opcional
     )).toList());
+    studentCount.value = students.length;
   }
 
 

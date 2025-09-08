@@ -15,7 +15,7 @@ class CreatePage extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
             const Text(
-              '¿Qué te gustaría crear?',
+              'Crea o ingresa a un curso nuevo',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -145,7 +145,7 @@ class CreatePage extends StatelessWidget {
 
             const SizedBox(height: 16),
             
-            // Crear Actividad
+     /*       // Crear Actividad
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(
@@ -263,7 +263,7 @@ class CreatePage extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
+            ), */
           ],
         ),
       ),

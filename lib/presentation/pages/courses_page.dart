@@ -234,13 +234,6 @@ class CoursesPage extends GetView<HomeController> {
                                       color: Colors.grey.shade600,
                                     ),
                                   ),
-                                  Text(
-                                    'Estudiantes: ${course.students}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
                                 ],
                               ),
                             ),

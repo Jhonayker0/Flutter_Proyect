@@ -21,8 +21,6 @@ class JoinCourseController extends GetxController {
     try {
       final code = codeCtrl.text.trim();
 
-      // Llama al repositorio: valida el código internamente, resuelve curso_id
-      // y crea o reutiliza la inscripción; retorna el id de estudiante_curso. (Arreglar que se puede ingresar al mismo varias veces)
       final enrollmentId = await repo.joinCourseByCode(
         studentId: userId!,
         courseCode: code,

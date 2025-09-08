@@ -12,7 +12,7 @@ class MainNavigationController extends GetxController {
       case 0:
         return 'Cursos';
       case 1:
-        return 'Crear';
+        return '';
       case 2:
         return 'Perfil';
       default:
