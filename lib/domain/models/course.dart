@@ -51,6 +51,7 @@ class Course {
       'nombre_asignatura': title,
       'descripcion': description,
       'profesor_id': profesorId,
+      'codigo': '1234567'
     };
   }
 }

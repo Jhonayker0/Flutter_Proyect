@@ -53,4 +53,9 @@ class CourseRepositoryImpl implements CourseRepository {
   Future<List<Map<String, dynamic>>> getUsersByCourse(int courseId) async {
     return await service.getUsersByCourse(courseId);
   }
+  
+  @override
+  Future<int> joinCourseByCode({required int studentId, required String courseCode}) async{
+    return await service.joinCourseByCode(studentId: studentId, courseCode: courseCode);
+  }
 }

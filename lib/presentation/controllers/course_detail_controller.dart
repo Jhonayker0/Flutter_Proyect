@@ -95,7 +95,6 @@ class CourseDetailController extends GetxController {
 
   Future<void> loadStudents() async {
     students.clear(); // RxList<User>
-    print(course.id);
     students.assignAll((await repo.getUsersByCourse(course.id!)).map((r) => User(
       id: r['id'] as int,
       name: r['nombre'] as String,

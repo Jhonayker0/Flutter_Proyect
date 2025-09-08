@@ -91,7 +91,7 @@ class CreatePage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: InkWell(
-                onTap: () => Get.toNamed(Routes.createCategory),
+                onTap: () => Get.toNamed(Routes.joinCourse),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -115,7 +115,7 @@ class CreatePage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Crear Categoría',
+                              'Ingresar a un curso',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -123,7 +123,7 @@ class CreatePage extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Crea una nueva categoría para organizar tus cursos',
+                              'Ingresa a un nuevo curso para descubrir sus maravillas',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey.shade600,

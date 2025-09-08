@@ -50,6 +50,7 @@ class DatabaseService {
             nombre_asignatura TEXT NOT NULL,
             descripcion TEXT,
             profesor_id INTEGER NOT NULL,
+            codigo TEXT,
             FOREIGN KEY (profesor_id) REFERENCES persona(id)
           )
         ''');
@@ -57,7 +58,8 @@ class DatabaseService {
         await db.insert('curso', {
           'nombre_asignatura': 'curso1',
           'descripcion': 'Curso de prueba',
-          'profesor_id': 1});
+          'profesor_id': 1,
+          'codigo': '123456'});
 
         await db.execute('''
           CREATE TABLE categoria (

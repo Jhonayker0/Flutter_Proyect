@@ -69,4 +69,53 @@ class CourseService {
     WHERE ec.curso_id = ?
   ''', [courseId]);
 }
+
+
+  Future<int> joinCourseByCode({required int studentId, required String courseCode}) async {
+    final db = await database;
+    return await db.transaction<int>((txn) async {
+      // 1) Resolver curso por código
+      final courseRows = await txn.query(
+        'curso',
+        columns: ['id', 'profesor_id'],
+        where: 'codigo = ?',
+        whereArgs: [courseCode],
+        limit: 1,
+      );
+      if (courseRows.isEmpty) {
+        throw Exception('Código de curso inválido');
+      }
+      final int courseId = courseRows.first['id'] as int;
+      final int profesorId = courseRows.first['profesor_id'] as int;
+
+      // 2) Bloquear si es el profesor del curso
+      if (studentId == profesorId) {
+        throw Exception('Ya es profesor de este curso');
+      }
+
+      // 3) Bloquear si ya está inscrito como estudiante
+      // EXISTS en SQL (opcional con rawQuery) o COUNT con helper
+      final existsRes = await txn.rawQuery(
+        'SELECT EXISTS(SELECT 1 FROM estudiante_curso WHERE estudiante_id = ? AND curso_id = ?)',
+        [studentId, courseId],
+      );
+      final alreadyEnrolled = Sqflite.firstIntValue(existsRes) == 1;
+      if (alreadyEnrolled) {
+        throw Exception('Ya está inscrito en este curso');
+      }
+
+      // 4) Insertar inscripción
+      final insertedId = await txn.insert(
+        'estudiante_curso',
+        {
+          'estudiante_id': studentId,
+          'curso_id': courseId,
+        },
+        conflictAlgorithm: ConflictAlgorithm.abort, // no debería chocar
+      );
+      return insertedId;
+    });
+  }
+
+
 }

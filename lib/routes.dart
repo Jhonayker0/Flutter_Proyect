@@ -5,6 +5,7 @@ import 'package:flutter_application/presentation/bindings/create_category_bindin
 import 'package:flutter_application/presentation/bindings/create_course_binding.dart';
 import 'package:flutter_application/presentation/bindings/edit_category_binding.dart';
 import 'package:flutter_application/presentation/bindings/home_binding.dart';
+import 'package:flutter_application/presentation/bindings/join_course_binding.dart';
 import 'package:flutter_application/presentation/bindings/main_navigation_binding.dart';
 import 'package:flutter_application/presentation/bindings/settings_binding.dart';
 import 'package:flutter_application/presentation/pages/categories_page.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_application/presentation/pages/create_activity_page.dart
 import 'package:flutter_application/presentation/pages/create_category_page.dart';
 import 'package:flutter_application/presentation/pages/create_course.dart';
 import 'package:flutter_application/presentation/pages/edit_category_page.dart';
+import 'package:flutter_application/presentation/pages/join_course_page.dart';
 import 'package:flutter_application/presentation/pages/login_page.dart';
 import 'package:flutter_application/presentation/pages/main_page.dart';
 import 'package:get/get.dart';
@@ -35,6 +37,7 @@ class Routes {
   static const String categories = '/categories';
   static const String editCategory = '/edit-category';
   static const String courseDetail = '/course-detail';
+  static const String joinCourse = '/join-course';
 
   static List<GetPage> pages = [
     GetPage(
@@ -96,5 +99,10 @@ class Routes {
       page: () => const CourseDetailPage(),
       binding: CourseDetailBinding(),
     ),
+    GetPage(
+      name: joinCourse,
+      page: () => JoinCoursePage(),
+      binding: JoinCourseBinding()
+    )
   ];
 }

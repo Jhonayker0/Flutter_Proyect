@@ -1,4 +1,5 @@
 import 'package:flutter_application/domain/models/course.dart' show Course;
+import 'package:flutter_application/domain/models/user.dart';
 
 abstract class CourseRepository {
   Future<void> create(Course course);
@@ -15,4 +16,5 @@ abstract class CourseRepository {
 
   Future<List<Course>> getCoursesByStudent(int userId);
   Future<List<Map<String, dynamic>>>  getUsersByCourse(int courseId);
+  Future<int> joinCourseByCode({required int studentId, required String courseCode});
 }
