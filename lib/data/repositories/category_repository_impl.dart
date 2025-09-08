@@ -7,45 +7,111 @@ class CategoryRepositoryImpl implements CategoryRepository {
   final CategoryService service;
   CategoryRepositoryImpl(this.service);
 
+  // Normaliza 'Type' del dominio a los valores de la DB
+  String _normalizeType(String type) {
+    final t = type.trim().toLowerCase();
+    if (t.startsWith('ale')) return 'aleatorio';
+    if (t.startsWith('auto')) return 'auto-asignado';
+    // fallback conservador
+    return t;
+  }
+
+  // Mapea fila DB -> dominio
+  Category _fromDb(Map<String, Object?> row) {
+    return Category(
+      id: row['id'] as int?,
+      name: (row['nombre'] as String?) ?? '',
+      // Si la columna 'descripcion' no existe en tu tabla, deja vacío u opcional
+      description: (row['descripcion'] as String?) ?? '',
+      type: (row['tipo'] as String?) ?? '',
+      capacity: row['capacidad'] as int,
+      // Asegúrate de que Category tenga courseId en el dominio
+      courseId: (row['curso_id'] as num).toInt(),
+    );
+  }
+
+  // Dominio -> columnas DB (por si necesitas transformar en algún punto)
+
+
+  // Crea la categoría y genera los grupos "Grupo N" dentro de la transacción del servicio.
+  // Devuelve el id creado (recomendado para encadenar lógica).
   @override
-  Future<void> create(Category category) async {
-    final dto = {
-      'name': category.name,
-      'description': category.description,
-      'type': category.type,
-      'capacity': category.capacity,
-    };
-    await service.postCategory(dto);
+  Future<int> create(Category category) async {
+    final id = await service.postCategory(
+      nombre: category.name,
+      tipo: _normalizeType(category.type),
+      capacidad: category.capacity,
+      cursoId: category.courseId, // requiere que Category tenga courseId
+    );
+    return id;
   }
 
   @override
   Future<List<Category>> getAll() async {
-    final data = await service.getAllCategories();
-    return data.map((json) => Category.fromMap(json)).toList();
+    final rows = await service.getAllCategories();
+    return rows.map(_fromDb).toList();
   }
 
   @override
   Future<Category?> getById(int id) async {
-    final data = await service.getCategoryById(id);
-    if (data == null) return null;
-    return Category.fromMap(data);
+    final row = await service.getCategoryById(id);
+    return row == null ? null : _fromDb(row);
   }
 
   @override
   Future<void> update(Category category) async {
-    if (category.id == null) throw Exception('Category ID is required for update');
-    
-    final dto = {
-      'name': category.name,
-      'description': category.description,
-      'type': category.type,
-      'capacity': category.capacity,
-    };
-    await service.updateCategory(category.id!, dto);
+    if (category.id == null) {
+      throw Exception('Category ID is required for update');
+    }
+    await service.updateCategory(
+      category.id!,
+      nombre: category.name,
+      tipo: _normalizeType(category.type),
+      capacidad: category.capacity,
+      // Si agregas 'descripcion' a la tabla, pásala aquí y en el servicio
+    );
   }
 
   @override
   Future<void> delete(int id) async {
     await service.deleteCategory(id);
   }
+
+  // Extensiones útiles para la UI
+
+  // Listar grupos de la categoría con conteo de miembros
+  Future<List<GroupSummary>> getGroupsByCategory(int categoriaId) async {
+    final rows = await service.getGroupsByCategory(categoriaId);
+    return rows.map((m) => GroupSummary(
+      id: (m['id'] as num).toInt(),
+      name: (m['nombre'] as String?) ?? '',
+      capacity: m['capacidad'] as int?,
+      members: (m['miembros'] as num?)?.toInt() ?? 0,
+    )).toList();
+  }
+
+  // Unir estudiante a grupo (valida capacidad y unicidad en la categoría)
+  Future<int> addStudentToGroup({
+    required int groupId,
+    required int studentId,
+  }) {
+    return service.addStudentToGroup(
+      grupoId: groupId,
+      estudianteId: studentId,
+    );
+  }
+}
+
+// Modelo auxiliar para la UI de grupos
+class GroupSummary {
+  final int id;
+  final String name;
+  final int? capacity;
+  final int members;
+  GroupSummary({
+    required this.id,
+    required this.name,
+    this.capacity,
+    required this.members,
+  });
 }

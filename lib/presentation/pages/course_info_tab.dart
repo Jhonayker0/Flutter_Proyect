@@ -155,17 +155,11 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                       ),
                       const SizedBox(height: 8),
                       _buildActionButton(
-                        'Ver Reportes',
-                        'Estadísticas detalladas del curso',
-                        Icons.bar_chart,
+                        'Crear categoria',
+                        'Crea una nueva categoria para el curso',
+                        Icons.add_circle,
                         Colors.orange,
-                        () {
-                          Get.snackbar(
-                            'Próximamente',
-                            'Esta funcionalidad estará disponible pronto',
-                            snackPosition: SnackPosition.BOTTOM,
-                          );
-                        },
+                        controller.createNewCategory,
                       ),
                     ],
                   ),

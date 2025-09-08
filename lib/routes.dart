@@ -1,5 +1,6 @@
 import 'package:flutter_application/presentation/bindings/auth_binding.dart';
 import 'package:flutter_application/presentation/bindings/categories_binding.dart';
+import 'package:flutter_application/presentation/bindings/view_categories_binding.dart';
 import 'package:flutter_application/presentation/bindings/create_activity_binding.dart';
 import 'package:flutter_application/presentation/bindings/create_category_binding.dart';
 import 'package:flutter_application/presentation/bindings/create_course_binding.dart';
@@ -16,6 +17,7 @@ import 'package:flutter_application/presentation/pages/edit_category_page.dart';
 import 'package:flutter_application/presentation/pages/join_course_page.dart';
 import 'package:flutter_application/presentation/pages/login_page.dart';
 import 'package:flutter_application/presentation/pages/main_page.dart';
+import 'package:flutter_application/presentation/pages/view_categories_page.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application/presentation/pages/sign_up_page.dart';
 import 'package:flutter_application/presentation/bindings/sign_up_binding.dart';
@@ -38,26 +40,15 @@ class Routes {
   static const String editCategory = '/edit-category';
   static const String courseDetail = '/course-detail';
   static const String joinCourse = '/join-course';
+  static const String prueba = '/prueba';
 
   static List<GetPage> pages = [
-    GetPage(
-      name: login,
-      page: () => LoginPage(),
-      binding: AuthBinding(),
-    ),
-    GetPage(
-      name: signup,
-      page: () =>  SignUpPage(),
-      binding: SignUpBinding(),
-    ),
+    GetPage(name: login, page: () => LoginPage(), binding: AuthBinding()),
+    GetPage(name: signup, page: () => SignUpPage(), binding: SignUpBinding()),
     GetPage(
       name: home,
       page: () => const MainPage(),
-      bindings: [
-        HomeBinding(),
-        MainNavigationBinding(),
-        SettingsBinding(),
-      ],
+      bindings: [HomeBinding(), MainNavigationBinding(), SettingsBinding()],
     ),
     GetPage(
       name: createActivity,
@@ -92,17 +83,22 @@ class Routes {
     GetPage(
       name: settings,
       page: () => SettingsPage(),
-      binding: SettingsBinding()
+      binding: SettingsBinding(),
     ),
     GetPage(
       name: courseDetail,
       page: () => const CourseDetailPage(),
-      binding: CourseDetailBinding(),
+      bindings: [CourseDetailBinding(),CategoryGroupsBinding() ],
     ),
     GetPage(
       name: joinCourse,
       page: () => JoinCoursePage(),
-      binding: JoinCourseBinding()
-    )
+      binding: JoinCourseBinding(),
+    ),
+    GetPage(
+      name: prueba,
+      page: () => CategoryGroupsPage(),
+      binding: CategoryGroupsBinding(),
+    ),
   ];
 }

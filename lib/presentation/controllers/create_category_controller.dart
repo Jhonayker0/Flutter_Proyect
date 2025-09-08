@@ -1,20 +1,27 @@
 // presentation/controllers/create_category_controller.dart
 import 'package:flutter_application/domain/models/category.dart';
 import 'package:flutter_application/domain/use_cases/create_category_case.dart';
+import 'package:flutter_application/routes.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
 class CreateCategoryController extends GetxController {
   final CreateCategory createCategoryUseCase;
   CreateCategoryController({required this.createCategoryUseCase});
-
+  late final int courseId;
   final nameCtrl = TextEditingController();
   final descCtrl = TextEditingController();
   final capacityCtrl = TextEditingController();
-
+  
   final type = RxnString(); // "Auto-asignado" | "Aleatorio"
   final isLoading = false.obs;
   final error = RxnString();
+  @override
+  void onInit() {
+    super.onInit();
+    final args = Get.arguments as Map?;
+    courseId = (args?['courseId'] as num).toInt();
+  }
 
   String? validateRequired(String? v, String msg) =>
       (v == null || v.trim().isEmpty) ? msg : null;
@@ -32,7 +39,6 @@ class CreateCategoryController extends GetxController {
 
   Future<void> submit(GlobalKey<FormState> formKey, BuildContext context) async {
     if (!(formKey.currentState?.validate() ?? false)) return;
-
     isLoading.value = true;
     error.value = null;
     try {
@@ -42,12 +48,14 @@ class CreateCategoryController extends GetxController {
         description: descCtrl.text.trim(),
         type: type.value!, // validado
         capacity: n,
+        courseId: courseId,
       );
       await createCategoryUseCase(category);
-      Get.snackbar('exito', 'Categoría creada');
       Get.back();
+      Get.snackbar('Exito', 'Categoría creada');
     } catch (e) {
-      error.value = 'No se pudo crear la categoría';
+        Get.snackbar('Error', 'No se pudo crear el curso $e',
+        backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }

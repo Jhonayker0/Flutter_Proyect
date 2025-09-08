@@ -50,6 +50,7 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
                     onTap: controller.createNewActivity,
                   ),
                 );
+                
               }
 
               // Ajustar índice para las actividades

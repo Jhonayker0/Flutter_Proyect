@@ -38,7 +38,7 @@ class EditCategoryController extends GetxController {
       _originalCategory = await categoryRepository.getById(id);
       if (_originalCategory != null) {
         nameCtrl.text = _originalCategory!.name;
-        descCtrl.text = _originalCategory!.description;
+        descCtrl.text = _originalCategory!.description!;
         capacityCtrl.text = _originalCategory!.capacity.toString();
         type.value = _originalCategory!.type;
       }

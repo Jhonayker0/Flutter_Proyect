@@ -1,6 +1,4 @@
 import 'package:flutter_application/domain/models/course.dart' show Course;
-import 'package:flutter_application/domain/models/user.dart';
-
 abstract class CourseRepository {
   Future<void> create(Course course);
 

@@ -1,6 +1,7 @@
 import 'package:flutter_application/domain/models/course.dart';
 import 'package:flutter_application/domain/models/user.dart';
 import 'package:flutter_application/domain/repositories/course_repository.dart';
+import 'package:flutter_application/routes.dart';
 import 'package:get/get.dart';
 import '../../domain/models/activity.dart';
 import '../controllers/home_controller_new.dart';
@@ -14,6 +15,7 @@ class CourseDetailController extends GetxController {
   final RxInt studentCount = 0.obs;
   final CourseRepository repo;
   CourseDetailController({required this.repo});
+  
   String get userRole => course.role;
   bool get isProfessor => userRole == HomeController.roleProfessor;
 
@@ -39,6 +41,8 @@ class CourseDetailController extends GetxController {
       case 1:
         return 'Estudiantes';
       case 2:
+        return 'Categoria';
+      case 3:
         return 'Información';
       default:
         return 'Actividades';
@@ -110,6 +114,12 @@ class CourseDetailController extends GetxController {
       Get.toNamed('/create-activity', arguments: {'courseId': course.id});
     }
   }
+  
+  void createNewCategory() {
+    if (isProfessor) {
+      Get.toNamed('/create-category', arguments: {'courseId': course.id});
+    }
+  }
 
   void inviteStudent() {
     if (isProfessor) {
@@ -118,7 +128,7 @@ class CourseDetailController extends GetxController {
   }
 
   void viewActivity(Activity activity) {
-    Get.toNamed('/activity-detail', arguments: {'activity': activity});
+    Get.toNamed(Routes.prueba);
   }
 
   void viewStudent(User student) {

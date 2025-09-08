@@ -14,7 +14,7 @@ class DatabaseService {
   Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'app.db');
-
+    print( dbPath);
     return await openDatabase(
       path,
       version: 1,
@@ -32,17 +32,20 @@ class DatabaseService {
         await db.insert('persona', {
           'nombre': 'usuario1',
           'correo': 'a@a.com',
-          'contrasena': '123456'});
+          'contrasena': '123456',
+        });
 
         await db.insert('persona', {
           'nombre': 'usuario2',
           'correo': 'b@a.com',
-          'contrasena': '123456'});
+          'contrasena': '123456',
+        });
 
         await db.insert('persona', {
           'nombre': 'usuario3',
           'correo': 'c@a.com',
-          'contrasena': '123456'});
+          'contrasena': '123456',
+        });
 
         await db.execute('''
           CREATE TABLE curso (
@@ -59,18 +62,39 @@ class DatabaseService {
           'nombre_asignatura': 'curso1',
           'descripcion': 'Curso de prueba',
           'profesor_id': 1,
-          'codigo': '123456'});
+          'codigo': '123456',
+        });
 
         await db.execute('''
           CREATE TABLE categoria (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
             tipo TEXT NOT NULL CHECK (tipo IN ('aleatorio', 'auto-asignado')),
             capacidad INTEGER,
             curso_id INTEGER NOT NULL,
             FOREIGN KEY (curso_id) REFERENCES curso(id)
           )
         ''');
-
+       
+        await db.execute('''
+          CREATE TABLE grupo (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              categoria_id INTEGER NOT NULL,
+              nombre TEXT NOT NULL,           
+              capacidad INTEGER,                   
+              FOREIGN KEY (categoria_id) REFERENCES categoria(id)
+            )
+          ''');
+        
+        await db.execute('''
+          CREATE TABLE categoria_estudiante (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            grupo_id INTEGER NOT NULL,
+            estudiante_id INTEGER NOT NULL,
+            FOREIGN KEY (grupo_id) REFERENCES grupo(id),
+            FOREIGN KEY (estudiante_id) REFERENCES persona(id)
+          )
+        ''');
         await db.execute('''
           CREATE TABLE actividad (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -115,7 +139,8 @@ class DatabaseService {
 
         await db.insert('estudiante_curso', {
           'estudiante_id': 2,
-          'curso_id': 1});
+          'curso_id': 1,
+        });
       },
     );
   }

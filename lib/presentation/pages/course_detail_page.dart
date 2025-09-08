@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/presentation/pages/view_categories_page.dart';
 import 'package:get/get.dart';
 import '../controllers/course_detail_controller.dart';
 import 'course_activities_tab.dart';
@@ -29,6 +30,7 @@ class CourseDetailPage extends GetView<CourseDetailController> {
         children: const [
           CourseActivitiesTab(),
           CourseStudentsTab(),
+          CategoryGroupsPage(),
           CourseInfoTab(),
         ],
       )),
@@ -48,6 +50,10 @@ class CourseDetailPage extends GetView<CourseDetailController> {
             label: 'Estudiantes',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.group),
+            label: 'Categorias',
+          ),
+           BottomNavigationBarItem(
             icon: Icon(Icons.info),
             label: 'Información',
           ),

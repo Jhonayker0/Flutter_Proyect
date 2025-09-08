@@ -92,7 +92,7 @@ class CategoriesPage extends GetView<CategoriesController> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(category.description),
+                      Text(category.description!),
                       const SizedBox(height: 4),
                       Row(
                         children: [

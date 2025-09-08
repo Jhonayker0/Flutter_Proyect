@@ -5,6 +5,5 @@ import 'package:flutter_application/data/datasources/database.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DatabaseService().database;
-
   runApp(const MyApp());
 }
