@@ -1,3 +1,4 @@
+import 'package:flutter_application/data/datasources/borrar.dart';
 import 'package:flutter_application/presentation/controllers/auth_controller.dart';
 import 'package:flutter_application/presentation/theme.dart';
 import 'package:get/get.dart';
@@ -16,9 +17,9 @@ class SettingsController extends GetxController {
     if (title == "Cerrar sesión") {
       final authController = Get.find<AuthController>();
       authController.logout(); 
-    } else {
-      Get.snackbar("Opción seleccionada", title,
-          snackPosition: SnackPosition.BOTTOM);
+    } 
+    else {
+      deleteDatabaseFile();
     }
   }
 }

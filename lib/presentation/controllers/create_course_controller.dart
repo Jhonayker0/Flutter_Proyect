@@ -1,18 +1,20 @@
-import 'package:flutter_application/domain/models/course.dart';
-import 'package:flutter_application/domain/use_cases/create_course_case.dart';
-import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter_application/presentation/controllers/home_controller_new.dart';
+import 'package:flutter_application/routes.dart';
+import 'package:get/get.dart';
+import '../../domain/models/course.dart';
+import '../../domain/use_cases/create_course_case.dart';
+import '../controllers/auth_controller.dart';
 
 class CreateCourseController extends GetxController {
   final CreateCourse createCourseUseCase;
   CreateCourseController({required this.createCourseUseCase});
 
+
+  final AuthController authController = Get.find<AuthController>();
+
   final nameCtrl = TextEditingController();
   final descCtrl = TextEditingController();
-
-  final deadline = Rxn<DateTime>();
-  final imagePath = RxnString();
 
   final isLoading = false.obs;
   final error = RxnString();
@@ -20,26 +22,49 @@ class CreateCourseController extends GetxController {
   String? validateRequired(String? v, String msg) =>
       (v == null || v.trim().isEmpty) ? msg : null;
 
-  void setDeadline(DateTime? d) => deadline.value = d;
-  void setImagePath(String? path) => imagePath.value = path;
-
   Future<void> submit(GlobalKey<FormState> formKey, BuildContext context) async {
     if (!(formKey.currentState?.validate() ?? false)) return;
 
+    final userId = authController.currentUser.value?.id;
+    if (userId == null) {
+      error.value = 'Usuario no logeado';
+      return;
+    }
+
     isLoading.value = true;
     error.value = null;
+
     try {
       final course = Course(
-        name: nameCtrl.text.trim(),
+        title: nameCtrl.text.trim(),
         description: descCtrl.text.trim(),
-        deadline: deadline.value,
-        imagePath: imagePath.value,
+        profesorId: userId,
+        role: 'Professor',   // rol del creador
+        students: 0,         // al crear no hay estudiantes
+        createdAt: DateTime.now(),
       );
       await createCourseUseCase(course);
-      Get.snackbar('exito', 'Curso creado');
-      Get.back();
+      Get.snackbar(
+        'Éxito',
+        'Curso creado correctamente',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+      
+      nameCtrl.clear();
+      descCtrl.clear();
+
+      final  homeController = Get.find<HomeController>();
+      homeController.addCourse(course); 
+
+      Get.offNamed(Routes.home);
+      
+
     } catch (e) {
-      error.value = 'No se pudo crear el curso';
+      Get.snackbar('Error', 'No se pudo crear el curso $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }

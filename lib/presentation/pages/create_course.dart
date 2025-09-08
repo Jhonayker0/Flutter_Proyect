@@ -6,7 +6,7 @@ class CreateCoursePage extends GetView<CreateCourseController> {
   CreateCoursePage({super.key});
   final _formKey = GlobalKey<FormState>();
 
-  Future<void> _pickDeadline(BuildContext context) async {
+  /*Future<void> _pickDeadline(BuildContext context) async {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -14,8 +14,10 @@ class CreateCoursePage extends GetView<CreateCourseController> {
       firstDate: now,
       lastDate: DateTime(now.year + 5),
     );
-    if (picked != null) controller.setDeadline(picked);
-  }
+    if (picked != null) {
+      controller.setDeadline(picked);
+    }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +58,7 @@ class CreateCoursePage extends GetView<CreateCourseController> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Fecha límite
+                  /*// Fecha límite
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.date_range),
@@ -71,7 +73,7 @@ class CreateCoursePage extends GetView<CreateCourseController> {
                       child: const Text('Seleccionar fecha'),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 20),*/
 
                   // Añadir imagen
                   OutlinedButton.icon(

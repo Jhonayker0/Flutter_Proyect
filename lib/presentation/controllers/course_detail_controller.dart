@@ -1,12 +1,16 @@
+import 'package:flutter_application/data/services/course_service.dart';
+import 'package:flutter_application/domain/models/course.dart';
+import 'package:flutter_application/domain/models/user.dart';
 import 'package:get/get.dart';
 import '../../domain/models/activity.dart';
-import '../../domain/models/student.dart';
-import '../controllers/home_controller.dart';
+import '../controllers/home_controller_new.dart';
 
 class CourseDetailController extends GetxController {
   final RxInt currentTabIndex = 0.obs;
   final RxList<Activity> activities = <Activity>[].obs;
-  final RxList<Student> students = <Student>[].obs;
+  final CourseService courseService = CourseService();
+  final RxList<User> students = <User>[].obs;
+
   final RxBool isLoading = false.obs;
   
   late Course course;
@@ -92,44 +96,17 @@ class CourseDetailController extends GetxController {
   }
 
   Future<void> loadStudents() async {
-    // Simular datos de estudiantes
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    final mockStudents = [
-      Student(
-        id: 1,
-        name: 'Ana García',
-        email: 'ana.garcia@email.com',
-        courseId: course.id!,
-        enrolledAt: DateTime.now().subtract(const Duration(days: 30)),
-        averageGrade: 88.5,
-        completedActivities: 2,
-        totalActivities: 3,
-      ),
-      Student(
-        id: 2,
-        name: 'Carlos López',
-        email: 'carlos.lopez@email.com',
-        courseId: course.id!,
-        enrolledAt: DateTime.now().subtract(const Duration(days: 25)),
-        averageGrade: 92.0,
-        completedActivities: 3,
-        totalActivities: 3,
-      ),
-      Student(
-        id: 3,
-        name: 'María Rodríguez',
-        email: 'maria.rodriguez@email.com',
-        courseId: course.id!,
-        enrolledAt: DateTime.now().subtract(const Duration(days: 20)),
-        averageGrade: 76.8,
-        completedActivities: 1,
-        totalActivities: 3,
-      ),
-    ];
+    students.clear(); // RxList<User>
+    final data = await courseService.getUsersByCourse(course.id!);
 
-    students.assignAll(mockStudents);
+    students.assignAll(data.map((r) => User(
+      id: r['id'] as int,
+      name: r['nombre'] as String,
+      email: r['correo'] as String,
+      imagepathh: r['imagen'] as String?, // opcional
+    )).toList());
   }
+
 
   void createNewActivity() {
     if (isProfessor) {
@@ -147,7 +124,7 @@ class CourseDetailController extends GetxController {
     Get.toNamed('/activity-detail', arguments: {'activity': activity});
   }
 
-  void viewStudent(Student student) {
+  void viewStudent(User student) {
     Get.toNamed('/student-detail', arguments: {'student': student});
   }
 

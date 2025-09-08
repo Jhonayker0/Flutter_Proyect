@@ -1,20 +1,9 @@
+import 'package:flutter_application/domain/models/course.dart';
+import 'package:flutter_application/domain/repositories/course_repository.dart';
 import 'package:flutter_application/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 import '../../routes.dart';
 
-class Course {
-  final String title;
-  final String role; // 'Professor' | 'Student'
-  final DateTime createdAt;
-  final int students; // Número de estudiantes
-  
-  Course({
-    required this.title, 
-    required this.role,
-    DateTime? createdAt,
-    this.students = 0,
-  }) : createdAt = createdAt ?? DateTime.now();
-}
 
 enum SortOption {
   nameAsc,
@@ -26,14 +15,16 @@ enum SortOption {
 }
 
 class HomeController extends GetxController {
-  final List<Course> _allCourses = [];
-  final RxList<Course> courses = <Course>[].obs;
+  final CourseRepository courseRepository;
+  HomeController({required this.courseRepository});
 
-  // Estados de filtros y búsqueda
-  final RxnString activeRoleFilter = RxnString();
-  final RxString searchQuery = ''.obs;
-  final Rx<SortOption> currentSort = SortOption.nameAsc.obs;
-  final RxInt activeFilters = 0.obs;
+  final courses = <Course>[].obs;
+  final _allCourses = <Course>[];
+
+  final activeRoleFilter = RxnString();
+  final searchQuery = ''.obs;
+  final currentSort = SortOption.nameAsc.obs;
+  final activeFilters = 0.obs;
 
   static const String roleProfessor = 'Professor';
   static const String roleStudent = 'Student';
@@ -44,49 +35,23 @@ class HomeController extends GetxController {
     loadCourses();
   }
 
-  // Simulación de carga con más datos
   Future<void> loadCourses() async {
+    final authController = Get.find<AuthController>();
+    final userId = authController.currentUser.value?.id;
+
+    if (userId == null) return;
+
     _allCourses.clear();
-    _allCourses.addAll([
-      Course(
-        title: "Alicia's Course", 
-        role: roleStudent,
-        createdAt: DateTime.now().subtract(const Duration(days: 5)),
-        students: 25,
-      ),
-      Course(
-        title: "UI/UX Design", 
-        role: roleStudent,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        students: 18,
-      ),
-      Course(
-        title: "DATA STRUCTURE II", 
-        role: roleStudent,
-        createdAt: DateTime.now().subtract(const Duration(days: 10)),
-        students: 30,
-      ),
-      Course(
-        title: "Mobile Development", 
-        role: roleProfessor,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        students: 22,
-      ),
-      Course(
-        title: "Flutter Advanced", 
-        role: roleProfessor,
-        createdAt: DateTime.now().subtract(const Duration(days: 7)),
-        students: 15,
-      ),
-      Course(
-        title: "JavaScript Basics", 
-        role: roleStudent,
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        students: 35,
-      ),
-    ]);
+
+    // Traer cursos del estudiante
+    final studentCourses = await courseRepository.getCoursesByStudent(userId);
+    // Traer cursos del profesor
+    final professorCourses = await courseRepository.getCoursesByProfesor(userId);
+
+    _allCourses.addAll([...studentCourses, ...professorCourses]);
     applyFilters();
   }
+
 
   // FUNCIONALIDAD DE BÚSQUEDA
   void setSearchQuery(String q) {
@@ -118,6 +83,11 @@ class HomeController extends GetxController {
     currentSort.value = option;
     applyFilters();
   }
+  void addCourse(Course course) {
+    _allCourses.add(course);
+    applyFilters(); // esto actualiza la lista observable `courses`
+  }
+
 
   String get sortLabel {
     switch (currentSort.value) {

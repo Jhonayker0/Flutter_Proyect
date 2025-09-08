@@ -39,7 +39,7 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                     ),
                     const SizedBox(height: 16),
                     _buildInfoRow('Nombre', controller.course.title),
-                    _buildInfoRow('Descripción', controller.course.description ?? 'Sin descripción'),
+                    _buildInfoRow('Descripción', controller.course.description),
                     _buildInfoRow('Tu rol', controller.course.role),
                     _buildInfoRow('Total de estudiantes', '${controller.course.students}'),
                     _buildInfoRow('Fecha de creación', _formatDate(controller.course.createdAt)),

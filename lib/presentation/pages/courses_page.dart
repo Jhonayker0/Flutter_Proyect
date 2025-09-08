@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/home_controller.dart';
+import '../controllers/home_controller_new.dart';
 
 class CoursesPage extends GetView<HomeController> {
   const CoursesPage({super.key});
 
-  // Mostrar opciones de ordenamiento
   Future<void> _showSortOptions(BuildContext context) async {
     await showModalBottomSheet(
       context: context,
@@ -28,22 +27,21 @@ class CoursesPage extends GetView<HomeController> {
               ('Más estudiantes', SortOption.studentsDesc),
               ('Menos estudiantes', SortOption.studentsAsc),
             ].map((option) => ListTile(
-              title: Text(option.$1),
-              trailing: Obx(() => controller.currentSort.value == option.$2
-                  ? const Icon(Icons.check, color: Colors.blue)
-                  : const SizedBox()),
-              onTap: () {
-                controller.setSortOption(option.$2);
-                Navigator.pop(ctx);
-              },
-            )),
+                  title: Text(option.$1),
+                  trailing: Obx(() => controller.currentSort.value == option.$2
+                      ? const Icon(Icons.check, color: Colors.blue)
+                      : const SizedBox()),
+                  onTap: () {
+                    controller.setSortOption(option.$2);
+                    Navigator.pop(ctx);
+                  },
+                )),
           ],
         ),
       ),
     );
   }
 
-  // Mostrar opciones de filtro
   Future<void> _showFilterOptions(BuildContext context) async {
     await showModalBottomSheet(
       context: context,
@@ -61,7 +59,8 @@ class CoursesPage extends GetView<HomeController> {
             ListTile(
               leading: const Icon(Icons.school),
               title: const Text('Profesor'),
-              trailing: Obx(() => controller.activeRoleFilter.value == HomeController.roleProfessor
+              trailing: Obx(() => controller.activeRoleFilter.value ==
+                      HomeController.roleProfessor
                   ? const Icon(Icons.check, color: Colors.blue)
                   : const SizedBox()),
               onTap: () {
@@ -72,7 +71,8 @@ class CoursesPage extends GetView<HomeController> {
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('Estudiante'),
-              trailing: Obx(() => controller.activeRoleFilter.value == HomeController.roleStudent
+              trailing: Obx(() => controller.activeRoleFilter.value ==
+                      HomeController.roleStudent
                   ? const Icon(Icons.check, color: Colors.blue)
                   : const SizedBox()),
               onTap: () {
@@ -100,12 +100,10 @@ class CoursesPage extends GetView<HomeController> {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Obx(() => Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 10),
-            
-            // Campo de búsqueda
             TextField(
               onChanged: controller.setSearchQuery,
               decoration: InputDecoration(
@@ -117,14 +115,10 @@ class CoursesPage extends GetView<HomeController> {
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
-            
             const SizedBox(height: 20),
-            
-            // Barra de ordenar y filtrar
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Botón Sort
                 GestureDetector(
                   onTap: () => _showSortOptions(context),
                   child: Row(
@@ -137,8 +131,6 @@ class CoursesPage extends GetView<HomeController> {
                     ],
                   ),
                 ),
-                
-                // Botón Filter
                 GestureDetector(
                   onTap: () => _showFilterOptions(context),
                   child: Row(
@@ -169,10 +161,7 @@ class CoursesPage extends GetView<HomeController> {
                 ),
               ],
             ),
-            
             const SizedBox(height: 20),
-            
-            // Título de sección
             const Text(
               'Tus cursos',
               style: TextStyle(
@@ -180,100 +169,96 @@ class CoursesPage extends GetView<HomeController> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
             const SizedBox(height: 16),
-            
-            // Lista de cursos
             Expanded(
-              child: controller.courses.isEmpty
-                  ? const Center(child: Text('No se encontraron cursos'))
-                  : ListView.builder(
-                      itemCount: controller.courses.length,
-                      itemBuilder: (context, index) {
-                        final course = controller.courses[index];
-                        return GestureDetector(
-                          onTap: () {
-                            Get.toNamed('/course-detail', arguments: {'course': course});
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.shade200,
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                // Imagen del curso
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade100,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    Icons.image,
-                                    color: Colors.blue.shade300,
-                                    size: 24,
-                                  ),
-                                ),
-                                
-                                const SizedBox(width: 16),
-                                
-                                // Información del curso
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        course.title,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Rol: ${course.role}',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Estudiantes: ${course.students}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                
-                                // Flecha
-                                Icon(
-                                  Icons.chevron_right,
-                                  color: Colors.grey.shade400,
-                                  size: 24,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
+              child: Obx(() {
+                final courses = controller.courses;
+                if (courses.isEmpty) {
+                  return const Center(child: Text('No se encontraron cursos'));
+                }
+                return ListView.builder(
+                  itemCount: courses.length,
+                  itemBuilder: (context, index) {
+                    final course = courses[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Get.toNamed('/course-detail',
+                            arguments: {'course': course});
                       },
-                    ),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.shade200,
+                              offset: const Offset(0, 2),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.image,
+                                color: Colors.blue.shade300,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    course.title,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Rol: ${course.role}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Estudiantes: ${course.students}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: Colors.grey.shade400,
+                              size: 24,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
             ),
           ],
-        )),
+        ),
       ),
     );
   }

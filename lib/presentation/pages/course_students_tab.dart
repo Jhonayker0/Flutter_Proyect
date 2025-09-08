@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/course_detail_controller.dart';
-import '../../domain/models/student.dart';
+import '../../domain/models/user.dart';
 
 class CourseStudentsTab extends GetView<CourseDetailController> {
   const CourseStudentsTab({super.key});
@@ -14,15 +14,15 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final students = controller.students;
-        
+        final users = controller.students;
+
         return RefreshIndicator(
           onRefresh: controller.loadStudents,
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: students.length + (controller.isProfessor ? 1 : 0),
+            itemCount: users.length + (controller.isProfessor ? 1 : 0),
             itemBuilder: (context, index) {
-              // Si es profesor, mostrar el botón de invitar estudiante primero
+              // Si es profesor, mostrar el botón de invitar usuario primero
               if (controller.isProfessor && index == 0) {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -52,11 +52,11 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
                 );
               }
 
-              // Ajustar índice para los estudiantes
-              final studentIndex = controller.isProfessor ? index - 1 : index;
-              final student = students[studentIndex];
+              // Ajustar índice para los usuarios
+              final userIndex = controller.isProfessor ? index - 1 : index;
+              final user = users[userIndex];
 
-              return _buildStudentCard(student);
+              return _buildUserCard(user);
             },
           ),
         );
@@ -64,18 +64,18 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
     );
   }
 
-  Widget _buildStudentCard(Student student) {
+  Widget _buildUserCard(User user) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: Colors.blue.shade100,
-          backgroundImage: student.profileImage != null 
-              ? NetworkImage(student.profileImage!)
+          backgroundImage: user.imagepathh != null
+              ? NetworkImage(user.imagepathh!)
               : null,
-          child: student.profileImage == null
+          child: user.imagepathh == null
               ? Text(
-                  student.name.split(' ').map((n) => n[0]).take(2).join(),
+                  user.name.split(' ').map((n) => n[0]).take(2).join(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.blue.shade700,
@@ -84,81 +84,13 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
               : null,
         ),
         title: Text(
-          student.name,
+          user.name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(student.email),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Progreso: ${student.progressPercentage.toStringAsFixed(1)}%',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      const SizedBox(height: 2),
-                      LinearProgressIndicator(
-                        value: student.progressPercentage / 100,
-                        backgroundColor: Colors.grey.shade300,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _getProgressColor(student.progressPercentage),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                if (student.averageGrade != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getGradeColor(student.averageGrade!).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      student.averageGrade!.toStringAsFixed(1),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: _getGradeColor(student.averageGrade!),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Actividades: ${student.completedActivities}/${student.totalActivities}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
-            ),
-          ],
-        ),
+        subtitle: Text(user.email),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        isThreeLine: true,
-        onTap: () => controller.viewStudent(student),
+        onTap: () => controller.viewStudent(user),
       ),
     );
-  }
-
-  Color _getProgressColor(double progress) {
-    if (progress >= 80) return Colors.green;
-    if (progress >= 60) return Colors.orange;
-    return Colors.red;
-  }
-
-  Color _getGradeColor(double grade) {
-    if (grade >= 90) return Colors.green;
-    if (grade >= 80) return Colors.blue;
-    if (grade >= 70) return Colors.orange;
-    return Colors.red;
   }
 }
