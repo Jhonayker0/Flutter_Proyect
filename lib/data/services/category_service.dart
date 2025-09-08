@@ -3,50 +3,82 @@ import 'package:sqflite/sqflite.dart';
 class CategoryService {
   final DatabaseService _dbService = DatabaseService();
   // Crear categoría y sus grupos "Grupo 1..G" según capacidad y estudiantes del curso
-  Future<int> postCategory({required String nombre,required String tipo, required int? capacidad, required int cursoId,}) async {
+  Future<int> postCategory({
+    required String nombre,
+    required String tipo,          // 'aleatorio' | 'auto-asignado'
+    required int? capacidad,       // X por grupo
+    required int cursoId,
+  }) async {
     final db = await _dbService.database;
     return await db.transaction<int>((txn) async {
-      // 1) Insertar categoría
-      final categoriaId = await txn.insert(
-        'categoria',
-        {
-          'nombre': nombre,
-          'tipo': tipo,
-          'capacidad': capacidad,
-          'curso_id': cursoId,
-        },
-      );
+      // 1) Crear categoría
+      final categoriaId = await txn.insert('categoria', {
+        'nombre': nombre,
+        'tipo': tipo,
+        'capacidad': capacidad,
+        'curso_id': cursoId,
+      });
 
-      // 2) Contar estudiantes del curso
-      final res = await txn.rawQuery(
-        'SELECT COUNT(*) FROM estudiante_curso WHERE curso_id = ?',
+      // 2) Leer estudiantes del curso
+      final rows = await txn.rawQuery(
+        'SELECT estudiante_id FROM estudiante_curso WHERE curso_id = ?',
         [cursoId],
       );
-      final int n = Sqflite.firstIntValue(res) ?? 0;
+      final students = rows.map((m) => (m['estudiante_id'] as num).toInt()).toList();
 
-      // 3) Decidir cuántos grupos crear (al menos 1 si se desea uno inicial)
-      final int x = (capacidad ?? 0) <= 0 ? 0 : capacidad!;
+      // 3) Crear grupos según capacidad
+      final x = (capacidad ?? 0) <= 0 ? 0 : capacidad!;
+      final n = students.length;
       int g = 1;
       if (x > 0 && n > 0) {
-        // G = ceil(n/x) = (n + x - 1) ~/ x
+        // ceil(n/x) sin ceil nativo
         g = (n + x - 1) ~/ x;
       }
 
-      // 4) Crear grupos "Grupo 1..G" (con capacidad heredada opcionalmente)
-      final batch = txn.batch();
+      // Crear y guardar ids de grupos
+      final groupIds = <int>[];
       for (int i = 1; i <= g; i++) {
-        batch.insert('grupo', {
+        final gid = await txn.insert('grupo', {
           'categoria_id': categoriaId,
           'nombre': 'Grupo $i',
-          'capacidad': capacidad, // se puede null si se prefiere heredar
+          'capacidad': capacidad,
         });
+        groupIds.add(gid);
       }
-      await batch.commit(noResult: true);
+
+      // 4) Si es aleatorio, asignar estudiantes ahora
+      if (tipo == 'aleatorio' && n > 0 && groupIds.isNotEmpty) {
+        students.shuffle(); // barajar en memoria
+        // Round-robin con límite de X por grupo
+        final counters = List<int>.filled(groupIds.length, 0);
+        final batch = txn.batch();
+        int gi = 0;
+        for (final sid in students) {
+          // Si hay capacidad X, saltar grupos llenos
+          int attempts = 0;
+          while (attempts < groupIds.length &&
+              x > 0 &&
+              counters[gi] >= x) {
+            gi = (gi + 1) % groupIds.length;
+            attempts++;
+          }
+          // Insertar si el grupo elegido no está lleno
+          if (x == 0 || counters[gi] < x) {
+            batch.insert('categoria_estudiante', {
+              'grupo_id': groupIds[gi],
+              'estudiante_id': sid,
+            });
+            counters[gi] += 1;
+            gi = (gi + 1) % groupIds.length;
+          }
+        }
+        await batch.commit(noResult: true);
+      }
+
       return categoriaId;
     });
   }
-
-  // Listado de categorías (básico)
+    // Listado de categorías (básico)
   Future<List<Map<String, Object?>>> getAllCategories() async {
     // Puedes enriquecer con conteos por JOIN/COUNT si lo necesitas
     final db = await _dbService.database;

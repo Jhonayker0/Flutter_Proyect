@@ -1,7 +1,7 @@
 // presentation/controllers/create_category_controller.dart
 import 'package:flutter_application/domain/models/category.dart';
 import 'package:flutter_application/domain/use_cases/create_category_case.dart';
-import 'package:flutter_application/routes.dart';
+import 'package:flutter_application/presentation/controllers/view_categories_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
@@ -51,7 +51,11 @@ class CreateCategoryController extends GetxController {
         courseId: courseId,
       );
       await createCategoryUseCase(category);
-      Get.back();
+
+      if (Get.isRegistered<CategoryGroupsController>()) {
+        Get.find<CategoryGroupsController>().refreshAll();
+      }
+      Get.back(result: true);
       Get.snackbar('Exito', 'Categoría creada');
     } catch (e) {
         Get.snackbar('Error', 'No se pudo crear el curso $e',
