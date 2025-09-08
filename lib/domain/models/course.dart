@@ -4,7 +4,7 @@ class Course {
   final String description;
   final int profesorId;
   final String role;      // "Student" o "Professor"
-  final int students;     // número de estudiantes
+  //final int students;     // número de estudiantes
   final DateTime createdAt;
 
   Course({
@@ -13,7 +13,7 @@ class Course {
     required this.description,
     required this.profesorId,
     required this.role,
-    required this.students,
+   // required this.students,
     required this.createdAt,
   });
 
@@ -24,10 +24,10 @@ class Course {
         ? 'Profesor'
         : 'Estudiante';
 
-    final students = map['students'] != null
+  /*  final students = map['students'] != null
         ? map['students'] as int
         : 0; // si no viene, asumir 0
-
+*/
     final createdAtStr = map['created_at'] as String?;
     final createdAt = createdAtStr != null
         ? DateTime.parse(createdAtStr)
@@ -39,7 +39,7 @@ class Course {
       description: map['descripcion'] as String? ?? '',
       profesorId: profesorId,
       role: role,
-      students: students,
+     // students: students,
       createdAt: createdAt,
     );
   }

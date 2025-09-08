@@ -39,8 +39,7 @@ class CreateCourseController extends GetxController {
         title: nameCtrl.text.trim(),
         description: descCtrl.text.trim(),
         profesorId: userId,
-        role: 'Professor',   // rol del creador
-        students: 0,         // al crear no hay estudiantes
+        role: 'Professor',   // rol del creador  
         createdAt: DateTime.now(),
       );
       await createCourseUseCase(course);

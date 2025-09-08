@@ -25,8 +25,8 @@ class CoursesPage extends GetView<HomeController> {
               ('Name Z-A', SortOption.nameDesc),
               ('Newest First', SortOption.dateDesc),
               ('Oldest First', SortOption.dateAsc),
-              ('More Students', SortOption.studentsDesc),
-              ('Less Students', SortOption.studentsAsc),
+             // ('More Students', SortOption.studentsDesc),
+              //('Less Students', SortOption.studentsAsc),
             ].map((option) => ListTile(
               title: Text(option.$1),
               trailing: Obx(() => controller.currentSort.value == option.$2
@@ -245,7 +245,7 @@ class CoursesPage extends GetView<HomeController> {
                                       ),
                                     ),
                                     Text(
-                                      'Students: ${course.students}',
+                                      'Students: 0',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade500,

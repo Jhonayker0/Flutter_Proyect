@@ -10,8 +10,8 @@ enum SortOption {
   nameDesc,
   dateAsc,
   dateDesc,
-  studentsAsc,
-  studentsDesc,
+  //studentsAsc,
+  //studentsDesc,
 }
 
 class HomeController extends GetxController {
@@ -99,10 +99,10 @@ class HomeController extends GetxController {
         return 'Oldest First';
       case SortOption.dateDesc:
         return 'Newest First';
-      case SortOption.studentsAsc:
+     /* case SortOption.studentsAsc:
         return 'Less Students';
       case SortOption.studentsDesc:
-        return 'More Students';
+        return 'More Students';*/
     }
   }
 
@@ -120,12 +120,12 @@ class HomeController extends GetxController {
       case SortOption.dateDesc:
         courses.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         break;
-      case SortOption.studentsAsc:
+      /*case SortOption.studentsAsc:
         courses.sort((a, b) => a.students.compareTo(b.students));
         break;
       case SortOption.studentsDesc:
         courses.sort((a, b) => b.students.compareTo(a.students));
-        break;
+        break;*/
     }
     return courses;
   }
