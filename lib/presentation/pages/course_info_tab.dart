@@ -41,7 +41,7 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                     _buildInfoRow('Nombre', controller.course.title),
                     _buildInfoRow('Descripción', controller.course.description),
                     _buildInfoRow('Tu rol', controller.course.role),
-                    _buildInfoRow('Total de estudiantes', '${controller.studentCount.value}'),
+                    Obx(() =>_buildInfoRow('Total de estudiantes', '${controller.studentCount.value}')),
                     _buildInfoRow('Fecha de creación', _formatDate(controller.course.createdAt)),
                   ],
                 ),
@@ -85,7 +85,7 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                         ),
                         _buildStatRow(
                           'Estudiantes inscritos',
-                          '${controller.students.length}',
+                          '${controller.studentCount.value}',
                           Icons.people,
                           Colors.green,
                         ),
