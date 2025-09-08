@@ -1,6 +1,6 @@
-import 'package:flutter_application/data/services/course_service.dart';
 import 'package:flutter_application/domain/models/course.dart';
 import 'package:flutter_application/domain/models/user.dart';
+import 'package:flutter_application/domain/repositories/course_repository.dart';
 import 'package:get/get.dart';
 import '../../domain/models/activity.dart';
 import '../controllers/home_controller_new.dart';
@@ -8,12 +8,12 @@ import '../controllers/home_controller_new.dart';
 class CourseDetailController extends GetxController {
   final RxInt currentTabIndex = 0.obs;
   final RxList<Activity> activities = <Activity>[].obs;
-  final CourseService courseService = CourseService();
   final RxList<User> students = <User>[].obs;
-
   final RxBool isLoading = false.obs;
-  
   late Course course;
+
+  final CourseRepository repo;
+  CourseDetailController({required this.repo});
   String get userRole => course.role;
   bool get isProfessor => userRole == HomeController.roleProfessor;
 
@@ -60,7 +60,6 @@ class CourseDetailController extends GetxController {
   Future<void> loadActivities() async {
     // Simular datos de actividades
     await Future.delayed(const Duration(milliseconds: 500));
-    
     final mockActivities = [
       Activity(
         id: 1,
@@ -91,15 +90,13 @@ class CourseDetailController extends GetxController {
         isCompleted: false,
       ),
     ];
-
     activities.assignAll(mockActivities);
   }
 
   Future<void> loadStudents() async {
     students.clear(); // RxList<User>
-    final data = await courseService.getUsersByCourse(course.id!);
-
-    students.assignAll(data.map((r) => User(
+    print(course.id);
+    students.assignAll((await repo.getUsersByCourse(course.id!)).map((r) => User(
       id: r['id'] as int,
       name: r['nombre'] as String,
       email: r['correo'] as String,

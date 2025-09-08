@@ -21,8 +21,8 @@ class Course {
   factory Course.fromMap(Map<String, dynamic> map, {int? currentUserId}) {
     final profesorId = map['profesor_id'] as int;
     final role = (currentUserId != null && currentUserId == profesorId)
-        ? 'Professor'
-        : 'Student';
+        ? 'Profesor'
+        : 'Estudiante';
 
     final students = map['students'] != null
         ? map['students'] as int

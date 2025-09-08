@@ -14,4 +14,5 @@ abstract class CourseRepository {
   Future<List<Course>> getCoursesByProfesor(int userId);
 
   Future<List<Course>> getCoursesByStudent(int userId);
+  Future<List<Map<String, dynamic>>>  getUsersByCourse(int courseId);
 }

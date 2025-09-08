@@ -57,7 +57,7 @@ class CreateCourseController extends GetxController {
       descCtrl.clear();
 
       final  homeController = Get.find<HomeController>();
-      homeController.addCourse(course); 
+      homeController.loadCourses(); 
 
       Get.offNamed(Routes.home);
       

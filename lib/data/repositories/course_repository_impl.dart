@@ -48,4 +48,9 @@ class CourseRepositoryImpl implements CourseRepository {
     final data = await service.getCoursesByProfesor(profesorId);
     return data.map((map) => Course.fromMap(map, currentUserId: profesorId)).toList();
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> getUsersByCourse(int courseId) async {
+    return await service.getUsersByCourse(courseId);
+  }
 }

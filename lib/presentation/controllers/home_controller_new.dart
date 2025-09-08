@@ -26,8 +26,8 @@ class HomeController extends GetxController {
   final currentSort = SortOption.nameAsc.obs;
   final activeFilters = 0.obs;
 
-  static const String roleProfessor = 'Professor';
-  static const String roleStudent = 'Student';
+  static const String roleProfessor = 'Profesor';
+  static const String roleStudent = 'Estudiante';
 
   @override
   void onInit() {
