@@ -1,13 +1,15 @@
 import 'package:flutter_application/data/datasources/database.dart';
 import 'package:sqflite/sqflite.dart';
+
 class CategoryService {
   final DatabaseService _dbService = DatabaseService();
   // Crear categoría y sus grupos "Grupo 1..G" según capacidad y estudiantes del curso
   Future<int> postCategory({
     required String nombre,
-    required String tipo,          // 'aleatorio' | 'auto-asignado'
-    required int? capacidad,       // X por grupo
+    required String tipo, // 'aleatorio' | 'auto-asignado'
+    required int? capacidad, // X por grupo
     required int cursoId,
+    required String? descripcion,
   }) async {
     final db = await _dbService.database;
     return await db.transaction<int>((txn) async {
@@ -15,6 +17,7 @@ class CategoryService {
       final categoriaId = await txn.insert('categoria', {
         'nombre': nombre,
         'tipo': tipo,
+        'descripcion': descripcion,
         'capacidad': capacidad,
         'curso_id': cursoId,
       });
@@ -24,7 +27,9 @@ class CategoryService {
         'SELECT estudiante_id FROM estudiante_curso WHERE curso_id = ?',
         [cursoId],
       );
-      final students = rows.map((m) => (m['estudiante_id'] as num).toInt()).toList();
+      final students = rows
+          .map((m) => (m['estudiante_id'] as num).toInt())
+          .toList();
 
       // 3) Crear grupos según capacidad
       final x = (capacidad ?? 0) <= 0 ? 0 : capacidad!;
@@ -56,9 +61,7 @@ class CategoryService {
         for (final sid in students) {
           // Si hay capacidad X, saltar grupos llenos
           int attempts = 0;
-          while (attempts < groupIds.length &&
-              x > 0 &&
-              counters[gi] >= x) {
+          while (attempts < groupIds.length && x > 0 && counters[gi] >= x) {
             gi = (gi + 1) % groupIds.length;
             attempts++;
           }
@@ -78,13 +81,17 @@ class CategoryService {
       return categoriaId;
     });
   }
-    // Listado de categorías (básico)
-  Future<List<Map<String, Object?>>> getAllCategories() async {
-    // Puedes enriquecer con conteos por JOIN/COUNT si lo necesitas
-    final db = await _dbService.database;
-    return await db.query('categoria', orderBy: 'id DESC');
-  }
 
+  // Listado de categorías (básico)
+  Future<List<Map<String, Object?>>> getAllCategoriesByCourse(int courseId) async {
+    final db = await _dbService.database;
+    return await db.query(
+      'categoria',
+      where: 'curso_id = ?',
+      whereArgs: [courseId],
+      orderBy: 'id DESC',
+    );
+  }
   // Obtener una categoría por id
   Future<Map<String, Object?>?> getCategoryById(int id) async {
     final db = await _dbService.database;
@@ -107,11 +114,7 @@ class CategoryService {
     final db = await _dbService.database;
     return await db.update(
       'categoria',
-      {
-        'nombre': nombre,
-        'tipo': tipo,
-        'capacidad': capacidad,
-      },
+      {'nombre': nombre, 'tipo': tipo, 'capacidad': capacidad},
       where: 'id = ?',
       whereArgs: [id],
       conflictAlgorithm: ConflictAlgorithm.abort,
@@ -148,15 +151,20 @@ class CategoryService {
   }
 
   // Listar grupos de una categoría con conteo de miembros
-  Future<List<Map<String, Object?>>> getGroupsByCategory(int categoriaId) async {
+  Future<List<Map<String, Object?>>> getGroupsByCategory(
+    int categoriaId,
+  ) async {
     final db = await _dbService.database;
-    return await db.rawQuery('''
+    return await db.rawQuery(
+      '''
       SELECT g.id, g.nombre, g.capacidad,
              (SELECT COUNT(*) FROM categoria_estudiante ce WHERE ce.grupo_id = g.id) AS miembros
       FROM grupo g
       WHERE g.categoria_id = ?
       ORDER BY g.id
-    ''', [categoriaId]);
+    ''',
+      [categoriaId],
+    );
   }
 
   // Ingresar estudiante a grupo por id, validando capacidad y unicidad en la categoría
@@ -167,14 +175,17 @@ class CategoryService {
     final db = await _dbService.database;
     return await db.transaction<int>((txn) async {
       // 1) Resolver categoría y capacidad efectiva
-      final gRows = await txn.rawQuery('''
+      final gRows = await txn.rawQuery(
+        '''
         SELECT g.categoria_id AS categoria_id,
                COALESCE(g.capacidad, c.capacidad) AS cap
         FROM grupo g
         JOIN categoria c ON c.id = g.categoria_id
         WHERE g.id = ?
         LIMIT 1
-      ''', [grupoId]);
+      ''',
+        [grupoId],
+      );
       if (gRows.isEmpty) {
         throw Exception('Grupo inexistente');
       }
@@ -188,7 +199,9 @@ class CategoryService {
       );
       final alreadyInCategory = (Sqflite.firstIntValue(existsAny) ?? 0) > 0;
       if (alreadyInCategory) {
-        throw Exception('El estudiante ya pertenece a un grupo de esta categoría');
+        throw Exception(
+          'El estudiante ya pertenece a un grupo de esta categoría',
+        );
       }
 
       // 3) Validar capacidad del grupo (si definida)
@@ -204,16 +217,42 @@ class CategoryService {
       }
 
       // 4) Insertar membresía (respetando UNIQUE si existe)
-      final id = await txn.insert(
-        'categoria_estudiante',
-        {
-          'grupo_id': grupoId,
-          'categoria_id': categoriaId,
-          'estudiante_id': estudianteId,
-        },
-        conflictAlgorithm: ConflictAlgorithm.abort,
-      );
+      final id = await txn.insert('categoria_estudiante', {
+        'grupo_id': grupoId,
+        'categoria_id': categoriaId,
+        'estudiante_id': estudianteId,
+      }, conflictAlgorithm: ConflictAlgorithm.abort);
       return id;
+    });
+  }
+
+  Future<List<Map<String, Object?>>> getMembersByGroupRaw(
+    int groupId,
+    int categoryId,
+  ) async {
+    final db = await _dbService.database;
+    return db.rawQuery(
+      '''
+      SELECT e.id      AS id,
+            e.nombre  AS name,
+            e.correo  AS email
+      FROM categoria_estudiante ce
+      JOIN persona e ON e.id = ce.estudiante_id
+      JOIN grupo g ON ce.grupo_id = g.id
+      WHERE ce.grupo_id = ? 
+        AND g.categoria_id = ?
+      ORDER BY e.nombre COLLATE NOCASE
+    ''',
+      [groupId, categoryId],
+    );
+  }
+  
+  Future<int> joinGroup(int studentId, int groupId) async {
+    final db = await _dbService.database;
+    print("llegue");
+    return await db.insert('categoria_estudiante', {
+      'grupo_id': groupId,
+      'estudiante_id': studentId,
     });
   }
 }

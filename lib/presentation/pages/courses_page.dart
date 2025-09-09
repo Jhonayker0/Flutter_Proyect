@@ -183,7 +183,7 @@ class CoursesPage extends GetView<HomeController> {
                     return GestureDetector(
                       onTap: () {
                         Get.toNamed('/course-detail',
-                            arguments: {'course': course});
+                            arguments: {'course': course, 'role': course.role});
                       },
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 12),

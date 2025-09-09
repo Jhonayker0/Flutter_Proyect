@@ -128,7 +128,7 @@ class CourseDetailController extends GetxController {
   }
 
   void viewActivity(Activity activity) {
-    Get.toNamed(Routes.prueba);
+    Get.toNamed('/activity-detail', arguments: {'activity': activity});
   }
 
   void viewStudent(User student) {

@@ -1,22 +1,25 @@
-// presentation/pages/category_groups_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_application/presentation/controllers/view_categories_controller.dart';
 import 'package:get/get.dart';
 
-class CategoryGroupsPage extends GetView<CategoryGroupsController> {
-  const CategoryGroupsPage({super.key});
+// Asumo que usas los mismos ViewModels y Controller pero adaptados para estudiantes
+class StudentGroupsPage extends GetView<CategoryGroupsController> {
+  const StudentGroupsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Categorías y Grupos'), automaticallyImplyLeading: false),
+      appBar: AppBar(
+        title: const Text('Cursos y Grupos'),
+        automaticallyImplyLeading: false,
+      ),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
         final cats = controller.categories;
         if (cats.isEmpty) {
-          return const Center(child: Text('No hay categorías'));
+          return const Center(child: Text('No hay categorías disponibles'));
         }
         return RefreshIndicator(
           onRefresh: controller.refreshAll,
@@ -31,53 +34,10 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
               return Card(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: ExpansionTile(
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          cat.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      PopupMenuButton<String>(
-                        tooltip: 'Opciones',
-                        onSelected: (value) async {
-                          switch (value) {
-                            case 'edit':
-                              final ok = await Get.toNamed(('/edit-category/${cat.id}'),
-                              );
-                              if (ok == true) {
-                                await controller.refreshAll();
-                              }
-                              break;
-                            case 'delete':
-                              final confirm = await _confirmDeleteCategory(context, cat.name);
-                              if (confirm == true) {
-                                await controller.deleteCategory(cat.id);
-                                await controller.refreshAll();
-                              }
-                              break;
-                          }
-                        },
-                        itemBuilder: (context) => const [
-                          PopupMenuItem<String>(
-                            value: 'edit',
-                            child: ListTile(
-                              leading: Icon(Icons.edit),
-                              title: Text('Editar categoría'),
-                            ),
-                          ),
-                          PopupMenuItem<String>(
-                            value: 'delete',
-                            child: ListTile(
-                              leading: Icon(Icons.delete, color: Colors.red),
-                              title: Text('Eliminar categoría'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  title: Text(
+                    cat.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text('Tipo: ${cat.type} • Capacidad: ${cat.capacity ?? '-'}'),
                   onExpansionChanged: (expanded) {
@@ -100,6 +60,7 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
                           leading: const Icon(Icons.groups),
                           title: Text(g.name),
                           subtitle: Text('Miembros: ${g.members} • Capacidad: ${g.capacity ?? '-'}'),
+                          trailing: _buildJoinButton(context, g, cat.id),
                           onTap: () => _showGroupMembersDialog(context, g.id, g.name, cat.id),
                         ),
                       ),
@@ -114,7 +75,42 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
     );
   }
 
+  /// Botón o mensaje según estado del usuario
+  Widget _buildJoinButton(BuildContext context, GroupVM g, int categoriaId) {
+    final isFull = g.capacity != null && g.members >= g.capacity!;
+    final userGroupId = controller.userGroupByCategory[categoriaId];
 
+    final yaEnEsteGrupo = userGroupId == g.id;
+    final yaEnOtroGrupo = userGroupId != null && userGroupId != g.id;
+
+    if (yaEnEsteGrupo) {
+      return const Text("Ya estás en este grupo",
+          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold));
+    }
+
+    if (yaEnOtroGrupo) {
+      return const Text("Ya estás en un grupo",
+          style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold));
+    }
+
+    return ElevatedButton(
+      onPressed: isFull
+          ? null
+          : () async {
+              final confirm = await _confirmJoinGroup(context, g.name);
+              if (confirm == true) {
+                await controller.joinGroup(g.id);
+              }
+            },
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Text(isFull ? 'Lleno' : 'Inscribirse'),
+    );
+  }
+
+  /// Muestra los miembros de un grupo
   void _showGroupMembersDialog(BuildContext context, int groupId, String groupName, int categoriaId) {
     showDialog<void>(
       context: context,
@@ -169,16 +165,16 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
     );
   }
 
-
-  Future<bool?> _confirmDeleteCategory(BuildContext context, String name) {
+  /// Confirmar inscripción
+  Future<bool?> _confirmJoinGroup(BuildContext context, String name) {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Eliminar categoría'),
-        content: Text('¿Eliminar la categoría "$name"? Esta acción no se puede deshacer.'),
+        title: const Text('Inscribirse en grupo'),
+        content: Text('¿Quieres inscribirte en el grupo "$name"?'),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Eliminar')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Inscribirse')),
         ],
       ),
     );

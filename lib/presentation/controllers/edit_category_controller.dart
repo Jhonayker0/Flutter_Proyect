@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/presentation/controllers/view_categories_controller.dart';
 import 'package:get/get.dart';
 import '../../domain/models/category.dart';
 import '../../domain/use_cases/update_category_use_case.dart';
@@ -79,8 +80,13 @@ class EditCategoryController extends GetxController {
       );
       
       await updateCategoryUseCase(updatedCategory);
-      Get.snackbar('Éxito', 'Categoría actualizada');
+
+     if (Get.isRegistered<CategoryGroupsController>()) {
+        Get.find<CategoryGroupsController>().refreshAll();
+      }
       Get.back();
+      Get.snackbar('Éxito', 'Categoría actualizada');
+
     } catch (e) {
       error.value = 'No se pudo actualizar la categoría';
     } finally {
