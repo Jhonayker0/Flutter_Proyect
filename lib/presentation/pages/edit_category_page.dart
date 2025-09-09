@@ -52,11 +52,11 @@ class EditCategoryPage extends GetView<EditCategoryController> {
                   initialValue: controller.type.value,
                   items: const [
                     DropdownMenuItem(
-                      value: 'Auto-asignado',
+                      value: 'auto-asignado',
                       child: Text('Auto-asignado'),
                     ),
                     DropdownMenuItem(
-                      value: 'Aleatorio',
+                      value: 'aleatorio',
                       child: Text('Aleatorio'),
                     ),
                   ],

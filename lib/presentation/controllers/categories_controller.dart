@@ -8,7 +8,7 @@ import '../../routes.dart';
 class CategoriesController extends GetxController {
   final GetCategories getCategoriesUseCase;
   final DeleteCategory deleteCategoryUseCase;
-
+  final courseid = 0;
   CategoriesController({
     required this.getCategoriesUseCase,
     required this.deleteCategoryUseCase,
@@ -29,7 +29,7 @@ class CategoriesController extends GetxController {
     error.value = null;
 
     try {
-      final result = await getCategoriesUseCase();
+      final result = await getCategoriesUseCase(courseid);
       categories.assignAll(result);
     } catch (e) {
       error.value = 'Error al cargar categorías';

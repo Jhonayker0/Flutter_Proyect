@@ -1,4 +1,5 @@
 import 'package:flutter_application/data/repositories/category_repository_impl.dart';
+import 'package:flutter_application/domain/use_cases/delete_category_use_case.dart';
 import 'package:get/get.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/models/category.dart';        
@@ -20,6 +21,7 @@ class CategoryVM {
     required this.courseId,
   });
 
+
   factory CategoryVM.fromDomain(Category c) => CategoryVM(
         id: c.id!,              
         name: c.name,
@@ -28,7 +30,12 @@ class CategoryVM {
         courseId: c.courseId,
       );
 }
-
+class MemberVM {
+  final int id;
+  final String name;
+  final String? email;
+  MemberVM({required this.id, required this.name, this.email});
+}
 class GroupVM {
   final int id;
   final String name;
@@ -51,10 +58,11 @@ class GroupVM {
 }
 
 class CategoryGroupsController extends GetxController {
-  CategoryGroupsController({required this.repo});
+  final int courseId;
+  final String role;
+  CategoryGroupsController({required this.repo, required this.deleteCategoryUseCase, required this.courseId, required this.role});
   final CategoryRepository repo;
-
-
+  final DeleteCategory deleteCategoryUseCase;
   final categories = <CategoryVM>[].obs;
   final groupsByCat = <int, List<GroupVM>>{}.obs;
   final isLoading = false.obs;
@@ -71,7 +79,7 @@ class CategoryGroupsController extends GetxController {
     isLoading.value = true;
     error.value = null;
     try {
-      final list = await repo.getAll();                 // List<Category>
+      final list = await repo.getAll(courseId);                 // List<Category>
       categories.assignAll(list.map(CategoryVM.fromDomain).toList());
       groupsByCat.clear();                              // limpiar cache de grupos
     } catch (e) {
@@ -99,4 +107,27 @@ class CategoryGroupsController extends GetxController {
     groupsByCat.clear();
     await _loadCategories();
   }
+  
+  Future<List<MemberVM>> getMembersByGroup(int groupId, int categoriaId) async {
+
+    final rows = await repo.getMembersByGroup(groupId, categoriaId); // devuelve List<Map> o List<Member>
+    return rows.map((m) => MemberVM(
+      id: m.id,
+      name: m.name,
+      email: m.email,
+    )).toList();
+  }
+
+  Future<void> deleteCategory(int categoryId) async {
+  try {
+ 
+    await deleteCategoryUseCase(categoryId);
+
+    Get.snackbar('Categoría eliminada', 'Se eliminó correctamente', snackPosition: SnackPosition.BOTTOM);
+  } catch (e) {
+    
+    Get.snackbar('Error', 'No se pudo eliminar: $e', snackPosition: SnackPosition.BOTTOM);
+    rethrow; 
+  }
+}
 }

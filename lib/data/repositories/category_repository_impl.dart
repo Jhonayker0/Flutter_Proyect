@@ -30,25 +30,22 @@ class CategoryRepositoryImpl implements CategoryRepository {
     );
   }
 
-  // Dominio -> columnas DB (por si necesitas transformar en algún punto)
 
-
-  // Crea la categoría y genera los grupos "Grupo N" dentro de la transacción del servicio.
-  // Devuelve el id creado (recomendado para encadenar lógica).
   @override
   Future<int> create(Category category) async {
     final id = await service.postCategory(
       nombre: category.name,
       tipo: _normalizeType(category.type),
+      descripcion: category.description,
       capacidad: category.capacity,
-      cursoId: category.courseId, // requiere que Category tenga courseId
+      cursoId: category.courseId, 
     );
     return id;
   }
 
   @override
-  Future<List<Category>> getAll() async {
-    final rows = await service.getAllCategories();
+  Future<List<Category>> getAll(int courseId) async {
+    final rows = await service.getAllCategoriesByCourse(courseId);
     return rows.map(_fromDb).toList();
   }
 
@@ -100,6 +97,16 @@ class CategoryRepositoryImpl implements CategoryRepository {
       estudianteId: studentId,
     );
   }
+  
+  @override
+  Future<List<Member>> getMembersByGroup(int groupId, int categoryId) async {
+    final rows = await service.getMembersByGroupRaw(groupId, categoryId);
+    return rows.map((m) => Member(
+      id: (m['id'] as num).toInt(),
+      name: (m['name'] as String?) ?? '',
+      email: m['email'] as String?,
+    )).toList();
+  }
 }
 
 // Modelo auxiliar para la UI de grupos
@@ -114,4 +121,5 @@ class GroupSummary {
     this.capacity,
     required this.members,
   });
+  
 }

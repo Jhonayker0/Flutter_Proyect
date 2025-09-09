@@ -14,7 +14,6 @@ class DatabaseService {
   Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'app.db');
-    print( dbPath);
     return await openDatabase(
       path,
       version: 1,
@@ -69,6 +68,7 @@ class DatabaseService {
           CREATE TABLE categoria (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nombre TEXT NOT NULL,
+            descripcion TEXT,
             tipo TEXT NOT NULL CHECK (tipo IN ('aleatorio', 'auto-asignado')),
             capacidad INTEGER,
             curso_id INTEGER NOT NULL,
@@ -89,7 +89,7 @@ class DatabaseService {
         await db.execute('''
           CREATE TABLE categoria_estudiante (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            grupo_id INTEGER NOT NULL,
+            grupo_id INTEGER NOT NULL,            
             estudiante_id INTEGER NOT NULL,
             FOREIGN KEY (grupo_id) REFERENCES grupo(id),
             FOREIGN KEY (estudiante_id) REFERENCES persona(id)

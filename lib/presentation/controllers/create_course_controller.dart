@@ -42,23 +42,31 @@ class CreateCourseController extends GetxController {
         role: 'Professor',   // rol del creador  
         createdAt: DateTime.now(),
       );
-      await createCourseUseCase(course);
-      Get.snackbar(
-        'Éxito',
-        'Curso creado correctamente',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
-      );
+      final res =await createCourseUseCase(course);
+      switch (res){
+        case Ok():            
+          Get.snackbar(
+            'Éxito',
+            'Curso creado correctamente',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 2),
+          );
+          
+          nameCtrl.clear();
+          descCtrl.clear();
+
+          final  homeController = Get.find<HomeController>();
+          homeController.loadCourses(); 
+
+          Get.offNamed(Routes.home);
+          break;
+        case Err(message: final m):
+          Get.snackbar('Error', 'No se pudo crear el curso $m',
+          backgroundColor: Colors.red, colorText: Colors.white);
       
-      nameCtrl.clear();
-      descCtrl.clear();
-
-      final  homeController = Get.find<HomeController>();
-      homeController.loadCourses(); 
-
-      Get.offNamed(Routes.home);
+      }
       
 
     } catch (e) {
