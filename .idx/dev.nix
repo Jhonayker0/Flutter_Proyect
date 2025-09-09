@@ -29,7 +29,7 @@
           "run"
           "--machine"
           "-d"
-          "android"
+          "pixel_2_api_34"
           "-d"
           "localhost:5555"
         ];

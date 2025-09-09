@@ -132,7 +132,10 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
       floatingActionButton: controller.role == 'Profesor'
           ? FloatingActionButton(
               onPressed: () async {
-                final result = await Get.toNamed('/create-category');
+                final result = await Get.toNamed(
+                  '/create-category',
+                  arguments: {'courseId': controller.courseId},
+                );
                 if (result == true) {
                   controller.refreshAll();
                 }
