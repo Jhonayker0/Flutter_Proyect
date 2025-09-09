@@ -7,7 +7,8 @@ class Activity {
   final DateTime createdAt;
   final bool isCompleted;
   final double? grade;
-  final int courseId;
+  final int
+  categoryId; // Cambiado de courseId a categoryId para coincidir con BD
 
   Activity({
     this.id,
@@ -15,7 +16,7 @@ class Activity {
     required this.description,
     required this.type,
     required this.dueDate,
-    required this.courseId,
+    required this.categoryId, // Cambiado
     DateTime? createdAt,
     this.isCompleted = false,
     this.grade,
@@ -30,7 +31,7 @@ class Activity {
     DateTime? createdAt,
     bool? isCompleted,
     double? grade,
-    int? courseId,
+    int? categoryId, // Cambiado
   }) {
     return Activity(
       id: id ?? this.id,
@@ -41,7 +42,7 @@ class Activity {
       createdAt: createdAt ?? this.createdAt,
       isCompleted: isCompleted ?? this.isCompleted,
       grade: grade ?? this.grade,
-      courseId: courseId ?? this.courseId,
+      categoryId: categoryId ?? this.categoryId, // Cambiado
     );
   }
 
@@ -55,7 +56,7 @@ class Activity {
       'createdAt': createdAt.toIso8601String(),
       'isCompleted': isCompleted,
       'grade': grade,
-      'courseId': courseId,
+      'categoryId': categoryId, // Cambiado
     };
   }
 
@@ -69,7 +70,7 @@ class Activity {
       createdAt: DateTime.parse(json['createdAt']),
       isCompleted: json['isCompleted'] ?? false,
       grade: json['grade']?.toDouble(),
-      courseId: json['courseId'],
+      categoryId: json['categoryId'], // Cambiado
     );
   }
 }

@@ -10,6 +10,11 @@ class CreateActivityBinding extends Bindings {
     final service = ActivityService();
     final repo = ActivityRepositoryImpl(service);
     final useCase = CreateActivity(repo);
-    Get.put(CreateActivityController(createActivityUC: useCase));
+    Get.put(
+      CreateActivityController(
+        createActivityUC: useCase,
+        activityRepository: repo,
+      ),
+    );
   }
 }

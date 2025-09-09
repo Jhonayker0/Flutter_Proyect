@@ -1,7 +1,7 @@
 import 'package:flutter_application/domain/models/course.dart';
 import 'package:flutter_application/domain/models/user.dart';
 import 'package:flutter_application/domain/repositories/course_repository.dart';
-import 'package:flutter_application/routes.dart';
+import 'package:flutter_application/domain/repositories/activity_repository.dart';
 import 'package:get/get.dart';
 import '../../domain/models/activity.dart';
 import '../controllers/home_controller_new.dart';
@@ -14,8 +14,9 @@ class CourseDetailController extends GetxController {
   late Course course;
   final RxInt studentCount = 0.obs;
   final CourseRepository repo;
-  CourseDetailController({required this.repo});
-  
+  final ActivityRepository activityRepo;
+  CourseDetailController({required this.repo, required this.activityRepo});
+
   String get userRole => course.role;
   bool get isProfessor => userRole == HomeController.roleProfessor;
 
@@ -52,69 +53,77 @@ class CourseDetailController extends GetxController {
   Future<void> loadCourseData() async {
     isLoading.value = true;
     try {
-      await Future.wait([
-        loadActivities(),
-        loadStudents(),
-      ]);
+      await Future.wait([loadActivities(), loadStudents()]);
     } finally {
       isLoading.value = false;
     }
   }
 
   Future<void> loadActivities() async {
-    // Simular datos de actividades
-    await Future.delayed(const Duration(milliseconds: 500));
-    final mockActivities = [
-      Activity(
-        id: 1,
-        title: 'Tarea 1: Fundamentos',
-        description: 'Completar los ejercicios del capítulo 1',
-        type: 'Tarea',
-        courseId: course.id!,
-        dueDate: DateTime.now().add(const Duration(days: 7)),
-        isCompleted: false,
-      ),
-      Activity(
-        id: 2,
-        title: 'Quiz 1: Conceptos básicos',
-        description: 'Evaluación de conceptos fundamentales',
-        type: 'Examen',
-        courseId: course.id!,
-        dueDate: DateTime.now().add(const Duration(days: 3)),
-        isCompleted: true,
-        grade: 85.0,
-      ),
-      Activity(
-        id: 3,
-        title: 'Proyecto Final',
-        description: 'Desarrollo de un proyecto completo aplicando todos los conceptos',
-        type: 'Proyecto',
-        courseId: course.id!,
-        dueDate: DateTime.now().add(const Duration(days: 30)),
-        isCompleted: false,
-      ),
-    ];
-    activities.assignAll(mockActivities);
+    try {
+      isLoading.value = true;
+      final courseActivities = await activityRepo.getActivitiesByCourse(
+        course.id!,
+      );
+      activities.assignAll(courseActivities);
+    } catch (e) {
+      // Si hay error, mantener actividades mock para desarrollo
+      final mockActivities = [
+        Activity(
+          id: 1,
+          title: 'Tarea 1: Fundamentos',
+          description: 'Completar los ejercicios del capítulo 1',
+          type: 'Tarea',
+          categoryId: 1, // Usar categoryId en lugar de courseId
+          dueDate: DateTime.now().add(const Duration(days: 7)),
+          isCompleted: false,
+        ),
+        Activity(
+          id: 2,
+          title: 'Quiz 1: Conceptos básicos',
+          description: 'Evaluación de conceptos fundamentales',
+          type: 'Examen',
+          categoryId: 1, // Usar categoryId en lugar de courseId
+          dueDate: DateTime.now().add(const Duration(days: 3)),
+          isCompleted: true,
+          grade: 85.0,
+        ),
+      ];
+      activities.assignAll(mockActivities);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> loadStudents() async {
     students.clear(); // RxList<User>
-    students.assignAll((await repo.getUsersByCourse(course.id!)).map((r) => User(
-      id: r['id'] as int,
-      name: r['nombre'] as String,
-      email: r['correo'] as String,
-      imagepathh: r['imagen'] as String?, // opcional
-    )).toList());
+    students.assignAll(
+      (await repo.getUsersByCourse(course.id!))
+          .map(
+            (r) => User(
+              id: r['id'] as int,
+              name: r['nombre'] as String,
+              email: r['correo'] as String,
+              imagepathh: r['imagen'] as String?, // opcional
+            ),
+          )
+          .toList(),
+    );
     studentCount.value = students.length;
   }
 
-
   void createNewActivity() {
     if (isProfessor) {
-      Get.toNamed('/create-activity', arguments: {'courseId': course.id});
+      Get.toNamed('/create-activity', arguments: {'courseId': course.id})?.then(
+        (result) {
+          if (result == true) {
+            loadActivities(); // Recargar actividades después de crear
+          }
+        },
+      );
     }
   }
-  
+
   void createNewCategory() {
     if (isProfessor) {
       Get.toNamed('/create-category', arguments: {'courseId': course.id});
