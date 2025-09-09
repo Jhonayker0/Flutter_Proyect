@@ -9,7 +9,10 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Categorías y Grupos'), automaticallyImplyLeading: false),
+      appBar: AppBar(
+        title: const Text('Categorías y Grupos'),
+        automaticallyImplyLeading: false,
+      ),
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -29,7 +32,9 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
               final loading = controller.loadingCat.contains(cat.id);
 
               return Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: ExpansionTile(
                   title: Row(
                     children: [
@@ -45,14 +50,18 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
                         onSelected: (value) async {
                           switch (value) {
                             case 'edit':
-                              final ok = await Get.toNamed(('/edit-category/${cat.id}'),
+                              final ok = await Get.toNamed(
+                                ('/edit-category/${cat.id}'),
                               );
                               if (ok == true) {
                                 await controller.refreshAll();
                               }
                               break;
                             case 'delete':
-                              final confirm = await _confirmDeleteCategory(context, cat.name);
+                              final confirm = await _confirmDeleteCategory(
+                                context,
+                                cat.name,
+                              );
                               if (confirm == true) {
                                 await controller.deleteCategory(cat.id);
                                 await controller.refreshAll();
@@ -79,7 +88,9 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
                       ),
                     ],
                   ),
-                  subtitle: Text('Tipo: ${cat.type} • Capacidad: ${cat.capacity ?? '-'}'),
+                  subtitle: Text(
+                    'Tipo: ${cat.type} • Capacidad: ${cat.capacity ?? '-'}',
+                  ),
                   onExpansionChanged: (expanded) {
                     if (expanded) controller.loadGroupsFor(cat.id);
                   },
@@ -99,8 +110,15 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
                         (g) => ListTile(
                           leading: const Icon(Icons.groups),
                           title: Text(g.name),
-                          subtitle: Text('Miembros: ${g.members} • Capacidad: ${g.capacity ?? '-'}'),
-                          onTap: () => _showGroupMembersDialog(context, g.id, g.name, cat.id),
+                          subtitle: Text(
+                            'Miembros: ${g.members} • Capacidad: ${g.capacity ?? '-'}',
+                          ),
+                          onTap: () => _showGroupMembersDialog(
+                            context,
+                            g.id,
+                            g.name,
+                            cat.id,
+                          ),
                         ),
                       ),
                     const SizedBox(height: 8),
@@ -111,11 +129,27 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
           ),
         );
       }),
+      floatingActionButton: controller.role == 'Profesor'
+          ? FloatingActionButton(
+              onPressed: () async {
+                final result = await Get.toNamed('/create-category');
+                if (result == true) {
+                  controller.refreshAll();
+                }
+              },
+              child: const Icon(Icons.add),
+              tooltip: 'Crear categoría',
+            )
+          : null,
     );
   }
 
-
-  void _showGroupMembersDialog(BuildContext context, int groupId, String groupName, int categoriaId) {
+  void _showGroupMembersDialog(
+    BuildContext context,
+    int groupId,
+    String groupName,
+    int categoriaId,
+  ) {
     showDialog<void>(
       context: context,
       builder: (_) {
@@ -162,23 +196,33 @@ class CategoryGroupsPage extends GetView<CategoryGroupsController> {
             },
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cerrar')),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
           ],
         );
       },
     );
   }
 
-
   Future<bool?> _confirmDeleteCategory(BuildContext context, String name) {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Eliminar categoría'),
-        content: Text('¿Eliminar la categoría "$name"? Esta acción no se puede deshacer.'),
+        content: Text(
+          '¿Eliminar la categoría "$name"? Esta acción no se puede deshacer.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Eliminar')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar'),
+          ),
         ],
       ),
     );
