@@ -91,6 +91,7 @@ class DatabaseService {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             grupo_id INTEGER NOT NULL,            
             estudiante_id INTEGER NOT NULL,
+            UNIQUE(grupo_id,estudiante_id)
             FOREIGN KEY (grupo_id) REFERENCES grupo(id),
             FOREIGN KEY (estudiante_id) REFERENCES persona(id)
           )

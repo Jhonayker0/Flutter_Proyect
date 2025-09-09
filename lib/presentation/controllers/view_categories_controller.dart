@@ -1,5 +1,6 @@
 import 'package:flutter_application/data/repositories/category_repository_impl.dart';
 import 'package:flutter_application/domain/use_cases/delete_category_use_case.dart';
+import 'package:flutter_application/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../domain/models/category.dart';        
@@ -69,6 +70,9 @@ class CategoryGroupsController extends GetxController {
   final loadingCat = <int>{}.obs;                 
   final error = RxnString();
 
+  final userGroupByCategory = <int, int?>{}.obs; 
+
+  final AuthController authController = Get.find<AuthController>();
   @override
   void onInit() {
     super.onInit();
@@ -90,12 +94,27 @@ class CategoryGroupsController extends GetxController {
   }
 
   Future<void> loadGroupsFor(int categoriaId) async {
-    if (groupsByCat.containsKey(categoriaId)) return;   // cache simple
+    if (groupsByCat.containsKey(categoriaId)) return;
     loadingCat.add(categoriaId);
     try {
-      final groups = await repo.getGroupsByCategory(categoriaId); // List<GroupSummary>
-      groupsByCat[categoriaId] = groups.map(GroupVM.fromDomain).toList();
-      groupsByCat.refresh();                             // notificar cambio en RxMap
+      final groups = await repo.getGroupsByCategory(categoriaId);
+      final mapped = groups.map(GroupVM.fromDomain).toList();
+      groupsByCat[categoriaId] = mapped;
+
+      // Detectar si el usuario ya está en algún grupo de esta categoría
+      final userId = authController.currentUser.value?.id;
+      int? foundGroupId;
+      for (final g in mapped) {
+        final members = await repo.getMembersByGroup(g.id, categoriaId);
+        if (members.any((m) => m.id == userId)) {
+          foundGroupId = g.id;
+          break;
+        }
+      }
+      userGroupByCategory[categoriaId] = foundGroupId;
+
+      groupsByCat.refresh();
+      userGroupByCategory.refresh();
     } catch (e) {
       error.value = e.toString();
     } finally {
@@ -130,4 +149,16 @@ class CategoryGroupsController extends GetxController {
     rethrow; 
   }
 }
+
+ Future<void> joinGroup(int groupId) async {
+    final userId = authController.currentUser.value?.id;
+    try {
+      await repo.joinGroup(userId!, groupId);
+      refreshAll();
+      Get.snackbar("Éxito", "Te uniste al grupo");
+      refreshAll();
+    } catch (e) {
+      Get.snackbar("Error", "No fue posible unirse: $e");
+    }
+  }
 }

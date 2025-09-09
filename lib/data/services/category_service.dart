@@ -246,4 +246,13 @@ class CategoryService {
       [groupId, categoryId],
     );
   }
+  
+  Future<int> joinGroup(int studentId, int groupId) async {
+    final db = await _dbService.database;
+    print("llegue");
+    return await db.insert('categoria_estudiante', {
+      'grupo_id': groupId,
+      'estudiante_id': studentId,
+    });
+  }
 }

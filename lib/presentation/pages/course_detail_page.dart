@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/presentation/pages/view_categories_page.dart';
+import 'package:flutter_application/presentation/pages/view_student_page.dart' show StudentGroupsPage;
 import 'package:get/get.dart';
 import '../controllers/course_detail_controller.dart';
 import 'course_activities_tab.dart';
@@ -26,39 +27,41 @@ class CourseDetailPage extends GetView<CourseDetailController> {
         ],
       ),
       body: Obx(() => IndexedStack(
-        index: controller.currentTabIndex.value,
-        children: const [
-          CourseActivitiesTab(),
-          CourseStudentsTab(),
-          CategoryGroupsPage(),
-          CourseInfoTab(),
-        ],
-      )),
+            index: controller.currentTabIndex.value,
+            children: [
+              const CourseActivitiesTab(),
+              const CourseStudentsTab(),
+              controller.isProfessor
+                  ? const CategoryGroupsPage()
+                  : const StudentGroupsPage(),
+              const CourseInfoTab(),
+            ],
+          )),
       bottomNavigationBar: Obx(() => BottomNavigationBar(
-        currentIndex: controller.currentTabIndex.value,
-        onTap: controller.changeTab,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: 'Actividades',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Estudiantes',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.group),
-            label: 'Categorias',
-          ),
-           BottomNavigationBarItem(
-            icon: Icon(Icons.info),
-            label: 'Información',
-          ),
-        ],
-      )),
+            currentIndex: controller.currentTabIndex.value,
+            onTap: controller.changeTab,
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: Colors.blue,
+            unselectedItemColor: Colors.grey,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.assignment),
+                label: 'Actividades',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.people),
+                label: 'Estudiantes',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.group),
+                label: 'Categorías',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.info),
+                label: 'Información',
+              ),
+            ],
+          )),
     );
   }
 }

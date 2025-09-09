@@ -76,7 +76,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
   // Extensiones útiles para la UI
 
-  // Listar grupos de la categoría con conteo de miembros
+  @override
   Future<List<GroupSummary>> getGroupsByCategory(int categoriaId) async {
     final rows = await service.getGroupsByCategory(categoriaId);
     return rows.map((m) => GroupSummary(
@@ -106,6 +106,11 @@ class CategoryRepositoryImpl implements CategoryRepository {
       name: (m['name'] as String?) ?? '',
       email: m['email'] as String?,
     )).toList();
+  }
+  
+  @override
+  Future<void> joinGroup(int studentId, int groupId) async {
+     await service.joinGroup(studentId, groupId);
   }
 }
 

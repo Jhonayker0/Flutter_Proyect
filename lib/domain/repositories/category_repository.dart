@@ -9,4 +9,5 @@ abstract class CategoryRepository {
   Future<void> delete(int id);
   Future<List<GroupSummary>> getGroupsByCategory(int categoriaId);
   Future<List<Member>> getMembersByGroup(int groupId, int categoryId);
+  Future<void> joinGroup(int studentId, int groupId);
 }
