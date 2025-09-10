@@ -100,5 +100,6 @@ class Routes {
       page: () => CategoryGroupsPage(),
       binding: CategoryGroupsBinding(),
     ),
+    // Re estructura de github
   ];
 }
