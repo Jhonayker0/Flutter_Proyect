@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/presentation/bindings/auth_binding.dart';
+import 'package:flutter_application/auth/presentation/bindings/auth_binding.dart';
 import 'package:get/get.dart';
 import 'routes.dart';
 
@@ -21,3 +21,10 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
