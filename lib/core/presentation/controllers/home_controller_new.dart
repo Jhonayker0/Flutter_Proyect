@@ -169,6 +169,11 @@ class HomeController extends GetxController {
     return (authController.currentUser.value?.name ?? 'Usuario').obs;
   }
 
+  // Verificar si el usuario actual es profesor (tiene cursos como profesor)
+  /*bool get isProfessor {
+    return _allCourses.any((course) => course.role == roleProfessor);
+  }*/
+
   void goToProfile() {
     Get.toNamed(Routes.settings);
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application/core/presentation/controllers/home_controller_new.dart';
+import 'package:flutter_application/routes.dart';
 
 class CoursesPage extends GetView<HomeController> {
   const CoursesPage({super.key});
@@ -176,10 +177,52 @@ class CoursesPage extends GetView<HomeController> {
                 if (courses.isEmpty) {
                   return const Center(child: Text('No se encontraron cursos'));
                 }
+
+                // Mostrar el botón de crear curso para todos los usuarios
+                final itemCount = courses.length + 1;
+
                 return ListView.builder(
-                  itemCount: courses.length,
+                  itemCount: itemCount,
                   itemBuilder: (context, index) {
-                    final course = courses[index];
+                    // Mostrar el botón de crear curso primero
+                    if (index == 0) {
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.add,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                          title: const Text(
+                            'Crear Nuevo Curso',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          subtitle: const Text('Crear un curso con contenido y actividades'),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: () => Get.toNamed(Routes.createCourse),
+                        ),
+                      );
+                    }
+
+                    // Ajustar índice para los cursos
+                    final courseIndex = index - 1;
+
+                    // Verificar que el índice esté dentro del rango
+                    if (courseIndex >= courses.length) {
+                      return const SizedBox();
+                    }
+
+                    final course = courses[courseIndex];
                     return GestureDetector(
                       onTap: () {
                         Get.toNamed('/course-detail',
