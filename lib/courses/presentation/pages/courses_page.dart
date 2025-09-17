@@ -25,18 +25,22 @@ class CoursesPage extends GetView<HomeController> {
               ('Nombre Z-A', SortOption.nameDesc),
               ('Más recientes', SortOption.dateDesc),
               ('Más antiguos', SortOption.dateAsc),
-             // ('Más estudiantes', SortOption.studentsDesc),
+              // ('Más estudiantes', SortOption.studentsDesc),
               //('Menos estudiantes', SortOption.studentsAsc),
-            ].map((option) => ListTile(
-                  title: Text(option.$1),
-                  trailing: Obx(() => controller.currentSort.value == option.$2
+            ].map(
+              (option) => ListTile(
+                title: Text(option.$1),
+                trailing: Obx(
+                  () => controller.currentSort.value == option.$2
                       ? const Icon(Icons.check, color: Colors.blue)
-                      : const SizedBox()),
-                  onTap: () {
-                    controller.setSortOption(option.$2);
-                    Navigator.pop(ctx);
-                  },
-                )),
+                      : const SizedBox(),
+                ),
+                onTap: () {
+                  controller.setSortOption(option.$2);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -60,10 +64,13 @@ class CoursesPage extends GetView<HomeController> {
             ListTile(
               leading: const Icon(Icons.school),
               title: const Text('Profesor'),
-              trailing: Obx(() => controller.activeRoleFilter.value ==
-                      HomeController.roleProfessor
-                  ? const Icon(Icons.check, color: Colors.blue)
-                  : const SizedBox()),
+              trailing: Obx(
+                () =>
+                    controller.activeRoleFilter.value ==
+                        HomeController.roleProfessor
+                    ? const Icon(Icons.check, color: Colors.blue)
+                    : const SizedBox(),
+              ),
               onTap: () {
                 controller.setRoleFilter(HomeController.roleProfessor);
                 Navigator.pop(ctx);
@@ -72,10 +79,13 @@ class CoursesPage extends GetView<HomeController> {
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('Estudiante'),
-              trailing: Obx(() => controller.activeRoleFilter.value ==
-                      HomeController.roleStudent
-                  ? const Icon(Icons.check, color: Colors.blue)
-                  : const SizedBox()),
+              trailing: Obx(
+                () =>
+                    controller.activeRoleFilter.value ==
+                        HomeController.roleStudent
+                    ? const Icon(Icons.check, color: Colors.blue)
+                    : const SizedBox(),
+              ),
               onTap: () {
                 controller.setRoleFilter(HomeController.roleStudent);
                 Navigator.pop(ctx);
@@ -140,23 +150,25 @@ class CoursesPage extends GetView<HomeController> {
                       const SizedBox(width: 4),
                       const Text('Filtrar'),
                       const SizedBox(width: 8),
-                      Obx(() => controller.activeFilters.value > 0
-                          ? Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.blue,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '${controller.activeFilters.value}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                      Obx(
+                        () => controller.activeFilters.value > 0
+                            ? Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.blue,
+                                  shape: BoxShape.circle,
                                 ),
-                              ),
-                            )
-                          : const SizedBox()),
+                                child: Text(
+                                  '${controller.activeFilters.value}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              )
+                            : const SizedBox(),
+                      ),
                     ],
                   ),
                 ),
@@ -165,10 +177,7 @@ class CoursesPage extends GetView<HomeController> {
             const SizedBox(height: 20),
             const Text(
               'Tus cursos',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -195,20 +204,22 @@ class CoursesPage extends GetView<HomeController> {
                               color: Colors.blue.shade100,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(
-                              Icons.add,
-                              color: Colors.blue.shade700,
-                            ),
+                            child: Icon(Icons.add, color: Colors.blue.shade700),
                           ),
                           title: const Text(
-                            'Crear Nuevo Curso',
+                            'Crear o unirse a un curso',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.blue,
                             ),
                           ),
-                          subtitle: const Text('Crear un curso con contenido y actividades'),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          subtitle: const Text(
+                            'Crear un curso nuevo o unirse a uno existente',
+                          ),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                          ),
                           onTap: () => Get.toNamed(Routes.createCourse),
                         ),
                       );
@@ -225,8 +236,10 @@ class CoursesPage extends GetView<HomeController> {
                     final course = courses[courseIndex];
                     return GestureDetector(
                       onTap: () {
-                        Get.toNamed('/course-detail',
-                            arguments: {'course': course, 'role': course.role});
+                        Get.toNamed(
+                          '/course-detail',
+                          arguments: {'course': course, 'role': course.role},
+                        );
                       },
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -299,10 +312,3 @@ class CoursesPage extends GetView<HomeController> {
     );
   }
 }
-
-
-
-
-
-
-

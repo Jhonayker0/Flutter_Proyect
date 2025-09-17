@@ -6,7 +6,8 @@ import 'package:flutter_application/auth/presentation/pages/sign_up_page.dart';
 
 // Categories imports
 import 'package:flutter_application/categories/presentation/bindings/categories_binding.dart';
-import 'package:flutter_application/categories/presentation/bindings/view_categories_binding.dart' as view_cat;
+import 'package:flutter_application/categories/presentation/bindings/view_categories_binding.dart'
+    as view_cat;
 import 'package:flutter_application/categories/presentation/bindings/create_category_binding.dart';
 import 'package:flutter_application/categories/presentation/bindings/edit_category_binding.dart';
 import 'package:flutter_application/categories/presentation/pages/categories_page.dart';
@@ -27,10 +28,7 @@ import 'package:flutter_application/courses/presentation/pages/join_course_page.
 
 // Core imports
 import 'package:flutter_application/core/presentation/bindings/home_binding.dart';
-import 'package:flutter_application/core/presentation/bindings/main_navigation_binding.dart';
-import 'package:flutter_application/core/presentation/bindings/settings_binding.dart';
 import 'package:flutter_application/core/presentation/pages/main_page.dart';
-import 'package:flutter_application/core/presentation/pages/settings_page.dart';
 
 import 'package:get/get.dart';
 
@@ -39,7 +37,6 @@ class Routes {
   static const String signup = '/signup';
   static const String home = '/home';
   static const String main = '/main';
-  static const String settings = '/settings';
   static const String createActivity = '/create-activity';
   static const String createCategory = '/create-category';
   static const String createCourse = '/create-course';
@@ -55,7 +52,7 @@ class Routes {
     GetPage(
       name: home,
       page: () => const MainPage(),
-      bindings: [HomeBinding(), MainNavigationBinding(), SettingsBinding()],
+      bindings: [HomeBinding()],
     ),
     GetPage(
       name: createActivity,
@@ -88,14 +85,13 @@ class Routes {
       binding: EditCategoryBinding(),
     ),
     GetPage(
-      name: settings,
-      page: () => SettingsPage(),
-      binding: SettingsBinding(),
-    ),
-    GetPage(
       name: courseDetail,
       page: () => const CourseDetailPage(),
-      bindings: [CourseDetailBinding(), view_cat.CategoryGroupsBinding(), CategoriesBinding()],
+      bindings: [
+        CourseDetailBinding(),
+        view_cat.CategoryGroupsBinding(),
+        CategoriesBinding(),
+      ],
     ),
     GetPage(
       name: joinCourse,
@@ -110,10 +106,3 @@ class Routes {
     // Re estructura de github
   ];
 }
-
-
-
-
-
-
-

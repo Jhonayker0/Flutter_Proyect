@@ -2,8 +2,6 @@ import 'package:flutter_application/courses/domain/models/course.dart';
 import 'package:flutter_application/courses/domain/repositories/course_repository.dart';
 import 'package:flutter_application/auth/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
-import 'package:flutter_application/routes.dart';
-
 
 enum SortOption {
   nameAsc,
@@ -46,12 +44,13 @@ class HomeController extends GetxController {
     // Traer cursos del estudiante
     final studentCourses = await courseRepository.getCoursesByStudent(userId);
     // Traer cursos del profesor
-    final professorCourses = await courseRepository.getCoursesByProfesor(userId);
+    final professorCourses = await courseRepository.getCoursesByProfesor(
+      userId,
+    );
 
     _allCourses.addAll([...studentCourses, ...professorCourses]);
     applyFilters();
   }
-
 
   // FUNCIONALIDAD DE BÚSQUEDA
   void setSearchQuery(String q) {
@@ -83,11 +82,11 @@ class HomeController extends GetxController {
     currentSort.value = option;
     applyFilters();
   }
+
   void addCourse(Course course) {
     _allCourses.add(course);
     applyFilters(); // esto actualiza la lista observable `courses`
   }
-
 
   String get sortLabel {
     switch (currentSort.value) {
@@ -99,7 +98,7 @@ class HomeController extends GetxController {
         return 'Oldest First';
       case SortOption.dateDesc:
         return 'Newest First';
-     /* case SortOption.studentsAsc:
+      /* case SortOption.studentsAsc:
         return 'Less Students';
       case SortOption.studentsDesc:
         return 'More Students';*/
@@ -162,7 +161,7 @@ class HomeController extends GetxController {
       default:
         return '';
     }
-  } 
+  }
 
   RxString get currentUserName {
     final authController = Get.find<AuthController>();
@@ -175,12 +174,13 @@ class HomeController extends GetxController {
   }*/
 
   void goToProfile() {
-    Get.toNamed(Routes.settings);
+    // Como ya no hay página de configuraciones, directamente hacemos logout
+    logout();
   }
 
   void logout() {
     final authController = Get.find<AuthController>();
-    authController.logout(); 
+    authController.logout();
   }
 
   void onOptionSelected(String value) {
@@ -193,10 +193,3 @@ class HomeController extends GetxController {
     }
   }
 }
-
-
-
-
-
-
-
