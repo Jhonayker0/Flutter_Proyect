@@ -18,6 +18,33 @@ class MainPage extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        leading: GestureDetector(
+          onTap: () {
+            Get.toNamed('/settings');
+          },
+          child: Container(
+            margin: const EdgeInsets.all(8.0),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/profile.jpg',
+                width: 32,
+                height: 32,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Si la imagen no se puede cargar, mostrar el icono por defecto
+                  return const Icon(
+                    Icons.account_circle,
+                    size: 32,
+                    color: Colors.grey,
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {

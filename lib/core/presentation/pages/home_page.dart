@@ -48,28 +48,27 @@ class HomePage extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text("Main Page"),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications)),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications),
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.settings),
             onSelected: (value) {
               if (value == "logout") {
                 Get.offAllNamed('/login'); // limpia la pila y va a login
               } else if (value == "perfil") {
-                // Como ya no hay página de configuraciones, directamente hacer logout
-                Get.offAllNamed('/login');
+                Get.toNamed(Routes.settings);
               } else if (value == "categories") {
                 // Get.toNamed(Routes.categories);
-                Get.snackbar(
-                  'En desarrollo',
-                  'Ver categorías desde aquí está en desarrollo. Úsalo desde un curso específico.',
-                  backgroundColor: Colors.orange,
-                  colorText: Colors.white,
-                );
+                Get.snackbar('En desarrollo', 'Ver categorías desde aquí está en desarrollo. Úsalo desde un curso específico.',
+                  backgroundColor: Colors.orange, colorText: Colors.white);
               } else {
                 Get.snackbar("Info", "Opción no implementada");
               }
@@ -77,10 +76,7 @@ class HomePage extends GetView<HomeController> {
             itemBuilder: (context) => const [
               PopupMenuItem(value: "perfil", child: Text("Perfil")),
               PopupMenuItem(value: "categories", child: Text("Categorías")),
-              PopupMenuItem(
-                value: "notificaciones",
-                child: Text("Notificaciones"),
-              ),
+              PopupMenuItem(value: "notificaciones", child: Text("Notificaciones")),
               PopupMenuItem(value: "logout", child: Text("Cerrar sesión")),
             ],
           ),
@@ -88,104 +84,95 @@ class HomePage extends GetView<HomeController> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Obx(
-          () => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 28,
-                    backgroundImage: AssetImage("assets/profile.jpg"),
-                  ),
-                  const SizedBox(width: 12),
-                  Obx(() {
-                    return Text(
-                      controller.currentUserName.value,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  }),
-                ],
-              ),
-              const SizedBox(height: 20),
+        child: Obx(() => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 28,
+                      backgroundImage: AssetImage("assets/profile.jpg"),
+                    ),
+                    const SizedBox(width: 12),
+                    Obx(() {
+                      return Text(
+                        controller.currentUserName.value,
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      );
+                    }),
+                  ],
+                ),
+                const SizedBox(height: 20),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      onChanged: controller.setSearchQuery,
-                      decoration: InputDecoration(
-                        hintText: "Buscar cursos...",
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        onChanged: controller.setSearchQuery,
+                        decoration: InputDecoration(
+                          hintText: "Buscar cursos...",
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.all(0),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () => _openRoleFilter(context),
+                      icon: const Icon(Icons.filter_list),
+                      label: const Text("Filtrar"),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 14),
+                        shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        contentPadding: const EdgeInsets.all(0),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: () => _openRoleFilter(context),
-                    icon: const Icon(Icons.filter_list),
-                    label: const Text("Filtrar"),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              if (controller.activeRoleFilter.value != null) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    Chip(
-                      label: Text(
-                        'Filtro: ${controller.activeRoleFilterLabel}',
-                      ),
-                      deleteIcon: const Icon(Icons.close),
-                      onDeleted: controller.clearRoleFilter,
                     ),
                   ],
                 ),
-              ],
 
-              const SizedBox(height: 20),
-              const Text(
-                "Your courses",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-
-              Expanded(
-                child: controller.courses.isEmpty
-                    ? const Center(child: Text('Sin resultados'))
-                    : ListView.builder(
-                        itemCount: controller.courses.length,
-                        itemBuilder: (context, index) {
-                          final c = controller.courses[index];
-                          return CourseCard(title: c.title, role: c.role);
-                        },
+                if (controller.activeRoleFilter.value != null) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      Chip(
+                        label: Text('Filtro: ${controller.activeRoleFilterLabel}'),
+                        deleteIcon: const Icon(Icons.close),
+                        onDeleted: controller.clearRoleFilter,
                       ),
-              ),
-            ],
-          ),
-        ),
+                    ],
+                  ),
+                ],
+
+                const SizedBox(height: 20),
+                const Text(
+                  "Your courses",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+
+                Expanded(
+                  child: controller.courses.isEmpty
+                      ? const Center(child: Text('Sin resultados'))
+                      : ListView.builder(
+                          itemCount: controller.courses.length,
+                          itemBuilder: (context, index) {
+                            final c = controller.courses[index];
+                            return CourseCard(title: c.title, role: c.role);
+                          },
+                        ),
+                ),
+              ],
+            )),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Get.toNamed(Routes.createCourse);
+         Get.toNamed(Routes.createCourse);
         },
         label: const Text("Crear curso"),
         icon: const Icon(Icons.add),
@@ -219,3 +206,10 @@ class CourseCard extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
