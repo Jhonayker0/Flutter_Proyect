@@ -1,16 +1,19 @@
 class AuthTokens {
   final String accessToken;
   final String refreshToken;
+  final Map<String, dynamic>? user;
 
   AuthTokens({
     required this.accessToken,
     required this.refreshToken,
+    this.user,
   });
 
   factory AuthTokens.fromJson(Map<String, dynamic> json) {
     return AuthTokens(
       accessToken: json['accessToken'] ?? '',
       refreshToken: json['refreshToken'] ?? '',
+      user: json['user'] as Map<String, dynamic>?,
     );
   }
 
@@ -18,6 +21,7 @@ class AuthTokens {
     return {
       'accessToken': accessToken,
       'refreshToken': refreshToken,
+      if (user != null) 'user': user,
     };
   }
 }

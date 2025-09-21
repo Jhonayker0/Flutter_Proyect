@@ -12,9 +12,13 @@ class RobleAuthService {
       final tokens = await _httpService.login(request);
       
       if (tokens != null) {
-        // Después del login exitoso, obtener la información del usuario
-        final userInfo = await getUserInfo();
-        return userInfo;
+        // Usar la información del usuario de la respuesta de login
+        if (tokens.user != null) {
+          return User.fromJson(tokens.user!);
+        } else {
+          // Fallback: obtener la información del usuario por separado
+          return await getUserInfo();
+        }
       }
     } catch (e) {
       rethrow;
@@ -111,7 +115,7 @@ class RobleAuthService {
       if (token != null) {
         // Podrías decodificar el JWT para obtener información básica
         return User(
-          id: 1, // Este valor debería venir del JWT o de otro endpoint
+          id: 0, // Usar int ID
           name: 'Usuario', // Este valor debería venir del JWT o de otro endpoint
           email: 'usuario@uninorte.edu.co', // Este valor debería venir del JWT
           imagepathh: null,

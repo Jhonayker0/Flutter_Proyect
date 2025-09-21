@@ -121,7 +121,7 @@ class RobleHttpService {
       print('✅ Respuesta recibida - Status: ${response.statusCode}');
       print('📦 Datos respuesta: ${response.data}');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final tokens = AuthTokens.fromJson(response.data);
         await saveTokens(tokens);
         return tokens;
@@ -142,7 +142,7 @@ class RobleHttpService {
         RobleConfig.signupEndpoint,
         data: request.toJson(),
       );
-      return response.statusCode == 200;
+      return response.statusCode == 200 || response.statusCode == 201;
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -154,7 +154,7 @@ class RobleHttpService {
         RobleConfig.signupDirectEndpoint,
         data: request.toJson(),
       );
-      return response.statusCode == 200;
+      return response.statusCode == 200 || response.statusCode == 201;
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -166,7 +166,7 @@ class RobleHttpService {
         RobleConfig.verifyEmailEndpoint,
         data: request.toJson(),
       );
-      return response.statusCode == 200;
+      return response.statusCode == 200 || response.statusCode == 201;
     } on DioException catch (e) {
       throw _handleError(e);
     }
