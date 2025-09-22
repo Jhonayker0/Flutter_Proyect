@@ -8,9 +8,6 @@ void main() async {
   // Inicializar GetStorage para el manejo de tokens
   await GetStorage.init();
   
-  // Ya no necesitamos inicializar la base de datos SQLite
-  // await DatabaseService().database;
-  
   runApp(const MyApp());
 }
 

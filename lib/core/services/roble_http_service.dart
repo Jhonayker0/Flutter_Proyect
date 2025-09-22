@@ -7,6 +7,9 @@ class RobleHttpService {
   late final Dio _dio;
   final GetStorage _storage = GetStorage();
 
+  // Getter para acceder al cliente Dio
+  Dio get dio => _dio;
+
   RobleHttpService() {
     _dio = Dio(BaseOptions(
       baseUrl: RobleConfig.baseUrl,

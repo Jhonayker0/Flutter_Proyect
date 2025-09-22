@@ -20,18 +20,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User?> signUp(String name, String email, String password) async {
     try {
-      // Usar signup normal (requiere verificación de email)
-      final success = await _service.signup(email, password, name);
+      // Usar signup directo (crea usuarios habilitados inmediatamente)
+      final success = await _service.signupDirect(email, password, name);
       
       if (success) {
-        // El usuario fue registrado pero necesita verificar email
-        // Retornamos un usuario temporal para mostrar el flujo de verificación
-        return User(
-          id: 0, // ID temporal
-          name: name,
-          email: email,
-          imagepathh: null,
-        );
+        // Para signup directo, intentamos hacer login inmediatamente
+        return await login(email, password);
       }
     } catch (e) {
       print('Repository signup error: $e');

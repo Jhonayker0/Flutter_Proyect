@@ -2,7 +2,7 @@ class RobleConfig {
   static const String baseUrl = 'https://roble-api.openlab.uninorte.edu.co';
   static const String dbName = 'movilapp_a4de2ed3d7';
   
-  // Endpoints
+  // Auth Endpoints
   static String get loginEndpoint => '/auth/$dbName/login';
   static String get signupEndpoint => '/auth/$dbName/signup';
   static String get signupDirectEndpoint => '/auth/$dbName/signup-direct';
