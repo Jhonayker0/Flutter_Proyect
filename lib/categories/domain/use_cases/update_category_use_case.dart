@@ -7,10 +7,3 @@ class UpdateCategory {
 
   Future<void> call(Category category) => repo.update(category);
 }
-
-
-
-
-
-
-

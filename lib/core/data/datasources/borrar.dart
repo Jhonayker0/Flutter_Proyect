@@ -7,9 +7,3 @@ Future<void> deleteDatabaseFile() async {
   await deleteDatabase(path);
   print('Base de datos eliminada');
 }
-
-
-
-
-
-

@@ -39,7 +39,8 @@ class JoinCoursePage extends GetView<JoinCourseController> {
                   onPressed: busy ? null : controller.submit,
                   child: busy
                       ? const SizedBox(
-                          height: 20, width: 20,
+                          height: 20,
+                          width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Text('Ingresar'),
@@ -52,10 +53,3 @@ class JoinCoursePage extends GetView<JoinCourseController> {
     );
   }
 }
-
-
-
-
-
-
-

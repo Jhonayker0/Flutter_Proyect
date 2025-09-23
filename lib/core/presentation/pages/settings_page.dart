@@ -11,11 +11,23 @@ class SettingsPage extends GetView<SettingsController> {
       const _SettingsOption(icon: Icons.person_outline, title: "Cuenta"),
       const _SettingsOption(icon: Icons.history, title: "Actividad reciente"),
       const _SettingsOption(icon: Icons.devices, title: "Dispositivos"),
-      const _SettingsOption(icon: Icons.notifications_outlined, title: "Notificaciones"),
-      const _SettingsOption(icon: Icons.color_lens_outlined, title: "Apariencia"),
+      const _SettingsOption(
+        icon: Icons.notifications_outlined,
+        title: "Notificaciones",
+      ),
+      const _SettingsOption(
+        icon: Icons.color_lens_outlined,
+        title: "Apariencia",
+      ),
       const _SettingsOption(icon: Icons.language, title: "Idioma"),
-      const _SettingsOption(icon: Icons.lock_outline, title: "Privacidad y seguridad"),
-      const _SettingsOption(icon: Icons.storage_outlined, title: "Almacenamiento"),
+      const _SettingsOption(
+        icon: Icons.lock_outline,
+        title: "Privacidad y seguridad",
+      ),
+      const _SettingsOption(
+        icon: Icons.storage_outlined,
+        title: "Almacenamiento",
+      ),
       const _SettingsOption(icon: Icons.logout, title: "Cerrar sesión"),
     ];
 
@@ -35,9 +47,14 @@ class SettingsPage extends GetView<SettingsController> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Jhonayker Echeverria",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text("@jhonay_ker", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  Text(
+                    "Jhonayker Echeverria",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "@jhonay_ker",
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
                 ],
               ),
             ],
@@ -65,7 +82,11 @@ class _SettingsOption extends GetView<SettingsController> {
   const _SettingsOption({required this.icon, required this.title, this.onTap});
 
   _SettingsOption copyWith({VoidCallback? onTap}) {
-    return _SettingsOption(icon: icon, title: title, onTap: onTap ?? this.onTap);
+    return _SettingsOption(
+      icon: icon,
+      title: title,
+      onTap: onTap ?? this.onTap,
+    );
   }
 
   @override
@@ -98,11 +119,3 @@ class _SettingsOption extends GetView<SettingsController> {
     );
   }
 }
-
-
-
-
-
-
-
-

@@ -22,7 +22,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       // Usar signup directo (crea usuarios habilitados inmediatamente)
       final success = await _service.signupDirect(email, password, name);
-      
+
       if (success) {
         // Para signup directo, intentamos hacer login inmediatamente
         return await login(email, password);
@@ -37,7 +37,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<User?> signUpDirect(String name, String email, String password) async {
     try {
       final success = await _service.signupDirect(email, password, name);
-      
+
       if (success) {
         // Para signup directo, intentamos hacer login inmediatamente
         return await login(email, password);
@@ -102,10 +102,3 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 }
-
-
-
-
-
-
-

@@ -11,7 +11,12 @@ class RobleCourseService {
   Future<List<Course>> getAllCourses({String? currentUserId}) async {
     try {
       final data = await _databaseService.read(tableName);
-      return data.map((courseMap) => Course.fromRoble(courseMap, currentUserId: currentUserId)).toList();
+      return data
+          .map(
+            (courseMap) =>
+                Course.fromRoble(courseMap, currentUserId: currentUserId),
+          )
+          .toList();
     } catch (e) {
       print('❌ Error obteniendo cursos: $e');
       rethrow;
@@ -24,13 +29,18 @@ class RobleCourseService {
     try {
       // Obtener todos los cursos y filtrar en el cliente
       final data = await _databaseService.read(tableName);
-      
+
       // Filtrar cursos donde professor_id coincide
       final filteredData = data.where((course) {
         return course['professor_id'] == professorId;
       }).toList();
-      
-      return filteredData.map((courseMap) => Course.fromRoble(courseMap, currentUserId: professorId)).toList();
+
+      return filteredData
+          .map(
+            (courseMap) =>
+                Course.fromRoble(courseMap, currentUserId: professorId),
+          )
+          .toList();
     } catch (e) {
       print('❌ Error obteniendo cursos del profesor: $e');
       rethrow;
@@ -41,35 +51,44 @@ class RobleCourseService {
   Future<List<Course>> getCoursesByStudent(String studentId) async {
     try {
       print('📚 Buscando cursos para estudiante: $studentId');
-      
+
       // 1. Obtener enrollments del estudiante
       final enrollments = await _databaseService.read('enrollments');
-      final studentEnrollments = enrollments.where((enrollment) => 
-          enrollment['student_id'] == studentId).toList();
-      
+      final studentEnrollments = enrollments
+          .where((enrollment) => enrollment['student_id'] == studentId)
+          .toList();
+
       print('📋 Enrollments encontrados: ${studentEnrollments.length}');
-      
+
       if (studentEnrollments.isEmpty) {
         print('📚 Usuario $studentId no tiene enrollments');
         return [];
       }
-      
+
       // 2. Extraer los course_ids
       final enrolledCourseIds = studentEnrollments
           .map<String>((enrollment) => enrollment['course_id'] as String)
           .toSet()
           .toList();
-      
+
       print('🔍 Course IDs desde enrollments: $enrolledCourseIds');
-      
+
       // 3. Obtener todos los cursos y filtrar
       final allCourses = await _databaseService.read(tableName);
-      final enrolledCourses = allCourses.where((course) => 
-          enrolledCourseIds.contains(course['_id'])).toList();
-      
-      print('✅ Cursos filtrados: ${enrolledCourses.length} de ${allCourses.length} totales');
-      
-      return enrolledCourses.map((courseMap) => Course.fromRoble(courseMap, currentUserId: studentId)).toList();
+      final enrolledCourses = allCourses
+          .where((course) => enrolledCourseIds.contains(course['_id']))
+          .toList();
+
+      print(
+        '✅ Cursos filtrados: ${enrolledCourses.length} de ${allCourses.length} totales',
+      );
+
+      return enrolledCourses
+          .map(
+            (courseMap) =>
+                Course.fromRoble(courseMap, currentUserId: studentId),
+          )
+          .toList();
     } catch (e) {
       print('❌ Error obteniendo cursos del estudiante: $e');
       rethrow;
@@ -109,16 +128,19 @@ class RobleCourseService {
   }
 
   /// Obtener un curso específico por ID
-  Future<Course?> getCourseById(String courseId, {String? currentUserId}) async {
+  Future<Course?> getCourseById(
+    String courseId, {
+    String? currentUserId,
+  }) async {
     try {
       final data = await _databaseService.read(tableName);
       final courseData = data.firstWhere(
         (course) => course['_id'] == courseId,
         orElse: () => <String, dynamic>{},
       );
-      
+
       if (courseData.isEmpty) return null;
-      
+
       return Course.fromRoble(courseData, currentUserId: currentUserId);
     } catch (e) {
       print('❌ Error obteniendo curso por ID: $e');

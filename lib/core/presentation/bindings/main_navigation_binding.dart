@@ -7,10 +7,3 @@ class MainNavigationBinding extends Bindings {
     Get.put(MainNavigationController());
   }
 }
-
-
-
-
-
-
-

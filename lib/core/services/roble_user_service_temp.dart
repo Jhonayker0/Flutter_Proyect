@@ -9,29 +9,32 @@ class RobleUserService {
   Future<List<Map<String, dynamic>>> getUsersByCourse(String courseId) async {
     try {
       print('👥 Buscando usuarios para curso: $courseId');
-      
+
       // 1. Obtener enrollments del curso
       final enrollments = await _databaseService.read('enrollments');
-      final courseEnrollments = enrollments.where((enrollment) => 
-          enrollment['course_id'] == courseId).toList();
-      
+      final courseEnrollments = enrollments
+          .where((enrollment) => enrollment['course_id'] == courseId)
+          .toList();
+
       print('📋 Enrollments del curso: ${courseEnrollments.length}');
-      
+
       if (courseEnrollments.isEmpty) {
         print('👥 No hay usuarios en el curso $courseId');
         return [];
       }
-      
+
       // 2. Como la tabla 'users' no existe, crear usuarios dummy basados en enrollments
-      print('👤 Creando usuarios basados en enrollments (tabla users no disponible)');
-      
+      print(
+        '👤 Creando usuarios basados en enrollments (tabla users no disponible)',
+      );
+
       // 3. Crear lista de usuarios con roles basada solo en enrollments
       final courseUsers = <Map<String, dynamic>>[];
-      
+
       for (var enrollment in courseEnrollments) {
         final studentId = enrollment['student_id'];
         final role = enrollment['role'] ?? 'student';
-        
+
         // Crear usuario básico basado en UUID del enrollment
         courseUsers.add({
           'id': studentId,
@@ -42,7 +45,7 @@ class RobleUserService {
           'uuid': studentId, // UUID original
         });
       }
-      
+
       print('✅ Usuarios encontrados: ${courseUsers.length}');
       return courseUsers;
     } catch (e) {

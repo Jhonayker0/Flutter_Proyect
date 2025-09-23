@@ -24,9 +24,7 @@ class MainPage extends StatelessWidget {
           },
           child: Container(
             margin: const EdgeInsets.all(8.0),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-            ),
+            decoration: const BoxDecoration(shape: BoxShape.circle),
             child: ClipOval(
               child: Image.asset(
                 'assets/profile.jpg',

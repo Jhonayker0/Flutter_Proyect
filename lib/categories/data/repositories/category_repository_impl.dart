@@ -1,4 +1,3 @@
-
 import 'package:flutter_application/categories/domain/models/category.dart';
 import 'package:flutter_application/categories/domain/repositories/category_repository.dart';
 import '../services/category_service.dart';
@@ -30,7 +29,6 @@ class CategoryRepositoryImpl implements CategoryRepository {
     );
   }
 
-
   @override
   Future<int> create(Category category) async {
     final id = await service.postCategory(
@@ -38,7 +36,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       tipo: _normalizeType(category.type),
       descripcion: category.description,
       capacidad: category.capacity,
-      cursoId: category.courseId, 
+      cursoId: category.courseId,
     );
     return id;
   }
@@ -79,12 +77,16 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<List<GroupSummary>> getGroupsByCategory(int categoriaId) async {
     final rows = await service.getGroupsByCategory(categoriaId);
-    return rows.map((m) => GroupSummary(
-      id: (m['id'] as num).toInt(),
-      name: (m['nombre'] as String?) ?? '',
-      capacity: m['capacidad'] as int?,
-      members: (m['miembros'] as num?)?.toInt() ?? 0,
-    )).toList();
+    return rows
+        .map(
+          (m) => GroupSummary(
+            id: (m['id'] as num).toInt(),
+            name: (m['nombre'] as String?) ?? '',
+            capacity: m['capacidad'] as int?,
+            members: (m['miembros'] as num?)?.toInt() ?? 0,
+          ),
+        )
+        .toList();
   }
 
   // Unir estudiante a grupo (valida capacidad y unicidad en la categoría)
@@ -92,29 +94,34 @@ class CategoryRepositoryImpl implements CategoryRepository {
     required int groupId,
     required int studentId,
   }) {
-    return service.addStudentToGroup(
-      grupoId: groupId,
-      estudianteId: studentId,
-    );
-  }
-  
-  @override
-  Future<List<Member>> getMembersByGroup(int groupId, int categoryId) async {
-    final rows = await service.getMembersByGroupRaw(groupId, categoryId);
-    return rows.map((m) => Member(
-      id: (m['id'] as num).toInt(),
-      name: (m['name'] as String?) ?? '',
-      email: m['email'] as String?,
-    )).toList();
-  }
-  
-  @override
-  Future<void> joinGroup(int studentId, int groupId) async {
-     await service.joinGroup(studentId, groupId);
+    return service.addStudentToGroup(grupoId: groupId, estudianteId: studentId);
   }
 
   @override
-  Future<void> assignStudentToGroup(int studentId, int groupId, int categoryId) async {
+  Future<List<Member>> getMembersByGroup(int groupId, int categoryId) async {
+    final rows = await service.getMembersByGroupRaw(groupId, categoryId);
+    return rows
+        .map(
+          (m) => Member(
+            id: (m['id'] as num).toInt(),
+            name: (m['name'] as String?) ?? '',
+            email: m['email'] as String?,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> joinGroup(int studentId, int groupId) async {
+    await service.joinGroup(studentId, groupId);
+  }
+
+  @override
+  Future<void> assignStudentToGroup(
+    int studentId,
+    int groupId,
+    int categoryId,
+  ) async {
     await service.assignStudentToGroup(studentId, groupId, categoryId);
   }
 
@@ -124,7 +131,10 @@ class CategoryRepositoryImpl implements CategoryRepository {
   }
 
   @override
-  Future<List<Member>> getUnassignedStudents(int courseId, int categoryId) async {
+  Future<List<Member>> getUnassignedStudents(
+    int courseId,
+    int categoryId,
+  ) async {
     return await service.getUnassignedStudents(courseId, categoryId);
   }
 }
@@ -141,12 +151,4 @@ class GroupSummary {
     this.capacity,
     required this.members,
   });
-  
 }
-
-
-
-
-
-
-

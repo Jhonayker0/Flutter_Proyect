@@ -14,15 +14,8 @@ class HomeBinding extends Bindings {
       final databaseService = RobleDatabaseService(httpService);
       final courseService = RobleCourseService(databaseService);
       final repository = RobleCourseRepositoryImpl(courseService);
-      
+
       Get.put<HomeController>(HomeController(courseRepository: repository));
     }
   }
 }
-
-
-
-
-
-
-

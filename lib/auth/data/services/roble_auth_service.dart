@@ -10,7 +10,7 @@ class RobleAuthService {
     try {
       final request = LoginRequest(email: email.trim(), password: password);
       final tokens = await _httpService.login(request);
-      
+
       if (tokens != null) {
         // Usar la información del usuario de la respuesta de login
         if (tokens.user != null) {
@@ -30,8 +30,8 @@ class RobleAuthService {
   Future<bool> signup(String email, String password, String name) async {
     try {
       final request = SignupRequest(
-        email: email.trim(), 
-        password: password, 
+        email: email.trim(),
+        password: password,
         name: name.trim(),
       );
       return await _httpService.signup(request);
@@ -44,8 +44,8 @@ class RobleAuthService {
   Future<bool> signupDirect(String email, String password, String name) async {
     try {
       final request = SignupRequest(
-        email: email.trim(), 
-        password: password, 
+        email: email.trim(),
+        password: password,
         name: name.trim(),
       );
       return await _httpService.signupDirect(request);
@@ -77,7 +77,10 @@ class RobleAuthService {
   /// Restablecer contraseña con token
   Future<bool> resetPassword(String token, String newPassword) async {
     try {
-      final request = ResetPasswordRequest(token: token, newPassword: newPassword);
+      final request = ResetPasswordRequest(
+        token: token,
+        newPassword: newPassword,
+      );
       return await _httpService.resetPassword(request);
     } catch (e) {
       rethrow;
@@ -109,11 +112,14 @@ class RobleAuthService {
   Future<User?> getUserInfo() async {
     try {
       // Verificar el token y obtener información del usuario
-      final verifyResponse = await _httpService.dio.get('/auth/movilapp_a4de2ed3d7/verify-token');
-      
-      if (verifyResponse.statusCode == 200 && verifyResponse.data['valid'] == true) {
+      final verifyResponse = await _httpService.dio.get(
+        '/auth/movilapp_a4de2ed3d7/verify-token',
+      );
+
+      if (verifyResponse.statusCode == 200 &&
+          verifyResponse.data['valid'] == true) {
         final userData = verifyResponse.data['user'];
-        
+
         return User(
           id: userData['sub'].hashCode.abs(), // Usar hash del UUID como int ID
           name: userData['email'] ?? 'Usuario', // Temporal, hasta tener el name
@@ -140,7 +146,7 @@ class RobleAuthService {
   Future<bool> isAuthenticated() async {
     final accessToken = await _httpService.getAccessToken();
     if (accessToken == null) return false;
-    
+
     // Verificar si el token es válido
     return await isTokenValid();
   }
@@ -153,7 +159,10 @@ class RobleAuthService {
 
   /// Método de compatibilidad con la implementación anterior
   @deprecated
-  Future<Map<String, dynamic>?> getUserByCredentials(String email, String password) async {
+  Future<Map<String, dynamic>?> getUserByCredentials(
+    String email,
+    String password,
+  ) async {
     final user = await login(email, password);
     return user?.toMap();
   }

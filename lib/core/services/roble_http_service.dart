@@ -11,64 +11,75 @@ class RobleHttpService {
   Dio get dio => _dio;
 
   RobleHttpService() {
-    _dio = Dio(BaseOptions(
-      baseUrl: RobleConfig.baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-      headers: RobleConfig.defaultHeaders,
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: RobleConfig.baseUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        headers: RobleConfig.defaultHeaders,
+      ),
+    );
 
     // Agregar logging interceptor para debug
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      requestHeader: true,
-      responseHeader: true,
-      error: true,
-    ));
+    _dio.interceptors.add(
+      LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        requestHeader: true,
+        responseHeader: true,
+        error: true,
+      ),
+    );
 
     // Interceptor para agregar automáticamente el token
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        print('🔍 Interceptor - Endpoint: ${options.path}');
-        print('🔍 Interceptor - Es auth endpoint: ${_isAuthEndpoint(options.path)}');
-        
-        final token = await getAccessToken();
-        if (token != null && !_isAuthEndpoint(options.path)) {
-          print('🔐 Agregando token de autorización');
-          options.headers['Authorization'] = 'Bearer $token';
-        } else {
-          print('ℹ️ No se agrega token (endpoint de auth o token no disponible)');
-        }
-        handler.next(options);
-      },
-      onError: (error, handler) async {
-        print('❌ Error en interceptor: ${error.response?.statusCode}');
-        // Si recibimos 401, intentamos renovar el token
-        if (error.response?.statusCode == 401 && !_isAuthEndpoint(error.requestOptions.path)) {
-          print('🔄 Intentando renovar token...');
-          final refreshed = await _refreshToken();
-          if (refreshed) {
-            print('✅ Token renovado, reintentando petición...');
-            // Reintentamos la petición original
-            final response = await _dio.fetch(error.requestOptions);
-            return handler.resolve(response);
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          print('🔍 Interceptor - Endpoint: ${options.path}');
+          print(
+            '🔍 Interceptor - Es auth endpoint: ${_isAuthEndpoint(options.path)}',
+          );
+
+          final token = await getAccessToken();
+          if (token != null && !_isAuthEndpoint(options.path)) {
+            print('🔐 Agregando token de autorización');
+            options.headers['Authorization'] = 'Bearer $token';
+          } else {
+            print(
+              'ℹ️ No se agrega token (endpoint de auth o token no disponible)',
+            );
           }
-        }
-        handler.next(error);
-      },
-    ));
+          handler.next(options);
+        },
+        onError: (error, handler) async {
+          print('❌ Error en interceptor: ${error.response?.statusCode}');
+          // Si recibimos 401, intentamos renovar el token
+          if (error.response?.statusCode == 401 &&
+              !_isAuthEndpoint(error.requestOptions.path)) {
+            print('🔄 Intentando renovar token...');
+            final refreshed = await _refreshToken();
+            if (refreshed) {
+              print('✅ Token renovado, reintentando petición...');
+              // Reintentamos la petición original
+              final response = await _dio.fetch(error.requestOptions);
+              return handler.resolve(response);
+            }
+          }
+          handler.next(error);
+        },
+      ),
+    );
   }
 
   bool _isAuthEndpoint(String path) {
     // Solo estos endpoints NO requieren token de autorización
-    return path.contains('/login') || 
-           path.contains('/signup') || 
-           path.contains('/signup-direct') ||
-           path.contains('/refresh-token') ||
-           path.contains('/forgot-password') ||
-           path.contains('/reset-password') ||
-           path.contains('/verify-email');
+    return path.contains('/login') ||
+        path.contains('/signup') ||
+        path.contains('/signup-direct') ||
+        path.contains('/refresh-token') ||
+        path.contains('/forgot-password') ||
+        path.contains('/reset-password') ||
+        path.contains('/verify-email');
   }
 
   Future<String?> getAccessToken() async {
@@ -113,9 +124,11 @@ class RobleHttpService {
   // Métodos de autenticación
   Future<AuthTokens?> login(LoginRequest request) async {
     try {
-      print('🚀 Intentando login con URL: ${RobleConfig.baseUrl}${RobleConfig.loginEndpoint}');
+      print(
+        '🚀 Intentando login con URL: ${RobleConfig.baseUrl}${RobleConfig.loginEndpoint}',
+      );
       print('📝 Datos enviados: ${request.toJson()}');
-      
+
       final response = await _dio.post(
         RobleConfig.loginEndpoint,
         data: request.toJson(),
@@ -231,7 +244,7 @@ class RobleHttpService {
     print('- Status Code: ${e.response?.statusCode}');
     print('- Request URL: ${e.requestOptions.uri}');
     print('- Request Data: ${e.requestOptions.data}');
-    
+
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
@@ -242,24 +255,33 @@ class RobleHttpService {
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode;
         final responseData = e.response?.data;
-        
+
         // Intentar obtener mensaje específico del servidor
         String serverMessage = '';
         if (responseData is Map<String, dynamic>) {
-          serverMessage = responseData['message'] ?? responseData['error'] ?? '';
+          serverMessage =
+              responseData['message'] ?? responseData['error'] ?? '';
         }
-        
+
         switch (statusCode) {
           case 400:
-            return serverMessage.isNotEmpty ? 'Error: $serverMessage' : 'Datos inválidos';
+            return serverMessage.isNotEmpty
+                ? 'Error: $serverMessage'
+                : 'Datos inválidos';
           case 401:
-            return serverMessage.isNotEmpty ? 'Error: $serverMessage' : 'Credenciales incorrectas';
+            return serverMessage.isNotEmpty
+                ? 'Error: $serverMessage'
+                : 'Credenciales incorrectas';
           case 403:
-            return serverMessage.isNotEmpty ? 'Error: $serverMessage' : 'Acceso denegado';
+            return serverMessage.isNotEmpty
+                ? 'Error: $serverMessage'
+                : 'Acceso denegado';
           case 404:
             return 'Servicio no encontrado - Verifica tu dbName: ${RobleConfig.dbName}';
           case 500:
-            return serverMessage.isNotEmpty ? 'Error del servidor: $serverMessage' : 'Error del servidor';
+            return serverMessage.isNotEmpty
+                ? 'Error del servidor: $serverMessage'
+                : 'Error del servidor';
           default:
             return 'Error HTTP $statusCode: ${serverMessage.isNotEmpty ? serverMessage : 'Error desconocido'}';
         }

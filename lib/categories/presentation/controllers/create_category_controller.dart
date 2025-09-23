@@ -12,11 +12,11 @@ class CreateCategoryController extends GetxController {
   final nameCtrl = TextEditingController();
   final descCtrl = TextEditingController();
   final capacityCtrl = TextEditingController();
-  
+
   final type = RxnString(); // "Auto-asignado" | "Aleatorio"
   final isLoading = false.obs;
   final error = RxnString();
-  
+
   @override
   void onInit() {
     super.onInit();
@@ -25,8 +25,12 @@ class CreateCategoryController extends GetxController {
       courseId = (args['courseId'] as num).toInt();
     } else {
       // Valor por defecto o manejo de error
-      Get.snackbar('Error', 'ID del curso no encontrado', 
-        backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+        'Error',
+        'ID del curso no encontrado',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
       Get.back();
       return;
     }
@@ -46,7 +50,10 @@ class CreateCategoryController extends GetxController {
 
   void setType(String? v) => type.value = v;
 
-  Future<void> submit(GlobalKey<FormState> formKey, BuildContext context) async {
+  Future<void> submit(
+    GlobalKey<FormState> formKey,
+    BuildContext context,
+  ) async {
     if (!(formKey.currentState?.validate() ?? false)) return;
     isLoading.value = true;
     error.value = null;
@@ -67,8 +74,12 @@ class CreateCategoryController extends GetxController {
       Get.back(result: true);
       Get.snackbar('Exito', 'Categoría creada');
     } catch (e) {
-        Get.snackbar('Error', 'No se pudo crear el curso $e',
-        backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+        'Error',
+        'No se pudo crear el curso $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -82,8 +93,3 @@ class CreateCategoryController extends GetxController {
     super.onClose();
   }
 }
-
-
-
-
-

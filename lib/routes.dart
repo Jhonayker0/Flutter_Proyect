@@ -6,7 +6,8 @@ import 'package:flutter_application/auth/presentation/pages/sign_up_page.dart';
 
 // Categories imports
 import 'package:flutter_application/categories/presentation/bindings/categories_binding.dart';
-import 'package:flutter_application/categories/presentation/bindings/view_categories_binding.dart' as view_cat;
+import 'package:flutter_application/categories/presentation/bindings/view_categories_binding.dart'
+    as view_cat;
 import 'package:flutter_application/categories/presentation/bindings/create_category_binding.dart';
 import 'package:flutter_application/categories/presentation/bindings/edit_category_binding.dart';
 import 'package:flutter_application/categories/presentation/pages/categories_page.dart';
@@ -95,7 +96,11 @@ class Routes {
     GetPage(
       name: courseDetail,
       page: () => const CourseDetailPage(),
-      bindings: [CourseDetailBinding(), view_cat.CategoryGroupsBinding(), CategoriesBinding()],
+      bindings: [
+        CourseDetailBinding(),
+        view_cat.CategoryGroupsBinding(),
+        CategoriesBinding(),
+      ],
     ),
     GetPage(
       name: joinCourse,
@@ -110,10 +115,3 @@ class Routes {
     // Re estructura de github
   ];
 }
-
-
-
-
-
-
-

@@ -29,36 +29,41 @@ class CreateCoursePage extends GetView<CreateCourseController> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: Obx(() => ListView(
-                children: [
-                  // Nombre
-                  TextFormField(
-                    controller: controller.nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre del curso',
-                      hintText: 'Escribe el nombre aquí...',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) =>
-                        controller.validateRequired(v, 'Por favor ingresa un nombre'),
+          child: Obx(
+            () => ListView(
+              children: [
+                // Nombre
+                TextFormField(
+                  controller: controller.nameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre del curso',
+                    hintText: 'Escribe el nombre aquí...',
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 20),
-
-                  // Descripción
-                  TextFormField(
-                    controller: controller.descCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Descripción',
-                      hintText: 'Escribe la descripción aquí...',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                    validator: (v) => controller
-                        .validateRequired(v, 'Por favor ingresa una descripción'),
+                  validator: (v) => controller.validateRequired(
+                    v,
+                    'Por favor ingresa un nombre',
                   ),
-                  const SizedBox(height: 20),
+                ),
+                const SizedBox(height: 20),
 
-                  /*// Fecha límite
+                // Descripción
+                TextFormField(
+                  controller: controller.descCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Descripción',
+                    hintText: 'Escribe la descripción aquí...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  validator: (v) => controller.validateRequired(
+                    v,
+                    'Por favor ingresa una descripción',
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                /*// Fecha límite
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.date_range),
@@ -75,67 +80,70 @@ class CreateCoursePage extends GetView<CreateCourseController> {
                   ),
                   const SizedBox(height: 20),*/
 
-                  // Añadir imagen
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      // TODO: abrir picker y llamar controller.setImagePath(path)
-                    },
-                    icon: const Icon(Icons.add_a_photo),
-                    label: const Text('Añadir imagen'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: cs.primary),
+                // Añadir imagen
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    // TODO: abrir picker y llamar controller.setImagePath(path)
+                  },
+                  icon: const Icon(Icons.add_a_photo),
+                  label: const Text('Añadir imagen'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: cs.primary),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Error
+                if (controller.error.value != null)
+                  Text(
+                    controller.error.value!,
+                    style: TextStyle(color: cs.error),
+                  ),
+
+                // Botones
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : () => controller.submit(_formKey, context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: cs.onPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                      ),
+                      child: controller.isLoading.value
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Crear'),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Error
-                  if (controller.error.value != null)
-                    Text(controller.error.value!, style: TextStyle(color: cs.error)),
-
-                  // Botones
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: controller.isLoading.value
-                            ? null
-                            : () => controller.submit(_formKey, context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: cs.primary,
-                          foregroundColor: cs.onPrimary,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 14),
+                    OutlinedButton(
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
                         ),
-                        child: controller.isLoading.value
-                            ? const SizedBox(
-                                height: 20, width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Text('Crear'),
                       ),
-                      OutlinedButton(
-                        onPressed:
-                            controller.isLoading.value ? null : () => Get.back(),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 14),
-                        ),
-                        child: const Text('Cancelar'),
-                      ),
-                    ],
-                  ),
-                ],
-              )),
+                      child: const Text('Cancelar'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
-
-
-
-
-
-
-

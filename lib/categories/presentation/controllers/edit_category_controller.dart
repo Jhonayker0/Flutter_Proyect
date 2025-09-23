@@ -21,7 +21,7 @@ class EditCategoryController extends GetxController {
   final type = RxnString();
   final isLoading = false.obs;
   final error = RxnString();
-  
+
   Category? _originalCategory;
 
   @override
@@ -64,7 +64,10 @@ class EditCategoryController extends GetxController {
 
   void setType(String? v) => type.value = v;
 
-  Future<void> submit(GlobalKey<FormState> formKey, BuildContext context) async {
+  Future<void> submit(
+    GlobalKey<FormState> formKey,
+    BuildContext context,
+  ) async {
     if (!(formKey.currentState?.validate() ?? false)) return;
     if (_originalCategory == null) return;
 
@@ -78,15 +81,14 @@ class EditCategoryController extends GetxController {
         type: type.value!,
         capacity: n,
       );
-      
+
       await updateCategoryUseCase(updatedCategory);
 
-     if (Get.isRegistered<CategoryGroupsController>()) {
+      if (Get.isRegistered<CategoryGroupsController>()) {
         Get.find<CategoryGroupsController>().refreshAll();
       }
       Get.back();
       Get.snackbar('Éxito', 'Categoría actualizada');
-
     } catch (e) {
       error.value = 'No se pudo actualizar la categoría';
     } finally {
@@ -102,10 +104,3 @@ class EditCategoryController extends GetxController {
     super.onClose();
   }
 }
-
-
-
-
-
-
-

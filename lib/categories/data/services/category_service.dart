@@ -53,7 +53,9 @@ class CategoryService {
       }
 
       // 4) Si es aleatorio o auto-asignado, asignar estudiantes ahora
-      if ((tipo == 'aleatorio' || tipo == 'auto-asignado') && n > 0 && groupIds.isNotEmpty) {
+      if ((tipo == 'aleatorio' || tipo == 'auto-asignado') &&
+          n > 0 &&
+          groupIds.isNotEmpty) {
         if (tipo == 'aleatorio') {
           students.shuffle(); // barajar solo si es aleatorio
         }
@@ -86,7 +88,9 @@ class CategoryService {
   }
 
   // Listado de categorías (básico)
-  Future<List<Map<String, Object?>>> getAllCategoriesByCourse(int courseId) async {
+  Future<List<Map<String, Object?>>> getAllCategoriesByCourse(
+    int courseId,
+  ) async {
     final db = await _dbService.database;
     return await db.query(
       'categoria',
@@ -95,6 +99,7 @@ class CategoryService {
       orderBy: 'id DESC',
     );
   }
+
   // Obtener una categoría por id
   Future<Map<String, Object?>?> getCategoryById(int id) async {
     final db = await _dbService.database;
@@ -249,7 +254,7 @@ class CategoryService {
       [groupId, categoryId],
     );
   }
-  
+
   Future<int> joinGroup(int studentId, int groupId) async {
     final db = await _dbService.database;
     print("llegue");
@@ -260,16 +265,21 @@ class CategoryService {
   }
 
   // Asignar estudiante a un grupo específico (para profesores)
-  Future<void> assignStudentToGroup(int studentId, int groupId, int categoryId) async {
+  Future<void> assignStudentToGroup(
+    int studentId,
+    int groupId,
+    int categoryId,
+  ) async {
     final db = await _dbService.database;
     await db.transaction((txn) async {
       // Primero eliminar al estudiante de cualquier grupo en esta categoría
       await txn.delete(
         'categoria_estudiante',
-        where: 'estudiante_id = ? AND grupo_id IN (SELECT id FROM grupo WHERE categoria_id = ?)',
+        where:
+            'estudiante_id = ? AND grupo_id IN (SELECT id FROM grupo WHERE categoria_id = ?)',
         whereArgs: [studentId, categoryId],
       );
-      
+
       // Luego agregarlo al nuevo grupo
       await txn.insert('categoria_estudiante', {
         'grupo_id': groupId,
@@ -283,15 +293,20 @@ class CategoryService {
     final db = await _dbService.database;
     await db.delete(
       'categoria_estudiante',
-      where: 'estudiante_id = ? AND grupo_id IN (SELECT id FROM grupo WHERE categoria_id = ?)',
+      where:
+          'estudiante_id = ? AND grupo_id IN (SELECT id FROM grupo WHERE categoria_id = ?)',
       whereArgs: [studentId, categoryId],
     );
   }
 
   // Obtener estudiantes del curso que no están asignados a ningún grupo de esta categoría
-  Future<List<Member>> getUnassignedStudents(int courseId, int categoryId) async {
+  Future<List<Member>> getUnassignedStudents(
+    int courseId,
+    int categoryId,
+  ) async {
     final db = await _dbService.database;
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT p.id, p.nombre, p.correo
       FROM persona p
       INNER JOIN estudiante_curso ec ON p.id = ec.estudiante_id
@@ -302,19 +317,18 @@ class CategoryService {
         INNER JOIN grupo g ON ce.grupo_id = g.id
         WHERE g.categoria_id = ?
       )
-    ''', [courseId, categoryId]);
-    
-    return rows.map((row) => Member(
-      id: row['id'] as int,
-      name: row['nombre'] as String,
-      email: row['correo'] as String?,
-    )).toList();
+    ''',
+      [courseId, categoryId],
+    );
+
+    return rows
+        .map(
+          (row) => Member(
+            id: row['id'] as int,
+            name: row['nombre'] as String,
+            email: row['correo'] as String?,
+          ),
+        )
+        .toList();
   }
 }
-
-
-
-
-
-
-

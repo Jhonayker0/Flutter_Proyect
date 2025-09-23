@@ -10,10 +10,3 @@ class SignUpUseCase {
     return repository.signUp(name, email, password);
   }
 }
-
-
-
-
-
-
-

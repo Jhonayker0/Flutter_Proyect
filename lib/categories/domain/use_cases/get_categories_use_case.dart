@@ -7,10 +7,3 @@ class GetCategories {
 
   Future<List<Category>> call(int courseId) => repo.getAll(courseId);
 }
-
-
-
-
-
-
-

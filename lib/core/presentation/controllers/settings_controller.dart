@@ -12,21 +12,13 @@ class SettingsController extends GetxController {
   bool get isDark => themeService.isDark;
 
   Future<void> toggleTheme() => themeService.toggleTheme();
-  
+
   void selectOption(String title) {
     if (title == "Cerrar sesión") {
       final authController = Get.find<AuthController>();
-      authController.logout(); 
-    } 
-    else {
+      authController.logout();
+    } else {
       deleteDatabaseFile();
     }
   }
 }
-
-
-
-
-
-
-

@@ -9,7 +9,7 @@ class CategoriesController extends GetxController {
   final GetCategories getCategoriesUseCase;
   final DeleteCategory deleteCategoryUseCase;
   late final int courseid;
-  
+
   CategoriesController({
     required this.getCategoriesUseCase,
     required this.deleteCategoryUseCase,
@@ -26,7 +26,8 @@ class CategoriesController extends GetxController {
     if (args != null && args['courseId'] != null) {
       courseid = (args['courseId'] as num).toInt();
     } else {
-      courseid = 1; // Valor por defecto para pruebas, en producción debería ser un error
+      courseid =
+          1; // Valor por defecto para pruebas, en producción debería ser un error
     }
     loadCategories();
   }
@@ -57,21 +58,33 @@ class CategoriesController extends GetxController {
 
   void goToCreateCategory() {
     if (courseid > 0) {
-      Get.toNamed(Routes.createCategory, arguments: {'courseId': courseid})?.then((_) => loadCategories());
+      Get.toNamed(
+        Routes.createCategory,
+        arguments: {'courseId': courseid},
+      )?.then((_) => loadCategories());
     } else {
-      Get.snackbar('Error', 'ID de curso no válido', backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar(
+        'Error',
+        'ID de curso no válido',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 
   void goToEditCategory(Category category) {
-    Get.toNamed('${Routes.editCategory}/${category.id}')?.then((_) => loadCategories());
+    Get.toNamed(
+      '${Routes.editCategory}/${category.id}',
+    )?.then((_) => loadCategories());
   }
 
   Future<void> confirmDelete(Category category) async {
     final result = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Confirmar eliminación'),
-        content: Text('¿Estás seguro de que quieres eliminar "${category.name}"?'),
+        content: Text(
+          '¿Estás seguro de que quieres eliminar "${category.name}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
@@ -90,10 +103,3 @@ class CategoriesController extends GetxController {
     }
   }
 }
-
-
-
-
-
-
-

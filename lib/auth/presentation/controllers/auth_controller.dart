@@ -35,7 +35,11 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> login(String email, String password, {bool remember = false}) async {
+  Future<void> login(
+    String email,
+    String password, {
+    bool remember = false,
+  }) async {
     isLoading.value = true;
     error.value = null;
 
@@ -191,12 +195,12 @@ class AuthController extends GetxController {
     try {
       await _repository.logout();
       currentUser.value = null;
-      
+
       // Limpiar SharedPreferences si es necesario
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('remember_email');
       await prefs.remove('remember_me');
-      
+
       Get.offAllNamed('/login');
     } catch (e) {
       print('Error during logout: $e');
@@ -208,10 +212,3 @@ class AuthController extends GetxController {
 
   bool get isLoggedIn => currentUser.value != null;
 }
-
-
-
-
-
-
-

@@ -13,10 +13,3 @@ class CreateCategoryBinding extends Bindings {
     Get.put(CreateCategoryController(createCategoryUseCase: useCase));
   }
 }
-
-
-
-
-
-
-

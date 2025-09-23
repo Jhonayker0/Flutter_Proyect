@@ -13,10 +13,3 @@ class CreateActivityBinding extends Bindings {
     Get.put(CreateActivityController(createActivityUC: useCase));
   }
 }
-
-
-
-
-
-
-

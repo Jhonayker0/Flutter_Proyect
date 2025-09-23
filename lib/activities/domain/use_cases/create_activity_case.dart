@@ -7,10 +7,3 @@ class CreateActivity {
 
   Future<void> call(Activity activity) => repo.create(activity);
 }
-
-
-
-
-
-
-

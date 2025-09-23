@@ -17,10 +17,3 @@ class AuthBinding extends Bindings {
     Get.put(AuthController(repo));
   }
 }
-
-
-
-
-
-
-

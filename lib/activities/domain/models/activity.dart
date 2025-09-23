@@ -73,10 +73,3 @@ class Activity {
     );
   }
 }
-
-
-
-
-
-
-

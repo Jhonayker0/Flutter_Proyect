@@ -40,29 +40,32 @@ class CourseRepositoryImpl implements CourseRepository {
   @override
   Future<List<Course>> getCoursesByStudent(int studentId) async {
     final data = await service.getCoursesByEstudiante(studentId);
-    return data.map((map) => Course.fromMap(map, currentUserId: studentId)).toList();
+    return data
+        .map((map) => Course.fromMap(map, currentUserId: studentId))
+        .toList();
   }
 
   @override
   Future<List<Course>> getCoursesByProfesor(int profesorId) async {
     final data = await service.getCoursesByProfesor(profesorId);
-    return data.map((map) => Course.fromMap(map, currentUserId: profesorId)).toList();
+    return data
+        .map((map) => Course.fromMap(map, currentUserId: profesorId))
+        .toList();
   }
 
   @override
   Future<List<Map<String, dynamic>>> getUsersByCourse(int courseId) async {
     return await service.getUsersByCourse(courseId);
   }
-  
+
   @override
-  Future<int> joinCourseByCode({required int studentId, required String courseCode}) async{
-    return await service.joinCourseByCode(studentId: studentId, courseCode: courseCode);
+  Future<int> joinCourseByCode({
+    required int studentId,
+    required String courseCode,
+  }) async {
+    return await service.joinCourseByCode(
+      studentId: studentId,
+      courseCode: courseCode,
+    );
   }
 }
-
-
-
-
-
-
-

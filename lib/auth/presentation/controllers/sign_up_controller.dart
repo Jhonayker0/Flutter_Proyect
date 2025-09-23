@@ -8,10 +8,7 @@ class SignUpController extends GetxController {
   final SignUpUseCase signUpUseCase;
   final AuthController authController;
 
-  SignUpController({
-    required this.signUpUseCase,
-    required this.authController,
-  });
+  SignUpController({required this.signUpUseCase, required this.authController});
 
   var loading = false.obs;
   var error = ''.obs;
@@ -23,8 +20,9 @@ class SignUpController extends GetxController {
     // Ejecuta el use case, devuelve un User? en vez de bool
     final User? user = await signUpUseCase.execute(name, email, password);
 
-    if (user != null) {// guarda el usuario logueado
-      Get.offAllNamed(Routes.login);             // navega a Home
+    if (user != null) {
+      // guarda el usuario logueado
+      Get.offAllNamed(Routes.login); // navega a Home
     } else {
       error.value = 'Ese correo ya está registrado';
     }
@@ -32,10 +30,3 @@ class SignUpController extends GetxController {
     loading.value = false;
   }
 }
-
-
-
-
-
-
-

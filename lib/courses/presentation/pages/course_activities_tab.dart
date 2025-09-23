@@ -10,14 +10,14 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(() {
-        if (controller.isLoading.value) {
+        if (controller.isLoadingActivities.value) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final activities = controller.activities;
-        
+        final activities = controller.courseActivities;
+
         return RefreshIndicator(
-          onRefresh: controller.loadActivities,
+          onRefresh: controller.loadRobleActivities,
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: activities.length + (controller.isProfessor ? 1 : 0),
@@ -33,10 +33,7 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
                         color: Colors.green.shade100,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(
-                        Icons.add,
-                        color: Colors.green.shade700,
-                      ),
+                      child: Icon(Icons.add, color: Colors.green.shade700),
                     ),
                     title: const Text(
                       'Crear Nueva Actividad',
@@ -45,23 +42,118 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
                         color: Colors.green,
                       ),
                     ),
-                    subtitle: const Text('Agregar una nueva tarea, examen o proyecto'),
+                    subtitle: const Text(
+                      'Agregar una nueva tarea, examen o proyecto',
+                    ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: controller.createNewActivity,
                   ),
                 );
-                
               }
 
               // Ajustar índice para las actividades
               final activityIndex = controller.isProfessor ? index - 1 : index;
               final activity = activities[activityIndex];
 
-              return _buildActivityCard(activity);
+              return _buildRobleActivityCard(activity);
             },
           ),
         );
       }),
+    );
+  }
+
+  Widget _buildRobleActivityCard(Map<String, dynamic> activity) {
+    final title = activity['title']?.toString() ?? 'Sin título';
+    final description =
+        activity['description']?.toString() ?? 'Sin descripción';
+    final type = activity['type']?.toString() ?? 'Actividad';
+    final formattedDate =
+        activity['formatted_due_date']?.toString() ?? 'Sin fecha';
+    final categoryName = activity['category_name']?.toString();
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _getActivityColorFromType(type).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            _getActivityIconFromType(type),
+            color: _getActivityColorFromType(type),
+          ),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(description),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  formattedDate,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+                if (categoryName != null) ...[
+                  const SizedBox(width: 12),
+                  Icon(Icons.category, size: 14, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Text(
+                    categoryName,
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Colors.grey.shade400,
+        ),
+        onTap: () => _showActivityDetails(activity),
+      ),
+    );
+  }
+
+  void _showActivityDetails(Map<String, dynamic> activity) {
+    showDialog(
+      context: Get.context!,
+      builder: (context) => AlertDialog(
+        title: Text(activity['title']?.toString() ?? 'Actividad'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Descripción: ${activity['description'] ?? 'Sin descripción'}',
+            ),
+            const SizedBox(height: 8),
+            Text('Tipo: ${activity['type'] ?? 'Sin tipo'}'),
+            const SizedBox(height: 8),
+            Text(
+              'Fecha límite: ${activity['formatted_due_date'] ?? 'Sin fecha'}',
+            ),
+            if (activity['category_name'] != null) ...[
+              const SizedBox(height: 8),
+              Text('Categoría: ${activity['category_name']}'),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -91,23 +183,19 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
             const SizedBox(height: 4),
             Row(
               children: [
-                Icon(
-                  Icons.access_time,
-                  size: 14,
-                  color: Colors.grey.shade600,
-                ),
+                Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
                 const SizedBox(width: 4),
                 Text(
                   'Vence: ${_formatDate(activity.dueDate)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 const Spacer(),
                 if (activity.isCompleted)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.shade100,
                       borderRadius: BorderRadius.circular(12),
@@ -122,7 +210,9 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
                         ),
                         const SizedBox(width: 2),
                         Text(
-                          activity.grade != null ? '${activity.grade}%' : 'Completado',
+                          activity.grade != null
+                              ? '${activity.grade}%'
+                              : 'Completado',
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.green.shade700,
@@ -134,7 +224,10 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
                   )
                 else
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.shade100,
                       borderRadius: BorderRadius.circular(12),
@@ -188,7 +281,7 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = date.difference(now).inDays;
-    
+
     if (difference < 0) {
       return 'Vencido';
     } else if (difference == 0) {
@@ -199,11 +292,13 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
       return '${date.day}/${date.month}/${date.year}';
     }
   }
+
+  // Métodos para el nuevo formato de ROBLE
+  Color _getActivityColorFromType(String type) {
+    return _getActivityColor(type);
+  }
+
+  IconData _getActivityIconFromType(String type) {
+    return _getActivityIcon(type);
+  }
 }
-
-
-
-
-
-
-

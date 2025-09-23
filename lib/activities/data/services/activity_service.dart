@@ -4,10 +4,3 @@ class ActivityService {
     await Future.delayed(const Duration(milliseconds: 500));
   }
 }
-
-
-
-
-
-
-

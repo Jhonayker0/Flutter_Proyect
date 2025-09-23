@@ -47,7 +47,9 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
                         color: Colors.blue,
                       ),
                     ),
-                    subtitle: const Text('Enviar invitación para unirse al curso'),
+                    subtitle: const Text(
+                      'Enviar invitación para unirse al curso',
+                    ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: controller.inviteStudent,
                   ),
@@ -71,12 +73,12 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
     final String email = userData['email'] ?? '';
     final String? imagePath = userData['imagepathh'];
     final String role = userData['role'] ?? 'student';
-    
+
     // Configurar colores y etiquetas según el rol
     Color roleColor;
     String roleLabel;
     IconData roleIcon;
-    
+
     switch (role.toLowerCase()) {
       case 'professor':
       case 'teacher':
@@ -97,12 +99,14 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: Colors.blue.shade100,
-          backgroundImage: imagePath != null
-              ? NetworkImage(imagePath)
-              : null,
+          backgroundImage: imagePath != null ? NetworkImage(imagePath) : null,
           child: imagePath == null
               ? Text(
-                  name.split(' ').map((n) => n.isNotEmpty ? n[0] : '').take(2).join(),
+                  name
+                      .split(' ')
+                      .map((n) => n.isNotEmpty ? n[0] : '')
+                      .take(2)
+                      .join(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.blue.shade700,
@@ -129,11 +133,7 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    roleIcon,
-                    size: 14,
-                    color: roleColor,
-                  ),
+                  Icon(roleIcon, size: 14, color: roleColor),
                   const SizedBox(width: 4),
                   Text(
                     roleLabel,
@@ -150,13 +150,15 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
         ),
         subtitle: Text(email),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () => controller.viewStudent(User(
-          id: userData['uuid'].hashCode.abs(),
-          name: name,
-          email: email,
-          imagepathh: imagePath,
-          uuid: userData['uuid'],
-        )),
+        onTap: () => controller.viewStudent(
+          User(
+            id: userData['uuid'].hashCode.abs(),
+            name: name,
+            email: email,
+            imagepathh: imagePath,
+            uuid: userData['uuid'],
+          ),
+        ),
       ),
     );
   }

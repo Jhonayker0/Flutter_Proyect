@@ -17,16 +17,8 @@ class SignUpBinding extends Bindings {
     final authController = Get.find<AuthController>();
 
     // Inyecta el SignUpController con useCase + authController
-    Get.put(SignUpController(
-      signUpUseCase: useCase,
-      authController: authController,
-    ));
+    Get.put(
+      SignUpController(signUpUseCase: useCase, authController: authController),
+    );
   }
 }
-
-
-
-
-
-
-

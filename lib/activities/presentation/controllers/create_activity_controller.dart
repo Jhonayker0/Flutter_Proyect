@@ -30,7 +30,10 @@ class CreateActivityController extends GetxController {
   void setCategory(String? c) => category.value = c;
   void setAttachment(String? path) => attachmentPath.value = path;
 
-  Future<void> submit(GlobalKey<FormState> formKey, BuildContext context) async {
+  Future<void> submit(
+    GlobalKey<FormState> formKey,
+    BuildContext context,
+  ) async {
     if (!(formKey.currentState?.validate() ?? false)) return;
 
     isLoading.value = true;
@@ -38,12 +41,14 @@ class CreateActivityController extends GetxController {
     try {
       final activity = Activity(
         title: nameCtrl.text.trim(),
-        description: descCtrl.text.trim().isEmpty ? 'Sin descripción' : descCtrl.text.trim(),
+        description: descCtrl.text.trim().isEmpty
+            ? 'Sin descripción'
+            : descCtrl.text.trim(),
         dueDate: deadline.value ?? DateTime.now().add(Duration(days: 7)),
         type: category.value ?? 'Tarea',
         courseId: 1, // TODO: Obtener el courseId actual
       );
-      
+
       await createActivityUC(activity);
       Get.snackbar('Éxito', 'Actividad creada');
       Get.back(); // o navegación custom
@@ -61,10 +66,3 @@ class CreateActivityController extends GetxController {
     super.onClose();
   }
 }
-
-
-
-
-
-
-

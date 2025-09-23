@@ -29,18 +29,25 @@ class _RobleTestScreenState extends State<RobleTestScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Configuración ROBLE:', 
-                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(
+                      'Configuración ROBLE:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                     SizedBox(height: 8),
                     Text('Base URL: ${RobleConfig.baseUrl}'),
                     Text('DB Name: ${RobleConfig.dbName}'),
-                    Text('Login URL: ${RobleConfig.baseUrl}${RobleConfig.loginEndpoint}'),
+                    Text(
+                      'Login URL: ${RobleConfig.baseUrl}${RobleConfig.loginEndpoint}',
+                    ),
                   ],
                 ),
               ),
             ),
             SizedBox(height: 20),
-            
+
             Row(
               children: [
                 ElevatedButton(
@@ -54,18 +61,21 @@ class _RobleTestScreenState extends State<RobleTestScreen> {
                 ),
               ],
             ),
-            
+
             SizedBox(height: 20),
-            
-            if (isLoading)
-              Center(child: CircularProgressIndicator()),
-            
+
+            if (isLoading) Center(child: CircularProgressIndicator()),
+
             Expanded(
               child: Card(
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: SingleChildScrollView(
-                    child: Text(testResult.isEmpty ? 'Presiona un botón para hacer test...' : testResult),
+                    child: Text(
+                      testResult.isEmpty
+                          ? 'Presiona un botón para hacer test...'
+                          : testResult,
+                    ),
                   ),
                 ),
               ),
@@ -85,7 +95,7 @@ class _RobleTestScreenState extends State<RobleTestScreen> {
     try {
       final dio = Dio();
       final response = await dio.get('${RobleConfig.baseUrl}/health');
-      
+
       setState(() {
         testResult += 'SUCCESS: Servidor responde\n';
         testResult += 'Status: ${response.statusCode}\n';
@@ -110,14 +120,11 @@ class _RobleTestScreenState extends State<RobleTestScreen> {
 
     try {
       final dio = Dio();
-      
+
       // Test con credenciales de prueba
       final response = await dio.post(
         '${RobleConfig.baseUrl}${RobleConfig.loginEndpoint}',
-        data: {
-          'email': 'test@test.com',
-          'password': 'test123'
-        },
+        data: {'email': 'test@test.com', 'password': 'test123'},
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -125,7 +132,7 @@ class _RobleTestScreenState extends State<RobleTestScreen> {
           },
         ),
       );
-      
+
       setState(() {
         testResult += 'SUCCESS: Login endpoint responde\n';
         testResult += 'Status: ${response.statusCode}\n';

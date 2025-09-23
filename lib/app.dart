@@ -8,8 +8,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-  return GetMaterialApp(
+    return GetMaterialApp(
       initialBinding: AuthBinding(),
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
@@ -21,10 +20,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-

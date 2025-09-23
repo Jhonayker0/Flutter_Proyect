@@ -32,8 +32,10 @@ class _SignUpPageState extends State<SignUpPage> {
           key: _formKey,
           child: ListView(
             children: [
-              const Text("Crea una cuenta para empezar",
-                  style: TextStyle(fontSize: 16)),
+              const Text(
+                "Crea una cuenta para empezar",
+                style: TextStyle(fontSize: 16),
+              ),
               const SizedBox(height: 20),
 
               // campos (los de tu código)
@@ -51,8 +53,9 @@ class _SignUpPageState extends State<SignUpPage> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) {
                   if (v == null || v.isEmpty) return "Ingresa tu correo";
-                  final emailReg =
-                      RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[a-zA-Z]{2,}$');
+                  final emailReg = RegExp(
+                    r'^[\w\.\-]+@([\w\-]+\.)+[a-zA-Z]{2,}$',
+                  );
                   if (!emailReg.hasMatch(v)) return "Correo inválido";
                   return null;
                 },
@@ -63,10 +66,10 @@ class _SignUpPageState extends State<SignUpPage> {
                 controller: _passCtrl,
                 obscure: _obscure1,
                 suffix: IconButton(
-                  onPressed: () =>
-                      setState(() => _obscure1 = !_obscure1),
+                  onPressed: () => setState(() => _obscure1 = !_obscure1),
                   icon: Icon(
-                      _obscure1 ? Icons.visibility_off : Icons.visibility),
+                    _obscure1 ? Icons.visibility_off : Icons.visibility,
+                  ),
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return "Ingresa una contraseña";
@@ -80,14 +83,15 @@ class _SignUpPageState extends State<SignUpPage> {
                 controller: _confirmPassCtrl,
                 obscure: _obscure2,
                 suffix: IconButton(
-                  onPressed: () =>
-                      setState(() => _obscure2 = !_obscure2),
+                  onPressed: () => setState(() => _obscure2 = !_obscure2),
                   icon: Icon(
-                      _obscure2 ? Icons.visibility_off : Icons.visibility),
+                    _obscure2 ? Icons.visibility_off : Icons.visibility,
+                  ),
                 ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return "Confirma tu contraseña";
-                  if (v != _passCtrl.text) return "Las contraseñas no coinciden";
+                  if (v != _passCtrl.text)
+                    return "Las contraseñas no coinciden";
                   return null;
                 },
               ),
@@ -108,36 +112,40 @@ class _SignUpPageState extends State<SignUpPage> {
               const SizedBox(height: 30),
 
               // Botón crear cuenta
-              Obx(() => SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: controller.loading.value
-                          ? null
-                          : () {
-                              if (!_agree) {
-                                Get.snackbar("Error",
-                                    "Debes aceptar los términos y condiciones"
-                                    ,duration: const Duration(seconds: 1));
-                                return;
-                              }
-                              if (_formKey.currentState!.validate()) {
-                                controller.signUp(
-                                  _nameCtrl.text.trim(),
-                                  _emailCtrl.text.trim(),
-                                  _passCtrl.text.trim(),
-                                );
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: cs.primary,
-                        foregroundColor: cs.onPrimary,
-                      ),
-                      child: controller.loading.value
-                          ? const CircularProgressIndicator()
-                          : const Text("Crear cuenta"),
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: controller.loading.value
+                        ? null
+                        : () {
+                            if (!_agree) {
+                              Get.snackbar(
+                                "Error",
+                                "Debes aceptar los términos y condiciones",
+                                duration: const Duration(seconds: 1),
+                              );
+                              return;
+                            }
+                            if (_formKey.currentState!.validate()) {
+                              controller.signUp(
+                                _nameCtrl.text.trim(),
+                                _emailCtrl.text.trim(),
+                                _passCtrl.text.trim(),
+                              );
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
                     ),
-                  )),
+                    child: controller.loading.value
+                        ? const CircularProgressIndicator()
+                        : const Text("Crear cuenta"),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -170,17 +178,12 @@ class _SignUpPageState extends State<SignUpPage> {
           validator: validator,
         ),
         const SizedBox(height: 4),
-        Text("Ej: $example",
-            style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(
+          "Ej: $example",
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
+        ),
         const SizedBox(height: 20),
       ],
     );
   }
 }
-
-
-
-
-
-
-

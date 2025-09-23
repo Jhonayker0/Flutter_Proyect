@@ -10,10 +10,3 @@ class SettingsBinding extends Bindings {
     Get.put<SettingsController>(SettingsController(Get.find<ThemeService>()));
   }
 }
-
-
-
-
-
-
-

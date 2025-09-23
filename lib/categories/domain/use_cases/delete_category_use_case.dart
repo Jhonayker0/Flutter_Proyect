@@ -6,10 +6,3 @@ class DeleteCategory {
 
   Future<void> call(int id) => repo.delete(id);
 }
-
-
-
-
-
-
-

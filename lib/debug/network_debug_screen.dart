@@ -21,24 +21,25 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Configuración ROBLE:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              'Configuración ROBLE:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             Text('Base URL: ${RobleConfig.baseUrl}'),
             Text('DB Name: ${RobleConfig.dbName}'),
-            Text('Login URL: ${RobleConfig.baseUrl}${RobleConfig.loginEndpoint}'),
+            Text(
+              'Login URL: ${RobleConfig.baseUrl}${RobleConfig.loginEndpoint}',
+            ),
             SizedBox(height: 20),
-            
+
             ElevatedButton(
               onPressed: _testConnection,
               child: Text('Test Conexión'),
             ),
-            
+
             SizedBox(height: 20),
-            
-            Expanded(
-              child: SingleChildScrollView(
-                child: Text(_debugInfo),
-              ),
-            ),
+
+            Expanded(child: SingleChildScrollView(child: Text(_debugInfo))),
           ],
         ),
       ),
@@ -53,14 +54,13 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
     try {
       // Test básico de conexión
       _updateDebugInfo('📡 Testing conexión básica...');
-      
+
       final testRequest = LoginRequest(
         email: 'test@uninorte.edu.co',
         password: 'test123',
       );
 
       await _httpService.login(testRequest);
-      
     } catch (e) {
       _updateDebugInfo('❌ Error capturado: $e');
     }

@@ -4,7 +4,7 @@ class User {
   final String email;
   final String? imagepathh;
   final String? uuid; // Guardamos el UUID original
-  
+
   User({
     required this.id,
     required this.name,
@@ -18,7 +18,7 @@ class User {
     final idValue = map['id'];
     int finalId;
     String? uuidValue;
-    
+
     if (idValue is String) {
       // Si es String (UUID), calcular hash como int y guardar UUID
       uuidValue = idValue;
@@ -28,7 +28,7 @@ class User {
     } else {
       finalId = 0;
     }
-    
+
     return User(
       id: finalId,
       name: map['name'] ?? map['nombre'] ?? '',
@@ -43,7 +43,7 @@ class User {
     final idValue = json['id'];
     int finalId;
     String? uuidValue;
-    
+
     if (idValue is String) {
       // Si es String (UUID), calcular hash como int y guardar UUID
       uuidValue = idValue;
@@ -53,12 +53,16 @@ class User {
     } else {
       finalId = 0;
     }
-    
+
     return User(
       id: finalId,
       name: json['name'] ?? json['nombre'] ?? '',
       email: json['email'] ?? json['correo'] ?? '',
-      imagepathh: json['avatarUrl'] ?? json['image'] ?? json['imagen'] ?? json['imagepathh'],
+      imagepathh:
+          json['avatarUrl'] ??
+          json['image'] ??
+          json['imagen'] ??
+          json['imagepathh'],
       uuid: uuidValue,
     );
   }
@@ -125,10 +129,3 @@ class User {
         uuid.hashCode;
   }
 }
-
-
-
-
-
-
-

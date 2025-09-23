@@ -1,10 +1,10 @@
 class Category {
   final int? id;
-  final String name;          
-  final String? description; 
-  final String type;         
-  final int? capacity;        
-  final int courseId;        
+  final String name;
+  final String? description;
+  final String type;
+  final int? capacity;
+  final int courseId;
 
   const Category({
     this.id,
@@ -44,7 +44,8 @@ class Category {
       'tipo': normalizeType(type),
       'capacidad': capacity,
       'curso_id': courseId,
-      if (description != null) 'descripcion': description, // solo si existe en DB
+      if (description != null)
+        'descripcion': description, // solo si existe en DB
     };
   }
 
@@ -92,15 +93,10 @@ class Category {
     );
   }
 }
+
 class Member {
   final int id;
   final String name;
   final String? email;
   Member({required this.id, required this.name, this.email});
 }
-
-
-
-
-
-

@@ -72,7 +72,10 @@ class RobleCourseRepositoryImpl implements CourseRepository {
   }
 
   @override
-  Future<int> joinCourseByCode({required int studentId, required String courseCode}) async {
+  Future<int> joinCourseByCode({
+    required int studentId,
+    required String courseCode,
+  }) async {
     // TODO: Implementar con enrollments
     // Por ahora retornamos 0 (éxito)
     return 0;

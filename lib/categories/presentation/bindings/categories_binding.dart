@@ -12,17 +12,12 @@ class CategoriesBinding extends Bindings {
     final repo = CategoryRepositoryImpl(service);
     final getCategoriesUseCase = GetCategories(repo);
     final deleteCategoryUseCase = DeleteCategory(repo);
-    
-    Get.put(CategoriesController(
-      getCategoriesUseCase: getCategoriesUseCase,
-      deleteCategoryUseCase: deleteCategoryUseCase,
-    ));
+
+    Get.put(
+      CategoriesController(
+        getCategoriesUseCase: getCategoriesUseCase,
+        deleteCategoryUseCase: deleteCategoryUseCase,
+      ),
+    );
   }
 }
-
-
-
-
-
-
-

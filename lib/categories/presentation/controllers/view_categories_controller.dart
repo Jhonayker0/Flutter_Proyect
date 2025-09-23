@@ -3,14 +3,13 @@ import 'package:flutter_application/categories/domain/use_cases/delete_category_
 import 'package:flutter_application/auth/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 import '../../domain/repositories/category_repository.dart';
-import '../../domain/models/category.dart';        
-
+import '../../domain/models/category.dart';
 
 // ViewModels para la UI
 class CategoryVM {
   final int id;
   final String name;
-  final String type;    
+  final String type;
   final int? capacity;
   final int courseId;
 
@@ -22,21 +21,22 @@ class CategoryVM {
     required this.courseId,
   });
 
-
   factory CategoryVM.fromDomain(Category c) => CategoryVM(
-        id: c.id!,              
-        name: c.name,
-        type: c.type,
-        capacity: c.capacity,
-        courseId: c.courseId,
-      );
+    id: c.id!,
+    name: c.name,
+    type: c.type,
+    capacity: c.capacity,
+    courseId: c.courseId,
+  );
 }
+
 class MemberVM {
   final int id;
   final String name;
   final String? email;
   MemberVM({required this.id, required this.name, this.email});
 }
+
 class GroupVM {
   final int id;
   final String name;
@@ -50,27 +50,28 @@ class GroupVM {
     required this.members,
   });
 
-  factory GroupVM.fromDomain(GroupSummary g) => GroupVM(
-        id: g.id,
-        name: g.name,
-        capacity: g.capacity,
-        members: g.members,
-      );
+  factory GroupVM.fromDomain(GroupSummary g) =>
+      GroupVM(id: g.id, name: g.name, capacity: g.capacity, members: g.members);
 }
 
 class CategoryGroupsController extends GetxController {
   final int courseId;
   final String role;
-  CategoryGroupsController({required this.repo, required this.deleteCategoryUseCase, required this.courseId, required this.role});
+  CategoryGroupsController({
+    required this.repo,
+    required this.deleteCategoryUseCase,
+    required this.courseId,
+    required this.role,
+  });
   final CategoryRepository repo;
   final DeleteCategory deleteCategoryUseCase;
   final categories = <CategoryVM>[].obs;
   final groupsByCat = <int, List<GroupVM>>{}.obs;
   final isLoading = false.obs;
-  final loadingCat = <int>{}.obs;                 
+  final loadingCat = <int>{}.obs;
   final error = RxnString();
 
-  final userGroupByCategory = <int, int?>{}.obs; 
+  final userGroupByCategory = <int, int?>{}.obs;
 
   final AuthController authController = Get.find<AuthController>();
   @override
@@ -83,9 +84,9 @@ class CategoryGroupsController extends GetxController {
     isLoading.value = true;
     error.value = null;
     try {
-      final list = await repo.getAll(courseId);                 // List<Category>
+      final list = await repo.getAll(courseId); // List<Category>
       categories.assignAll(list.map(CategoryVM.fromDomain).toList());
-      groupsByCat.clear();                              // limpiar cache de grupos
+      groupsByCat.clear(); // limpiar cache de grupos
     } catch (e) {
       error.value = e.toString();
     } finally {
@@ -126,31 +127,37 @@ class CategoryGroupsController extends GetxController {
     groupsByCat.clear();
     await _loadCategories();
   }
-  
-  Future<List<MemberVM>> getMembersByGroup(int groupId, int categoriaId) async {
 
-    final rows = await repo.getMembersByGroup(groupId, categoriaId); // devuelve List<Map> o List<Member>
-    return rows.map((m) => MemberVM(
-      id: m.id,
-      name: m.name,
-      email: m.email,
-    )).toList();
+  Future<List<MemberVM>> getMembersByGroup(int groupId, int categoriaId) async {
+    final rows = await repo.getMembersByGroup(
+      groupId,
+      categoriaId,
+    ); // devuelve List<Map> o List<Member>
+    return rows
+        .map((m) => MemberVM(id: m.id, name: m.name, email: m.email))
+        .toList();
   }
 
   Future<void> deleteCategory(int categoryId) async {
-  try {
- 
-    await deleteCategoryUseCase(categoryId);
+    try {
+      await deleteCategoryUseCase(categoryId);
 
-    Get.snackbar('Categoría eliminada', 'Se eliminó correctamente', snackPosition: SnackPosition.BOTTOM);
-  } catch (e) {
-    
-    Get.snackbar('Error', 'No se pudo eliminar: $e', snackPosition: SnackPosition.BOTTOM);
-    rethrow; 
+      Get.snackbar(
+        'Categoría eliminada',
+        'Se eliminó correctamente',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo eliminar: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      rethrow;
+    }
   }
-}
 
- Future<void> joinGroup(int groupId) async {
+  Future<void> joinGroup(int groupId) async {
     final userId = authController.currentUser.value?.id;
     try {
       await repo.joinGroup(userId!, groupId);
@@ -163,7 +170,11 @@ class CategoryGroupsController extends GetxController {
   }
 
   // Métodos para profesores: gestión manual de estudiantes
-  Future<void> assignStudentToGroup(int studentId, int groupId, int categoryId) async {
+  Future<void> assignStudentToGroup(
+    int studentId,
+    int groupId,
+    int categoryId,
+  ) async {
     try {
       await repo.assignStudentToGroup(studentId, groupId, categoryId);
       refreshAll();
@@ -186,20 +197,12 @@ class CategoryGroupsController extends GetxController {
   Future<List<MemberVM>> getUnassignedStudents(int categoryId) async {
     try {
       final students = await repo.getUnassignedStudents(courseId, categoryId);
-      return students.map((s) => MemberVM(
-        id: s.id,
-        name: s.name,
-        email: s.email,
-      )).toList();
+      return students
+          .map((s) => MemberVM(id: s.id, name: s.name, email: s.email))
+          .toList();
     } catch (e) {
       Get.snackbar("Error", "No se pudieron cargar los estudiantes: $e");
       return [];
     }
   }
 }
-
-
-
-
-
-

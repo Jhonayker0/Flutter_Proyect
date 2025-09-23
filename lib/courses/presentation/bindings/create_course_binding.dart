@@ -13,10 +13,3 @@ class CreateCourseBinding extends Bindings {
     Get.put(CreateCourseController(createCourseUseCase: useCase));
   }
 }
-
-
-
-
-
-
-

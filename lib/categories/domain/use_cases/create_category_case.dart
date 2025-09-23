@@ -7,10 +7,3 @@ class CreateCategory {
 
   Future<void> call(Category category) => repo.create(category);
 }
-
-
-
-
-
-
-

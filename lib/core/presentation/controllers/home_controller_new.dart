@@ -37,11 +37,13 @@ class HomeController extends GetxController {
   Future<void> loadCourses() async {
     final authController = Get.find<AuthController>();
     final user = authController.currentUser.value;
-    
+
     if (user == null) return;
 
     // Debug: Mostrar información del usuario
-    print('🧐 Usuario actual: ID=${user.id}, UUID=${user.uuid}, Email=${user.email}');
+    print(
+      '🧐 Usuario actual: ID=${user.id}, UUID=${user.uuid}, Email=${user.email}',
+    );
 
     // Usar UUID si está disponible, sino usar el id como fallback
     final userIdString = user.uuid ?? user.id.toString();
@@ -52,11 +54,15 @@ class HomeController extends GetxController {
     try {
       // Obtener el repository como RobleCourseRepositoryImpl para usar métodos ROBLE
       final robleRepo = courseRepository as RobleCourseRepositoryImpl;
-      
+
       // Traer cursos del estudiante
-      final studentCourses = await robleRepo.getRobleCoursesByStudent(userIdString);
-      // Traer cursos del profesor  
-      final professorCourses = await robleRepo.getRobleCoursesByProfesor(userIdString);
+      final studentCourses = await robleRepo.getRobleCoursesByStudent(
+        userIdString,
+      );
+      // Traer cursos del profesor
+      final professorCourses = await robleRepo.getRobleCoursesByProfesor(
+        userIdString,
+      );
 
       _allCourses.addAll([...studentCourses, ...professorCourses]);
     } catch (e) {
@@ -64,10 +70,12 @@ class HomeController extends GetxController {
       // Fallback a métodos SQLite si falla ROBLE
       final userId = user.id;
       final studentCourses = await courseRepository.getCoursesByStudent(userId);
-      final professorCourses = await courseRepository.getCoursesByProfesor(userId);
+      final professorCourses = await courseRepository.getCoursesByProfesor(
+        userId,
+      );
       _allCourses.addAll([...studentCourses, ...professorCourses]);
     }
-    
+
     applyFilters();
   }
 

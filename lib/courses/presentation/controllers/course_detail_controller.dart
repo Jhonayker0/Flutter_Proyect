@@ -3,6 +3,8 @@ import 'package:flutter_application/auth/domain/models/user.dart';
 import 'package:flutter_application/courses/domain/repositories/course_repository.dart';
 import 'package:flutter_application/core/services/roble_database_service.dart';
 import 'package:flutter_application/core/services/roble_user_service.dart';
+import 'package:flutter_application/core/services/roble_activity_service.dart';
+import 'package:flutter_application/core/services/roble_category_service.dart';
 import 'package:flutter_application/core/services/roble_http_service.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -12,21 +14,39 @@ import 'package:flutter_application/core/presentation/controllers/home_controlle
 class CourseDetailController extends GetxController {
   final RxInt currentTabIndex = 0.obs;
   final RxList<Activity> activities = <Activity>[].obs;
-  final RxList<Map<String, dynamic>> courseUsers = <Map<String, dynamic>>[].obs; // Cambiar para incluir roles
+  final RxList<Map<String, dynamic>> courseUsers =
+      <Map<String, dynamic>>[].obs; // Usuarios con roles
   final RxList<User> students = <User>[].obs; // Mantener para compatibilidad
+
+  // Nuevas listas para actividades y categorías
+  final RxList<Map<String, dynamic>> courseActivities =
+      <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> courseCategories =
+      <Map<String, dynamic>>[].obs;
+
   final RxBool isLoading = false.obs;
+  final RxBool isLoadingActivities = false.obs;
+  final RxBool isLoadingCategories = false.obs;
+
   late Course course;
   final RxInt studentCount = 0.obs;
+  final RxInt activityCount = 0.obs;
+  final RxInt categoryCount = 0.obs;
+
   final CourseRepository repo;
   late final RobleUserService _userService;
-  
+  late final RobleActivityService _activityService;
+  late final RobleCategoryService _categoryService;
+
   CourseDetailController({required this.repo}) {
-    // Inicializar el servicio de usuarios de ROBLE
+    // Inicializar los servicios de ROBLE
     final httpService = RobleHttpService();
     final databaseService = RobleDatabaseService(httpService);
     _userService = RobleUserService(databaseService);
+    _activityService = RobleActivityService(databaseService);
+    _categoryService = RobleCategoryService(databaseService);
   }
-  
+
   String get userRole => course.role;
   bool get isProfessor => userRole == HomeController.roleProfessor;
 
@@ -64,7 +84,8 @@ class CourseDetailController extends GetxController {
     isLoading.value = true;
     try {
       await Future.wait([
-        loadActivities(),
+        loadRobleActivities(),
+        loadRobleCategories(),
         loadStudents(),
       ]);
     } finally {
@@ -72,41 +93,48 @@ class CourseDetailController extends GetxController {
     }
   }
 
-  Future<void> loadActivities() async {
-    // Simular datos de actividades
-    await Future.delayed(const Duration(milliseconds: 500));
-    final courseIdInt = int.tryParse(course.id!) ?? 1; // Convertir String a int para compatibilidad
-    final mockActivities = [
-      Activity(
-        id: 1,
-        title: 'Tarea 1: Fundamentos',
-        description: 'Completar los ejercicios del capítulo 1',
-        type: 'Tarea',
-        courseId: courseIdInt,
-        dueDate: DateTime.now().add(const Duration(days: 7)),
-        isCompleted: false,
-      ),
-      Activity(
-        id: 2,
-        title: 'Quiz 1: Conceptos básicos',
-        description: 'Evaluación de conceptos fundamentales',
-        type: 'Examen',
-        courseId: courseIdInt,
-        dueDate: DateTime.now().add(const Duration(days: 3)),
-        isCompleted: true,
-        grade: 85.0,
-      ),
-      Activity(
-        id: 3,
-        title: 'Proyecto Final',
-        description: 'Desarrollo de un proyecto completo aplicando todos los conceptos',
-        type: 'Proyecto',
-        courseId: courseIdInt,
-        dueDate: DateTime.now().add(const Duration(days: 30)),
-        isCompleted: false,
-      ),
-    ];
-    activities.assignAll(mockActivities);
+  /// Cargar actividades usando ROBLE API
+  Future<void> loadRobleActivities() async {
+    try {
+      isLoadingActivities.value = true;
+      print('🔄 Cargando actividades para curso: ${course.id}');
+
+      final activitiesData = await _activityService.getActivitiesByCourse(
+        course.id ?? '',
+      );
+      courseActivities.assignAll(activitiesData);
+      activityCount.value = activitiesData.length;
+
+      print('✅ Actividades cargadas: ${activityCount.value}');
+    } catch (e) {
+      print('❌ Error cargando actividades: $e');
+      courseActivities.clear();
+      activityCount.value = 0;
+    } finally {
+      isLoadingActivities.value = false;
+    }
+  }
+
+  /// Cargar categorías usando ROBLE API
+  Future<void> loadRobleCategories() async {
+    try {
+      isLoadingCategories.value = true;
+      print('🔄 Cargando categorías para curso: ${course.id}');
+
+      final categoriesData = await _categoryService.getCategoriesByCourse(
+        course.id ?? '',
+      );
+      courseCategories.assignAll(categoriesData);
+      categoryCount.value = categoriesData.length;
+
+      print('✅ Categorías cargadas: ${categoryCount.value}');
+    } catch (e) {
+      print('❌ Error cargando categorías: $e');
+      courseCategories.clear();
+      categoryCount.value = 0;
+    } finally {
+      isLoadingCategories.value = false;
+    }
   }
 
   Future<void> loadStudents() async {
@@ -114,20 +142,28 @@ class CourseDetailController extends GetxController {
       print('🔄 Cargando estudiantes para curso: ${course.id}');
       students.clear();
       courseUsers.clear();
-      
+
       // Usar ROBLE para obtener usuarios con roles
-      final usersWithRoles = await _userService.getUsersByCourse(course.id ?? '');
+      final usersWithRoles = await _userService.getUsersByCourse(
+        course.id ?? '',
+      );
       courseUsers.assignAll(usersWithRoles);
-      
+
       // Mantener compatibilidad con students (sin roles)
-      students.assignAll(usersWithRoles.map((userData) => User(
-        id: userData['_id'].hashCode.abs(),
-        name: userData['name'] as String,
-        email: userData['email'] as String,
-        imagepathh: userData['avatarUrl'] as String?,
-        uuid: userData['_id'] as String,
-      )).toList());
-      
+      students.assignAll(
+        usersWithRoles
+            .map(
+              (userData) => User(
+                id: userData['_id'].hashCode.abs(),
+                name: userData['name'] as String,
+                email: userData['email'] as String,
+                imagepathh: userData['avatarUrl'] as String?,
+                uuid: userData['_id'] as String,
+              ),
+            )
+            .toList(),
+      );
+
       studentCount.value = courseUsers.length;
       print('✅ Estudiantes cargados: ${studentCount.value}');
     } catch (e) {
@@ -138,13 +174,12 @@ class CourseDetailController extends GetxController {
     }
   }
 
-
   void createNewActivity() {
     if (isProfessor) {
       Get.toNamed('/create-activity', arguments: {'courseId': course.id});
     }
   }
-  
+
   void createNewCategory() {
     if (isProfessor) {
       Get.toNamed('/create-category', arguments: {'courseId': course.id});
@@ -154,31 +189,36 @@ class CourseDetailController extends GetxController {
   void inviteStudent() {
     if (isProfessor) {
       // Get.toNamed('/invite-student', arguments: {'courseId': course.id});
-      Get.snackbar('En desarrollo', 'La funcionalidad de invitar estudiantes está en desarrollo',
-        backgroundColor: Colors.orange, colorText: Colors.white);
+      Get.snackbar(
+        'En desarrollo',
+        'La funcionalidad de invitar estudiantes está en desarrollo',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
     }
   }
 
   void viewActivity(Activity activity) {
     // Get.toNamed('/activity-detail', arguments: {'activity': activity});
-    Get.snackbar('En desarrollo', 'El detalle de actividades está en desarrollo',
-      backgroundColor: Colors.orange, colorText: Colors.white);
+    Get.snackbar(
+      'En desarrollo',
+      'El detalle de actividades está en desarrollo',
+      backgroundColor: Colors.orange,
+      colorText: Colors.white,
+    );
   }
 
   void viewStudent(User student) {
     // Get.toNamed('/student-detail', arguments: {'student': student});
-    Get.snackbar('En desarrollo', 'El detalle de estudiantes está en desarrollo',
-      backgroundColor: Colors.orange, colorText: Colors.white);
+    Get.snackbar(
+      'En desarrollo',
+      'El detalle de estudiantes está en desarrollo',
+      backgroundColor: Colors.orange,
+      colorText: Colors.white,
+    );
   }
 
   void refreshData() {
     loadCourseData();
   }
 }
-
-
-
-
-
-
-
