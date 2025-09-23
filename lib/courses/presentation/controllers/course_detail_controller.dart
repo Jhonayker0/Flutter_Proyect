@@ -1,6 +1,9 @@
 import 'package:flutter_application/courses/domain/models/course.dart';
 import 'package:flutter_application/auth/domain/models/user.dart';
 import 'package:flutter_application/courses/domain/repositories/course_repository.dart';
+import 'package:flutter_application/core/services/roble_database_service.dart';
+import 'package:flutter_application/core/services/roble_user_service.dart';
+import 'package:flutter_application/core/services/roble_http_service.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/activities/domain/models/activity.dart';
@@ -9,12 +12,20 @@ import 'package:flutter_application/core/presentation/controllers/home_controlle
 class CourseDetailController extends GetxController {
   final RxInt currentTabIndex = 0.obs;
   final RxList<Activity> activities = <Activity>[].obs;
-  final RxList<User> students = <User>[].obs;
+  final RxList<Map<String, dynamic>> courseUsers = <Map<String, dynamic>>[].obs; // Cambiar para incluir roles
+  final RxList<User> students = <User>[].obs; // Mantener para compatibilidad
   final RxBool isLoading = false.obs;
   late Course course;
   final RxInt studentCount = 0.obs;
   final CourseRepository repo;
-  CourseDetailController({required this.repo});
+  late final RobleUserService _userService;
+  
+  CourseDetailController({required this.repo}) {
+    // Inicializar el servicio de usuarios de ROBLE
+    final httpService = RobleHttpService();
+    final databaseService = RobleDatabaseService(httpService);
+    _userService = RobleUserService(databaseService);
+  }
   
   String get userRole => course.role;
   bool get isProfessor => userRole == HomeController.roleProfessor;
@@ -99,15 +110,32 @@ class CourseDetailController extends GetxController {
   }
 
   Future<void> loadStudents() async {
-    students.clear(); // RxList<User>
-    final courseIdInt = int.tryParse(course.id!) ?? 1; // Convertir String a int para compatibilidad
-    students.assignAll((await repo.getUsersByCourse(courseIdInt)).map((r) => User(
-      id: r['id'] as int,
-      name: r['nombre'] as String,
-      email: r['correo'] as String,
-      imagepathh: r['imagen'] as String?, // opcional
-    )).toList());
-    studentCount.value = students.length;
+    try {
+      print('🔄 Cargando estudiantes para curso: ${course.id}');
+      students.clear();
+      courseUsers.clear();
+      
+      // Usar ROBLE para obtener usuarios con roles
+      final usersWithRoles = await _userService.getUsersByCourse(course.id ?? '');
+      courseUsers.assignAll(usersWithRoles);
+      
+      // Mantener compatibilidad con students (sin roles)
+      students.assignAll(usersWithRoles.map((userData) => User(
+        id: userData['_id'].hashCode.abs(),
+        name: userData['name'] as String,
+        email: userData['email'] as String,
+        imagepathh: userData['avatarUrl'] as String?,
+        uuid: userData['_id'] as String,
+      )).toList());
+      
+      studentCount.value = courseUsers.length;
+      print('✅ Estudiantes cargados: ${studentCount.value}');
+    } catch (e) {
+      print('❌ Error cargando estudiantes: $e');
+      students.clear();
+      courseUsers.clear();
+      studentCount.value = 0;
+    }
   }
 
 
