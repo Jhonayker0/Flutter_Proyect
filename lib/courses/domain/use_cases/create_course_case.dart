@@ -18,7 +18,7 @@ class CreateCourse {
   final CourseRepository repo;
 
   Future<Result<int>> call(Course course) async {
-    final cursos = await repo.getCoursesByProfesor(course.profesorId);
+    final cursos = await repo.getCoursesByProfesor(int.tryParse(course.professorId) ?? 0);
     if (cursos.length >= 3) {
       return const Err('ya tienes 3');
     }

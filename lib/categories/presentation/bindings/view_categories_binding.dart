@@ -19,7 +19,7 @@ class CategoryGroupsBinding extends Bindings {
     if (args != null) {
       if (args.containsKey('course')) {
         final course = args['course'] as Course;
-        courseId = course.id!;
+        courseId = int.tryParse(course.id!) ?? 1; // Convertir String a int
         role = args['role'] as String? ?? 'estudiante';
       } else if (args.containsKey('courseId')) {
         courseId = (args['courseId'] as num).toInt();

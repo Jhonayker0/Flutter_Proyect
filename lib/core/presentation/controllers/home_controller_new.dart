@@ -1,5 +1,6 @@
 import 'package:flutter_application/courses/domain/models/course.dart';
 import 'package:flutter_application/courses/domain/repositories/course_repository.dart';
+import 'package:flutter_application/courses/data/repositories/roble_course_repository_impl.dart';
 import 'package:flutter_application/auth/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 
@@ -35,20 +36,38 @@ class HomeController extends GetxController {
 
   Future<void> loadCourses() async {
     final authController = Get.find<AuthController>();
-    final userId = authController.currentUser.value?.id;
+    final user = authController.currentUser.value;
+    
+    if (user == null) return;
 
-    if (userId == null) return;
+    // Debug: Mostrar información del usuario
+    print('🧐 Usuario actual: ID=${user.id}, UUID=${user.uuid}, Email=${user.email}');
+
+    // Usar UUID si está disponible, sino usar el id como fallback
+    final userIdString = user.uuid ?? user.id.toString();
+    print('🔍 UserIdString a usar: $userIdString');
 
     _allCourses.clear();
 
-    // Traer cursos del estudiante
-    final studentCourses = await courseRepository.getCoursesByStudent(userId);
-    // Traer cursos del profesor
-    final professorCourses = await courseRepository.getCoursesByProfesor(
-      userId,
-    );
+    try {
+      // Obtener el repository como RobleCourseRepositoryImpl para usar métodos ROBLE
+      final robleRepo = courseRepository as RobleCourseRepositoryImpl;
+      
+      // Traer cursos del estudiante
+      final studentCourses = await robleRepo.getRobleCoursesByStudent(userIdString);
+      // Traer cursos del profesor  
+      final professorCourses = await robleRepo.getRobleCoursesByProfesor(userIdString);
 
-    _allCourses.addAll([...studentCourses, ...professorCourses]);
+      _allCourses.addAll([...studentCourses, ...professorCourses]);
+    } catch (e) {
+      print('❌ Error cargando cursos ROBLE: $e');
+      // Fallback a métodos SQLite si falla ROBLE
+      final userId = user.id;
+      final studentCourses = await courseRepository.getCoursesByStudent(userId);
+      final professorCourses = await courseRepository.getCoursesByProfesor(userId);
+      _allCourses.addAll([...studentCourses, ...professorCourses]);
+    }
+    
     applyFilters();
   }
 

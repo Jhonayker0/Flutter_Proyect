@@ -38,7 +38,7 @@ class CreateCourseController extends GetxController {
       final course = Course(
         title: nameCtrl.text.trim(),
         description: descCtrl.text.trim(),
-        profesorId: userId,
+        professorId: userId.toString(), // Convertir a String
         role: 'Professor',   // rol del creador  
         createdAt: DateTime.now(),
       );

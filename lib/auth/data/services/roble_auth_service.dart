@@ -106,19 +106,20 @@ class RobleAuthService {
   }
 
   /// Obtener información del usuario autenticado
-  /// Nota: Este método necesitará ser implementado cuando conozcas el endpoint para obtener user info
   Future<User?> getUserInfo() async {
     try {
-      // TODO: Implementar cuando sepas el endpoint para obtener información del usuario
-      // Por ahora, creamos un usuario básico con la información disponible
-      final token = await _httpService.getAccessToken();
-      if (token != null) {
-        // Podrías decodificar el JWT para obtener información básica
+      // Verificar el token y obtener información del usuario
+      final verifyResponse = await _httpService.dio.get('/auth/movilapp_a4de2ed3d7/verify-token');
+      
+      if (verifyResponse.statusCode == 200 && verifyResponse.data['valid'] == true) {
+        final userData = verifyResponse.data['user'];
+        
         return User(
-          id: 0, // Usar int ID
-          name: 'Usuario', // Este valor debería venir del JWT o de otro endpoint
-          email: 'usuario@uninorte.edu.co', // Este valor debería venir del JWT
+          id: userData['sub'].hashCode.abs(), // Usar hash del UUID como int ID
+          name: userData['email'] ?? 'Usuario', // Temporal, hasta tener el name
+          email: userData['email'] ?? 'usuario@uninorte.edu.co',
           imagepathh: null,
+          uuid: userData['sub'], // Guardar el UUID original
         );
       }
     } catch (e) {

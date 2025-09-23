@@ -13,6 +13,13 @@ class RobleConfig {
   static String get logoutEndpoint => '/auth/$dbName/logout';
   static String get verifyTokenEndpoint => '/auth/$dbName/verify-token';
   
+  // Database Endpoints
+  static String get databaseEndpoint => '/database/$dbName';
+  static String get readEndpoint => '$databaseEndpoint/read';
+  static String get insertEndpoint => '$databaseEndpoint/insert';
+  static String get updateEndpoint => '$databaseEndpoint/update';
+  static String get deleteEndpoint => '$databaseEndpoint/delete';
+  
   // Headers
   static Map<String, String> get defaultHeaders => {
     'Content-Type': 'application/json',

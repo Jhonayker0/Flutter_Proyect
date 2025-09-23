@@ -64,13 +64,14 @@ class CourseDetailController extends GetxController {
   Future<void> loadActivities() async {
     // Simular datos de actividades
     await Future.delayed(const Duration(milliseconds: 500));
+    final courseIdInt = int.tryParse(course.id!) ?? 1; // Convertir String a int para compatibilidad
     final mockActivities = [
       Activity(
         id: 1,
         title: 'Tarea 1: Fundamentos',
         description: 'Completar los ejercicios del capítulo 1',
         type: 'Tarea',
-        courseId: course.id!,
+        courseId: courseIdInt,
         dueDate: DateTime.now().add(const Duration(days: 7)),
         isCompleted: false,
       ),
@@ -79,7 +80,7 @@ class CourseDetailController extends GetxController {
         title: 'Quiz 1: Conceptos básicos',
         description: 'Evaluación de conceptos fundamentales',
         type: 'Examen',
-        courseId: course.id!,
+        courseId: courseIdInt,
         dueDate: DateTime.now().add(const Duration(days: 3)),
         isCompleted: true,
         grade: 85.0,
@@ -89,7 +90,7 @@ class CourseDetailController extends GetxController {
         title: 'Proyecto Final',
         description: 'Desarrollo de un proyecto completo aplicando todos los conceptos',
         type: 'Proyecto',
-        courseId: course.id!,
+        courseId: courseIdInt,
         dueDate: DateTime.now().add(const Duration(days: 30)),
         isCompleted: false,
       ),
@@ -99,7 +100,8 @@ class CourseDetailController extends GetxController {
 
   Future<void> loadStudents() async {
     students.clear(); // RxList<User>
-    students.assignAll((await repo.getUsersByCourse(course.id!)).map((r) => User(
+    final courseIdInt = int.tryParse(course.id!) ?? 1; // Convertir String a int para compatibilidad
+    students.assignAll((await repo.getUsersByCourse(courseIdInt)).map((r) => User(
       id: r['id'] as int,
       name: r['nombre'] as String,
       email: r['correo'] as String,
