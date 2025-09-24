@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/course_detail_controller.dart';
 import '../../../core/services/roble_category_service.dart';
 import '../../../core/services/roble_user_service.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class CourseCategoriesTab extends GetView<CourseDetailController> {
   const CourseCategoriesTab({super.key});
@@ -302,7 +303,7 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                       itemCount: groups.length,
                       itemBuilder: (context, index) {
                         final group = groups[index];
-                        return _buildGroupCard(group);
+                        return _buildGroupCard(group, category);
                       },
                     );
                   },
@@ -328,7 +329,7 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Gestionar Grupos}',
+                    'Gestionar Grupos',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -416,7 +417,7 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
     }
   }
 
-  Widget _buildGroupCard(Map<String, dynamic> group) {
+  Widget _buildGroupCard(Map<String, dynamic> group, Map<String, dynamic> category) {
     final name = group['name']?.toString() ?? 'Grupo sin nombre';
     final description = group['description']?.toString() ?? 'Sin descripción';
     final capacity = group['capacity'] as int? ?? 0;
@@ -425,6 +426,14 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
     final capacityPercentage = capacity > 0
         ? ((memberCount / capacity) * 100).round()
         : 0;
+    
+    // Verificar si el usuario actual está en el grupo
+    final authController = Get.find<AuthController>();
+    final currentUserId = authController.currentUser.value?.id;
+    final isUserInGroup = members.any((member) => member['student_id'] == currentUserId.toString());
+    final isElectionCategory = category['type']?.toString().toLowerCase() == 'eleccion';
+    final canJoin = isElectionCategory && !controller.isProfessor && !isUserInGroup && memberCount < capacity;
+    final canLeave = isElectionCategory && !controller.isProfessor && isUserInGroup;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -498,6 +507,39 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                   color: Colors.grey,
                   fontStyle: FontStyle.italic,
                 ),
+              ),
+            ),
+          ],
+          
+          // Botones de acción para estudiantes en categorías de elección
+          if (canJoin || canLeave) ...[
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (canJoin)
+                    ElevatedButton.icon(
+                      onPressed: () => _joinGroup(group, category),
+                      icon: const Icon(Icons.person_add, size: 18),
+                      label: const Text('Inscribirse'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  if (canLeave)
+                    ElevatedButton.icon(
+                      onPressed: () => _leaveGroup(group, category),
+                      icon: const Icon(Icons.person_remove, size: 18),
+                      label: const Text('Salirse'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
@@ -1158,7 +1200,7 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Añadir Estudiante - ${group['name']}',
+                    'Añadir Estudiante',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1463,6 +1505,141 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
     } catch (e) {
       print('❌ Error loading available students: $e');
       return [];
+    }
+  }
+
+  Future<void> _joinGroup(Map<String, dynamic> group, Map<String, dynamic> category) async {
+    try {
+      final authController = Get.find<AuthController>();
+      final currentUserId = authController.currentUser.value?.id;
+      
+      if (currentUserId == null) {
+        Get.snackbar(
+          'Error',
+          'No se pudo obtener la información del usuario',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      final categoryService = Get.find<RobleCategoryService>();
+      
+      final success = await categoryService.addStudentToGroup(
+        groupId: group['_id'],
+        studentId: currentUserId.toString(),
+        categoryId: category['_id'],
+      );
+      
+      if (success) {
+        Get.snackbar(
+          'Éxito',
+          'Te has inscrito exitosamente en el grupo',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        
+        // Recargar la vista de categorías
+        controller.loadRobleCategories();
+        
+        // Cerrar el diálogo actual y volver a abrirlo para mostrar los cambios
+        Get.back();
+        await Future.delayed(const Duration(milliseconds: 300));
+        _showCategoryGroups(category);
+      } else {
+        Get.snackbar(
+          'Error',
+          'No se pudo inscribir en el grupo',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error al inscribirse en el grupo: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _leaveGroup(Map<String, dynamic> group, Map<String, dynamic> category) async {
+    try {
+      final authController = Get.find<AuthController>();
+      final currentUserId = authController.currentUser.value?.id;
+      
+      if (currentUserId == null) {
+        Get.snackbar(
+          'Error',
+          'No se pudo obtener la información del usuario',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      // Mostrar confirmación
+      final confirm = await Get.dialog<bool>(
+        AlertDialog(
+          title: const Text('Confirmar salida'),
+          content: Text('¿Estás seguro de que deseas salirte del grupo "${group['name']}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(result: false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Get.back(result: true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Salir'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) return;
+
+      final categoryService = Get.find<RobleCategoryService>();
+      
+      final success = await categoryService.removeStudentFromGroup(
+        studentId: currentUserId.toString(),
+        categoryId: category['_id'],
+      );
+      
+      if (success) {
+        Get.snackbar(
+          'Éxito',
+          'Te has salido exitosamente del grupo',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        
+        // Recargar la vista de categorías
+        controller.loadRobleCategories();
+        
+        // Cerrar el diálogo actual y volver a abrirlo para mostrar los cambios
+        Get.back();
+        await Future.delayed(const Duration(milliseconds: 300));
+        _showCategoryGroups(category);
+      } else {
+        Get.snackbar(
+          'Error',
+          'No se pudo salir del grupo',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error al salirse del grupo: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 }
