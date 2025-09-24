@@ -1,5 +1,5 @@
 class Activity {
-  final int? id;
+  final String? id; // ROBLE usa String IDs
   final String title;
   final String description;
   final String type; // 'Tarea', 'Examen', 'Proyecto', etc.
@@ -7,7 +7,8 @@ class Activity {
   final DateTime createdAt;
   final bool isCompleted;
   final double? grade;
-  final int courseId;
+  final String courseId; // ROBLE usa String IDs
+  final String? categoryId; // Nuevo campo para categoría
 
   Activity({
     this.id,
@@ -16,13 +17,14 @@ class Activity {
     required this.type,
     required this.dueDate,
     required this.courseId,
+    this.categoryId,
     DateTime? createdAt,
     this.isCompleted = false,
     this.grade,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Activity copyWith({
-    int? id,
+    String? id,
     String? title,
     String? description,
     String? type,
@@ -30,7 +32,8 @@ class Activity {
     DateTime? createdAt,
     bool? isCompleted,
     double? grade,
-    int? courseId,
+    String? courseId,
+    String? categoryId,
   }) {
     return Activity(
       id: id ?? this.id,
@@ -42,6 +45,7 @@ class Activity {
       isCompleted: isCompleted ?? this.isCompleted,
       grade: grade ?? this.grade,
       courseId: courseId ?? this.courseId,
+      categoryId: categoryId ?? this.categoryId,
     );
   }
 
@@ -56,20 +60,54 @@ class Activity {
       'isCompleted': isCompleted,
       'grade': grade,
       'courseId': courseId,
+      'categoryId': categoryId,
+    };
+  }
+
+  /// Convertir a formato ROBLE
+  Map<String, dynamic> toRoble() {
+    return {
+      'title': title,
+      'description': description,
+      // Removido 'type' porque no existe en la tabla ROBLE
+      'due_date': dueDate.toIso8601String(),
+      'course_id': courseId,
+      'category_id': categoryId,
     };
   }
 
   factory Activity.fromJson(Map<String, dynamic> json) {
     return Activity(
-      id: json['id'],
-      title: json['title'],
-      description: json['description'],
-      type: json['type'],
+      id: json['id']?.toString(),
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'Tarea',
       dueDate: DateTime.parse(json['dueDate']),
       createdAt: DateTime.parse(json['createdAt']),
       isCompleted: json['isCompleted'] ?? false,
       grade: json['grade']?.toDouble(),
-      courseId: json['courseId'],
+      courseId: json['courseId']?.toString() ?? '',
+      categoryId: json['categoryId']?.toString(),
+    );
+  }
+
+  /// Crear desde formato ROBLE
+  factory Activity.fromRoble(Map<String, dynamic> json) {
+    return Activity(
+      id: json['_id']?.toString(),
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'Tarea',
+      dueDate: json['due_date'] != null 
+        ? DateTime.parse(json['due_date'])
+        : DateTime.now(),
+      createdAt: json['created_at'] != null 
+        ? DateTime.parse(json['created_at'])
+        : DateTime.now(),
+      isCompleted: json['is_completed'] ?? false,
+      grade: json['grade']?.toDouble(),
+      courseId: json['course_id']?.toString() ?? '',
+      categoryId: json['category_id']?.toString(),
     );
   }
 }

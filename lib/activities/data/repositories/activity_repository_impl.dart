@@ -8,13 +8,8 @@ class ActivityRepositoryImpl implements ActivityRepository {
 
   @override
   Future<void> create(Activity activity) async {
-    final dto = {
-      'title': activity.title,
-      'description': activity.description,
-      'dueDate': activity.dueDate.toIso8601String(),
-      'type': activity.type,
-      'courseId': activity.courseId,
-    };
-    await service.postActivity(dto);
+    print('🏛️ Repositorio: Creando actividad...');
+    await service.postActivity(activity);
+    print('✅ Repositorio: Actividad creada');
   }
 }

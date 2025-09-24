@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/course_detail_controller.dart';
 import '../../../core/services/roble_category_service.dart';
 import '../../../core/services/roble_user_service.dart';
+import '../../../core/services/roble_database_service.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 
 class CourseCategoriesTab extends GetView<CourseDetailController> {
@@ -161,6 +162,7 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                 const SizedBox(height: 8),
                 _buildStatsRow('Miembros', totalMembers, Colors.green),
                 const SizedBox(height: 16),
+                // Primera fila con Ver Grupos y Editar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -183,8 +185,28 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                           backgroundColor: Colors.green.shade50,
                         ),
                       ),
+                    // Espaciador si no hay botón de editar para mantener centrado Ver Grupos
+                    if (!controller.isProfessor) const SizedBox(width: 120),
                   ],
                 ),
+                // Segunda fila con botón Eliminar (solo para profesores)
+                if (controller.isProfessor) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => _deleteCategory(category),
+                        icon: const Icon(Icons.delete, size: 16),
+                        label: const Text('Eliminar'),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          backgroundColor: Colors.red.shade50,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -1602,6 +1624,176 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    }
+  }
+
+  /// Eliminar categoría (solo para profesores)
+  Future<void> _deleteCategory(Map<String, dynamic> category) async {
+    final categoryName = category['name']?.toString() ?? 'Sin nombre';
+    
+    // Mostrar diálogo de confirmación
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning,
+              color: Colors.red,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Text('Eliminar Categoría'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Estás seguro de que quieres eliminar la categoría "$categoryName"?',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.red[700], size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Esta acción eliminará:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '• Todos los grupos de esta categoría\n'
+                    '• Todas las actividades asociadas\n'
+                    '• Los miembros de los grupos\n'
+                    '• Esta acción no se puede deshacer',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.red[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar Categoría'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+
+    if (confirmed == true) {
+      await _performDeleteCategory(category);
+    }
+  }
+
+  /// Ejecutar la eliminación de la categoría
+  Future<void> _performDeleteCategory(Map<String, dynamic> category) async {
+    try {
+      // Obtener servicios necesarios
+      final databaseService = Get.find<RobleDatabaseService>();
+      final categoryId = category['_id']?.toString();
+      
+      if (categoryId == null) {
+        throw Exception('ID de categoría no encontrado');
+      }
+
+      print('🗑️ Eliminando categoría: $categoryId');
+
+      // Primero eliminar todas las actividades de la categoría
+      final activities = await databaseService.read('activities');
+      final categoryActivities = activities
+          .where((activity) => activity['category_id'] == categoryId)
+          .toList();
+      
+      for (final activity in categoryActivities) {
+        await databaseService.delete('activities', activity['_id']);
+        print('🗑️ Actividad eliminada: ${activity['_id']}');
+      }
+
+      // Luego eliminar todos los grupos de la categoría
+      final groups = await databaseService.read('groups');
+      final categoryGroups = groups
+          .where((group) => group['category_id'] == categoryId)
+          .toList();
+      
+      for (final group in categoryGroups) {
+        // Eliminar miembros del grupo
+        final members = await databaseService.read('group_members');
+        final groupMembers = members
+            .where((member) => member['group_id'] == group['_id'])
+            .toList();
+        
+        for (final member in groupMembers) {
+          await databaseService.delete('group_members', member['_id']);
+          print('🗑️ Miembro eliminado: ${member['_id']}');
+        }
+        
+        // Eliminar el grupo
+        await databaseService.delete('groups', group['_id']);
+        print('🗑️ Grupo eliminado: ${group['_id']}');
+      }
+
+      // Finalmente eliminar la categoría
+      await databaseService.delete('categories', categoryId);
+      print('✅ Categoría eliminada: $categoryId');
+
+      Get.snackbar(
+        'Éxito',
+        'La categoría "${category['name']}" ha sido eliminada correctamente',
+        icon: Icon(Icons.check_circle, color: Colors.white),
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+
+      // Recargar la vista de categorías
+      controller.loadRobleCategories();
+
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo eliminar la categoría: $e',
+        icon: Icon(Icons.error, color: Colors.white),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      print('❌ Error deleting category: $e');
     }
   }
 }

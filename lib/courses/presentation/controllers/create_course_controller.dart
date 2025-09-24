@@ -88,11 +88,16 @@ class CreateCourseController extends GetxController with GetSingleTickerProvider
           Get.offNamed(Routes.home);
           break;
         case Err(message: final m):
+          final title = m.contains('límite máximo') ? 'Límite Alcanzado' : 'Error';
+          final message = m.contains('límite máximo') ? m : 'No se pudo crear el curso: $m';
+          
           Get.snackbar(
-            'Error',
-            'No se pudo crear el curso $m',
+            title,
+            message,
             backgroundColor: Colors.red,
             colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+            snackPosition: SnackPosition.BOTTOM,
           );
       }
     } catch (e) {

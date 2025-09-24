@@ -75,60 +75,74 @@ class CreateActivityPage extends GetView<CreateActivityController> {
                 const SizedBox(height: 20),
 
                 // Categoría
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Categoría',
-                    border: OutlineInputBorder(),
-                  ),
-                  initialValue: controller.category.value,
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Category 1',
-                      child: Text('Categoría 1'),
+                Obx(() {
+                  if (controller.isLoadingCategories.value) {
+                    return const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            SizedBox(width: 12),
+                            Text('Cargando categorías...'),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'Categoría',
+                      border: OutlineInputBorder(),
                     ),
-                    DropdownMenuItem(
-                      value: 'Category 2',
-                      child: Text('Categoría 2'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Category 3',
-                      child: Text('Categoría 3'),
-                    ),
-                  ],
-                  onChanged: controller.setCategory,
-                  validator: controller.validateCategory,
-                ),
+                    value: controller.selectedCategoryId.value,
+                    items: controller.categories.map((category) {
+                      return DropdownMenuItem<String>(
+                        value: category['_id']?.toString(),
+                        child: Text(category['name']?.toString() ?? 'Sin nombre'),
+                      );
+                    }).toList(),
+                    onChanged: controller.setCategory,
+                    validator: controller.validateCategory,
+                    hint: const Text('Selecciona una categoría'),
+                  );
+                }),
                 const SizedBox(height: 30),
 
-                // Adjuntar Archivo
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    // TODO: abrir picker y llamar controller.setAttachment(path)
-                  },
-                  icon: const Icon(Icons.attach_file),
-                  label: const Text('Adjuntar Archivo'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: cs.primary),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
                 // Error
-                if (controller.error.value != null)
-                  Text(
-                    controller.error.value!,
-                    style: TextStyle(color: cs.error),
-                  ),
+                Obx(() => controller.error.value != null
+                  ? Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: cs.error.withOpacity(0.1),
+                        border: Border.all(color: cs.error),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        controller.error.value!,
+                        style: TextStyle(color: cs.error),
+                      ),
+                    )
+                  : const SizedBox.shrink()),
 
                 // Botones
-                Row(
+                Obx(() => Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton(
                       onPressed: controller.isLoading.value
                           ? null
-                          : () => controller.submit(_formKey, context),
+                          : () {
+                              print('🎯 Botón Crear presionado');
+                              controller.submit(_formKey, context);
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: cs.primary,
                         foregroundColor: cs.onPrimary,
@@ -158,7 +172,7 @@ class CreateActivityPage extends GetView<CreateActivityController> {
                       child: const Text('Cancelar'),
                     ),
                   ],
-                ),
+                )),
               ],
             ),
           ),

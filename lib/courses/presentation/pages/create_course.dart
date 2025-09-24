@@ -94,7 +94,48 @@ class CreateCoursePage extends GetView<CreateCourseController> {
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
+
+              // Información sobre el límite de cursos
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber[200]!),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.amber[700], size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Límite de Cursos',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber[700],
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Puedes crear un máximo de 3 cursos. Si necesitas más, elimina cursos antiguos primero.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.amber[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // Nombre
               TextFormField(

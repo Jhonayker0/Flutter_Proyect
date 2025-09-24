@@ -177,8 +177,12 @@ class CourseDetailController extends GetxController {
   }
 
   void createNewActivity() {
+    print('🎯 createNewActivity llamado - isProfessor: $isProfessor');
     if (isProfessor) {
+      print('🚀 Navegando a crear actividad con courseId: ${course.id}');
       Get.toNamed('/create-activity', arguments: {'courseId': course.id});
+    } else {
+      print('❌ Usuario no es profesor, no puede crear actividades');
     }
   }
 
@@ -703,6 +707,340 @@ class CourseDetailController extends GetxController {
       print('❌ Error deleting course: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// Elimina una actividad de la base de datos
+  Future<void> deleteActivity(Map<String, dynamic> activity) async {
+    try {
+      isLoading.value = true;
+
+      // Confirmar eliminación con diálogo
+      bool confirmed = await Get.dialog<bool>(
+        AlertDialog(
+          title: Text('Confirmar eliminación'),
+          content: Text('¿Estás seguro de que deseas eliminar la actividad "${activity['title']}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(result: false),
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Get.back(result: true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: Text('Eliminar'),
+            ),
+          ],
+        ),
+      ) ?? false;
+
+      if (!confirmed) {
+        isLoading.value = false;
+        return;
+      }
+
+      final httpService = RobleHttpService();
+      final databaseService = RobleDatabaseService(httpService);
+
+      // Eliminar la actividad de la base de datos
+      await databaseService.delete('activities', activity['_id']);
+
+      // Remover de la lista local
+      courseActivities.removeWhere((a) => a['_id'] == activity['_id']);
+
+      // Actualizar contador
+      activityCount.value = courseActivities.length;
+
+      Get.snackbar(
+        'Éxito',
+        'La actividad "${activity['title']}" ha sido eliminada correctamente',
+        icon: Icon(Icons.check_circle, color: Colors.white),
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+
+      print('✅ Actividad eliminada: ${activity['title']}');
+
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo eliminar la actividad: $e',
+        icon: Icon(Icons.error, color: Colors.white),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      print('❌ Error deleting activity: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Obtiene la respuesta existente de un estudiante para una actividad
+  Future<Map<String, dynamic>?> getExistingSubmission(String activityId) async {
+    try {
+      final authController = Get.find<AuthController>();
+      final currentUserId = authController.currentUser.value?.uuid;
+      
+      if (currentUserId == null) return null;
+
+      final httpService = RobleHttpService();
+      final databaseService = RobleDatabaseService(httpService);
+
+      // Obtener todas las submissions
+      final submissions = await databaseService.read('submissions');
+      
+      // Buscar la submission del estudiante para esta actividad
+      final existingSubmission = submissions.firstWhere(
+        (submission) =>
+            submission['activity_id'] == activityId &&
+            submission['student_id'] == currentUserId,
+        orElse: () => <String, dynamic>{},
+      );
+
+      return existingSubmission.isEmpty ? null : existingSubmission;
+    } catch (e) {
+      print('❌ Error obteniendo submission existente: $e');
+      return null;
+    }
+  }
+
+  /// Responde o actualiza la respuesta de una actividad
+  Future<void> respondToActivity(
+    Map<String, dynamic> activity,
+    String content,
+    String? fileUrl,
+  ) async {
+    try {
+      isLoading.value = true;
+
+      final authController = Get.find<AuthController>();
+      final currentUserId = authController.currentUser.value?.uuid;
+      
+      if (currentUserId == null) {
+        throw Exception('Usuario no encontrado');
+      }
+
+      // Verificar si la fecha límite no ha pasado
+      final dueDateStr = activity['due_date'] as String?;
+      if (dueDateStr != null) {
+        final dueDate = DateTime.parse(dueDateStr);
+        final now = DateTime.now();
+        
+        if (now.isAfter(dueDate)) {
+          Get.snackbar(
+            'Fecha límite vencida',
+            'No puedes responder esta actividad porque la fecha límite ha pasado',
+            icon: Icon(Icons.access_time, color: Colors.white),
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+          );
+          return;
+        }
+      }
+
+      final httpService = RobleHttpService();
+      final databaseService = RobleDatabaseService(httpService);
+
+      // Verificar si ya existe una respuesta
+      final existingSubmission = await getExistingSubmission(activity['_id']);
+      
+      if (existingSubmission != null) {
+        // Actualizar respuesta existente
+        final updates = {
+          'content': content,
+          'file_url': fileUrl ?? '',
+          'status': 'delivered',
+        };
+
+        await databaseService.update('submissions', existingSubmission['_id'], updates);
+        
+        Get.snackbar(
+          'Éxito',
+          'Tu respuesta ha sido actualizada correctamente',
+          icon: Icon(Icons.check_circle, color: Colors.white),
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+
+        print('✅ Respuesta actualizada para actividad: ${activity['title']}');
+      } else {
+        // Crear nueva respuesta
+        final submissionData = {
+          'activity_id': activity['_id'].toString(),
+          'student_id': currentUserId.toString(),
+          'group_id': activity['category_id'].toString(),
+          'content': content,
+          'file_url': fileUrl ?? '',
+          'status': 'delivered',
+        };
+
+        await databaseService.insert('submissions', [submissionData]);
+        
+        Get.snackbar(
+          'Éxito',
+          'Tu respuesta ha sido enviada correctamente',
+          icon: Icon(Icons.check_circle, color: Colors.white),
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+
+        print('✅ Nueva respuesta creada para actividad: ${activity['title']}');
+      }
+
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo enviar la respuesta: $e',
+        icon: Icon(Icons.error, color: Colors.white),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      print('❌ Error respondiendo actividad: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Muestra el diálogo para responder una actividad
+  Future<void> showResponseDialog(Map<String, dynamic> activity) async {
+    // Verificar si la fecha límite no ha pasado
+    final dueDateStr = activity['due_date'] as String?;
+    if (dueDateStr != null) {
+      final dueDate = DateTime.parse(dueDateStr);
+      final now = DateTime.now();
+      
+      if (now.isAfter(dueDate)) {
+        Get.snackbar(
+          'Fecha límite vencida',
+          'No puedes responder esta actividad porque la fecha límite ha pasado',
+          icon: Icon(Icons.access_time, color: Colors.white),
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+        return;
+      }
+    }
+
+    // Obtener respuesta existente si la hay
+    final existingSubmission = await getExistingSubmission(activity['_id']);
+    
+    // Crear controladores dentro del diálogo
+    TextEditingController? contentController;
+    TextEditingController? urlController;
+    
+    try {
+      contentController = TextEditingController(
+        text: existingSubmission?['content'] ?? '',
+      );
+      urlController = TextEditingController(
+        text: existingSubmission?['file_url'] ?? '',
+      );
+
+      final result = await Get.dialog<Map<String, String>?>(
+        AlertDialog(
+          title: Text('Responder Actividad'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Actividad: ${activity['title']}',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Respuesta *',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: contentController,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      hintText: 'Escribe tu respuesta aquí...',
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'URL (Opcional)',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: urlController,
+                    decoration: InputDecoration(
+                      hintText: 'https://ejemplo.com/archivo',
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      prefixIcon: Icon(Icons.link),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(result: null),
+              child: Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final content = contentController!.text.trim();
+                
+                if (content.isEmpty) {
+                  Get.snackbar(
+                    'Campo requerido',
+                    'La respuesta es obligatoria',
+                    icon: Icon(Icons.error, color: Colors.white),
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
+                  );
+                  return;
+                }
+
+                final fileUrl = urlController!.text.trim();
+                
+                Get.back(result: {
+                  'content': content,
+                  'fileUrl': fileUrl,
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: Text('Enviar'),
+            ),
+          ],
+        ),
+        barrierDismissible: false,
+      );
+
+      // Si el usuario envió los datos, procesar la respuesta
+      if (result != null) {
+        await respondToActivity(
+          activity,
+          result['content']!,
+          result['fileUrl']!.isEmpty ? null : result['fileUrl'],
+        );
+      }
+    } finally {
+      // Siempre dispose de los controladores, sin importar qué pase
+      contentController?.dispose();
+      urlController?.dispose();
     }
   }
 }
