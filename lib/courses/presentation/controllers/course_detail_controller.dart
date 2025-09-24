@@ -8,6 +8,7 @@ import 'package:flutter_application/core/services/roble_category_service.dart';
 import 'package:flutter_application/core/services/roble_http_service.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application/activities/domain/models/activity.dart';
 import 'package:flutter_application/core/presentation/controllers/home_controller_new.dart';
 
@@ -188,11 +189,177 @@ class CourseDetailController extends GetxController {
 
   void inviteStudent() {
     if (isProfessor) {
-      // Get.toNamed('/invite-student', arguments: {'courseId': course.id});
+      _showCourseCodeDialog();
+    }
+  }
+
+  void _showCourseCodeDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.share,
+              color: Colors.blue,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Código del Curso',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Comparte este código con los estudiantes para que puedan unirse al curso:',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Código del curso:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          course.id ?? 'ID no disponible',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => _copyCourseCode(),
+                    icon: Icon(
+                      Icons.copy,
+                      color: Colors.blue,
+                    ),
+                    tooltip: 'Copiar código',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: Colors.blue[700],
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Los estudiantes podrán usar este código para inscribirse al curso.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.blue[700],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'Cerrar',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => _copyCourseCode(),
+            icon: const Icon(Icons.copy, size: 18),
+            label: const Text('Copiar Código'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: true,
+    );
+  }
+
+  void _copyCourseCode() async {
+    try {
+      final courseId = course.id;
+      if (courseId == null) {
+        Get.snackbar(
+          'Error',
+          'El ID del curso no está disponible',
+          icon: Icon(Icons.error, color: Colors.white),
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+      
+      await Clipboard.setData(ClipboardData(text: courseId));
+      Get.back(); // Cerrar el dialog
+      
       Get.snackbar(
-        'En desarrollo',
-        'La funcionalidad de invitar estudiantes está en desarrollo',
-        backgroundColor: Colors.orange,
+        'Código Copiado',
+        'El código del curso ha sido copiado al portapapeles',
+        icon: Icon(Icons.check_circle, color: Colors.white),
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo copiar el código. Inténtalo de nuevo.',
+        icon: Icon(Icons.error, color: Colors.white),
+        backgroundColor: Colors.red,
         colorText: Colors.white,
       );
     }

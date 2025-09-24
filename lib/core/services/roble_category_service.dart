@@ -440,29 +440,56 @@ class RobleCategoryService {
     required String courseId,
   }) async {
     try {
+      print('🔍 Buscando estudiantes disponibles - CategoryID: $categoryId, CourseID: $courseId');
+      
       // Obtener todos los estudiantes del curso
       final enrollments = await _databaseService.read('enrollments');
+      print('🔍 Total enrollments: ${enrollments.length}');
+      
       final courseStudents = enrollments
-          .where((e) => e['course_id'] == courseId && e['role'] == 'student')
+          .where((e) {
+            final courseMatches = e['course_id']?.toString().trim() == courseId.trim();
+            final role = e['role']?.toString().toLowerCase() ?? '';
+            final roleMatches = role == 'student' || role == 'estudiante';
+            final matches = courseMatches && roleMatches;
+            
+            print('🔍 Enrollment: CourseID=${e['course_id']}, Role=${e['role']}, StudentID=${e['student_id']}');
+            print('🔍 Course match: $courseMatches, Role match: $roleMatches, Final: $matches');
+            
+            if (matches) {
+              print('🎓 Estudiante encontrado: ${e['student_id']} - Role: ${e['role']}');
+            }
+            return matches;
+          })
           .toList();
+      
+      print('🎓 Estudiantes del curso: ${courseStudents.length}');
 
       // Obtener estudiantes que ya están en grupos de esta categoría
       final groups = await _databaseService.read('groups');
       final categoryGroups = groups.where((g) => g['category_id'] == categoryId).toList();
+      print('👥 Grupos en esta categoría: ${categoryGroups.length}');
       
       final occupiedStudents = <String>{};
       for (final group in categoryGroups) {
         final members = await _getGroupMembers(group['_id']);
+        print('👥 Grupo ${group['name']}: ${members.length} miembros');
         for (final member in members) {
           occupiedStudents.add(member['student_id']);
+          print('🚫 Estudiante ocupado: ${member['student_id']}');
         }
       }
 
       // Filtrar estudiantes disponibles
       final availableStudents = courseStudents
-          .where((student) => !occupiedStudents.contains(student['student_id']))
+          .where((student) {
+            final isAvailable = !occupiedStudents.contains(student['student_id']);
+            print('✅ Estudiante ${student['student_id']} disponible: $isAvailable');
+            return isAvailable;
+          })
           .toList();
 
+      print('✅ Estudiantes disponibles finales: ${availableStudents.length}');
       return availableStudents;
     } catch (e) {
       print('❌ Error obteniendo estudiantes disponibles: $e');
