@@ -1043,4 +1043,774 @@ class CourseDetailController extends GetxController {
       urlController?.dispose();
     }
   }
+
+  /// Obtiene todas las submissions de una actividad para evaluación peer
+  Future<List<Map<String, dynamic>>> getActivitySubmissions(String activityId) async {
+    try {
+      final authController = Get.find<AuthController>();
+      final currentUserId = authController.currentUser.value?.uuid;
+      
+      if (currentUserId == null) return [];
+
+      final httpService = RobleHttpService();
+      final databaseService = RobleDatabaseService(httpService);
+
+      // Obtener todas las submissions de la actividad
+      final submissions = await databaseService.read('submissions');
+      
+      // Filtrar submissions de esta actividad, excluyendo la propia
+      final activitySubmissions = submissions.where((submission) =>
+          submission['activity_id'] == activityId &&
+          submission['student_id'] != currentUserId
+      ).toList();
+
+      // Obtener las calificaciones ya dadas por el usuario actual
+      final grades = await databaseService.read('grades');
+      final myGrades = grades.where((grade) => 
+          grade['graded_by'] == currentUserId
+      ).toList();
+
+      // Agregar información de calificación a cada submission
+      for (var submission in activitySubmissions) {
+        final existingGrade = myGrades.firstWhere(
+          (grade) => grade['submission_id'] == submission['_id'],
+          orElse: () => <String, dynamic>{},
+        );
+        
+        submission['my_grade'] = existingGrade.isEmpty ? null : existingGrade['grade'];
+        submission['grade_id'] = existingGrade.isEmpty ? null : existingGrade['_id'];
+      }
+
+      return activitySubmissions;
+    } catch (e) {
+      print('❌ Error obteniendo submissions para evaluación: $e');
+      return [];
+    }
+  }
+
+  /// Muestra el diálogo de evaluación de pares
+  Future<void> showPeerEvaluationDialog(Map<String, dynamic> activity) async {
+    try {
+      isLoading.value = true;
+      
+      final submissions = await getActivitySubmissions(activity['_id']);
+      
+      if (submissions.isEmpty) {
+        Get.snackbar(
+          'Sin entregas',
+          'No hay entregas de compañeros para evaluar en esta actividad',
+          icon: Icon(Icons.info, color: Colors.white),
+          backgroundColor: Colors.blue,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      Get.dialog(
+        AlertDialog(
+          title: Text('Evaluar Compañeros'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Actividad: ${activity['title']}',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Entregas de compañeros:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: submissions.length,
+                    itemBuilder: (context, index) {
+                      final submission = submissions[index];
+                      final hasGrade = submission['my_grade'] != null;
+                      
+                      return Card(
+                        margin: EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: hasGrade ? Colors.green : Colors.grey,
+                            child: Icon(
+                              hasGrade ? Icons.check : Icons.person,
+                              color: Colors.white,
+                            ),
+                          ),
+                          title: Text('Estudiante: ${submission['student_id'].toString().substring(0, 8)}...'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (hasGrade)
+                                Text(
+                                  'Mi calificación: ${submission['my_grade']}/5',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          trailing: Icon(Icons.arrow_forward_ios),
+                          onTap: () => _showSubmissionEvaluationDialog(submission),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo cargar las entregas: $e',
+        icon: Icon(Icons.error, color: Colors.white),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Muestra el diálogo para evaluar una submission específica
+  Future<void> _showSubmissionEvaluationDialog(Map<String, dynamic> submission) async {
+    int selectedGrade = submission['my_grade']?.toInt() ?? 3;
+    
+    final result = await Get.dialog<int?>(
+      AlertDialog(
+        title: Text('Evaluar Entrega'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Estudiante: ${submission['student_id'].toString().substring(0, 8)}...',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Respuesta:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey.shade50,
+                  ),
+                  child: Text(
+                    submission['content'] ?? 'Sin respuesta',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+                if (submission['file_url'] != null && submission['file_url'].toString().isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'URL adjunta:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.blue.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.blue.shade50,
+                    ),
+                    child: Text(
+                      submission['file_url'],
+                      style: TextStyle(color: Colors.blue.shade700, fontSize: 12),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Text(
+                  'Calificación (1-5):',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                StatefulBuilder(
+                  builder: (context, setState) {
+                    return Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: List.generate(5, (index) {
+                            final grade = index + 1;
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedGrade = grade;
+                                });
+                              },
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: selectedGrade == grade 
+                                      ? Colors.blue 
+                                      : Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                    color: selectedGrade == grade 
+                                        ? Colors.blue.shade700 
+                                        : Colors.grey.shade400,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    grade.toString(),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: selectedGrade == grade 
+                                          ? Colors.white 
+                                          : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Calificación seleccionada: $selectedGrade/5',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: null),
+            child: Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: selectedGrade),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('Evaluar'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      await _saveGrade(submission, result);
+    }
+  }
+
+  /// Guarda o actualiza una calificación en la tabla grades
+  Future<void> _saveGrade(Map<String, dynamic> submission, int grade) async {
+    try {
+      isLoading.value = true;
+
+      final authController = Get.find<AuthController>();
+      final currentUserId = authController.currentUser.value?.uuid;
+      
+      if (currentUserId == null) {
+        throw Exception('Usuario no encontrado');
+      }
+
+      final httpService = RobleHttpService();
+      final databaseService = RobleDatabaseService(httpService);
+
+      if (submission['grade_id'] != null) {
+        // Actualizar calificación existente
+        final updates = {
+          'grade': grade.toDouble(),
+          'max_grade': 5.0,
+        };
+
+        await databaseService.update('grades', submission['grade_id'], updates);
+        
+        Get.snackbar(
+          'Éxito',
+          'Calificación actualizada correctamente',
+          icon: Icon(Icons.check_circle, color: Colors.white),
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+
+        print('✅ Calificación actualizada: ${grade}/5');
+      } else {
+        // Crear nueva calificación
+        final gradeData = {
+          'submission_id': submission['_id'].toString(),
+          'grade': grade.toDouble(),
+          'max_grade': 5.0,
+          'feedback': '',
+          'graded_by': currentUserId.toString(),
+        };
+
+        await databaseService.insert('grades', [gradeData]);
+        
+        Get.snackbar(
+          'Éxito',
+          'Calificación enviada correctamente',
+          icon: Icon(Icons.check_circle, color: Colors.white),
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+
+        print('✅ Nueva calificación creada: ${grade}/5');
+      }
+
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo guardar la calificación: $e',
+        icon: Icon(Icons.error, color: Colors.white),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      print('❌ Error guardando calificación: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Obtiene todas las submissions de una actividad con notas para el profesor
+  Future<List<Map<String, dynamic>>> getActivitySubmissionsForProfessor(String activityId) async {
+    try {
+      final httpService = RobleHttpService();
+      final databaseService = RobleDatabaseService(httpService);
+
+      // Obtener todas las submissions de la actividad
+      final submissions = await databaseService.read('submissions');
+      final activitySubmissions = submissions.where((submission) =>
+          submission['activity_id'] == activityId
+      ).toList();
+
+      // Obtener todas las calificaciones
+      final grades = await databaseService.read('grades');
+
+      // Calcular promedio de notas para cada submission
+      for (var submission in activitySubmissions) {
+        final submissionGrades = grades.where((grade) => 
+            grade['submission_id'] == submission['_id']
+        ).toList();
+        
+        if (submissionGrades.isNotEmpty) {
+          final gradeSum = submissionGrades.fold<double>(0.0, (sum, grade) => 
+              sum + (grade['grade']?.toDouble() ?? 0.0));
+          final averageGrade = gradeSum / submissionGrades.length;
+          
+          submission['average_grade'] = averageGrade;
+          submission['total_evaluations'] = submissionGrades.length;
+          submission['grades_list'] = submissionGrades;
+        } else {
+          submission['average_grade'] = null;
+          submission['total_evaluations'] = 0;
+          submission['grades_list'] = [];
+        }
+      }
+
+      // Ordenar por promedio de nota (mayor a menor)
+      activitySubmissions.sort((a, b) {
+        final aGrade = a['average_grade'] ?? 0.0;
+        final bGrade = b['average_grade'] ?? 0.0;
+        return bGrade.compareTo(aGrade);
+      });
+
+      return activitySubmissions;
+    } catch (e) {
+      print('❌ Error obteniendo submissions para profesor: $e');
+      return [];
+    }
+  }
+
+  /// Muestra el diálogo de ver notas para el profesor
+  Future<void> showGradesViewDialog(Map<String, dynamic> activity) async {
+    try {
+      isLoading.value = true;
+      
+      final submissions = await getActivitySubmissionsForProfessor(activity['_id']);
+      
+      if (submissions.isEmpty) {
+        Get.snackbar(
+          'Sin entregas',
+          'No hay entregas de estudiantes en esta actividad',
+          icon: Icon(Icons.info, color: Colors.white),
+          backgroundColor: Colors.blue,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      Get.dialog(
+        AlertDialog(
+          title: Text('Ver Notas'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 500,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Actividad: ${activity['title']}',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                
+                // Estadísticas generales
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Total entregas:',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            '${submissions.length}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Con evaluaciones:',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            '${submissions.where((s) => s['total_evaluations'] > 0).length}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                Text(
+                  'Entregas de estudiantes:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: submissions.length,
+                    itemBuilder: (context, index) {
+                      final submission = submissions[index];
+                      final hasGrades = submission['total_evaluations'] > 0;
+                      final averageGrade = submission['average_grade'];
+                      
+                      return Card(
+                        margin: EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: hasGrades 
+                                ? (averageGrade >= 4.0 ? Colors.green : 
+                                   averageGrade >= 3.0 ? Colors.orange : Colors.red)
+                                : Colors.grey,
+                            child: Text(
+                              hasGrades 
+                                  ? averageGrade.toStringAsFixed(1)
+                                  : '?',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          title: Text('Estudiante: ${submission['student_id'].toString().substring(0, 8)}...'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (hasGrades) ...[
+                                Text(
+                                  'Promedio: ${averageGrade.toStringAsFixed(2)}/5.0',
+                                  style: TextStyle(
+                                    color: averageGrade >= 4.0 ? Colors.green : 
+                                           averageGrade >= 3.0 ? Colors.orange : Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Evaluaciones: ${submission['total_evaluations']}',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ] else ...[
+                                Text(
+                                  'Sin evaluaciones',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          trailing: Icon(Icons.arrow_forward_ios),
+                          onTap: () => _showSubmissionDetailForProfessor(submission),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudieron cargar las notas: $e',
+        icon: Icon(Icons.error, color: Colors.white),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Muestra el detalle de una submission para el profesor (solo lectura)
+  Future<void> _showSubmissionDetailForProfessor(Map<String, dynamic> submission) async {
+    final hasGrades = submission['total_evaluations'] > 0;
+    final averageGrade = submission['average_grade'];
+    final gradesList = submission['grades_list'] as List<dynamic>;
+    
+    Get.dialog(
+      AlertDialog(
+        title: Text('Detalle de Entrega'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Estudiante: ${submission['student_id'].toString().substring(0, 8)}...',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                
+                // Información de la entrega
+                Text(
+                  'Respuesta:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey.shade50,
+                  ),
+                  child: Text(
+                    submission['content'] ?? 'Sin respuesta',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+                
+                if (submission['file_url'] != null && submission['file_url'].toString().isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'URL adjunta:',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.blue.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.blue.shade50,
+                    ),
+                    child: Text(
+                      submission['file_url'],
+                      style: TextStyle(color: Colors.blue.shade700, fontSize: 12),
+                    ),
+                  ),
+                ],
+                
+                const SizedBox(height: 20),
+                
+                // Información de calificaciones
+                if (hasGrades) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Calificaciones:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Promedio: ${averageGrade.toStringAsFixed(2)}/5.0',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade800,
+                          ),
+                        ),
+                        Text(
+                          'Total evaluaciones: ${submission['total_evaluations']}',
+                          style: TextStyle(color: Colors.green.shade600),
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        // Lista de calificaciones individuales
+                        Text(
+                          'Calificaciones individuales:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...gradesList.map((grade) => Padding(
+                          padding: EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Evaluador: ${grade['graded_by'].toString().substring(0, 8)}...',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade100,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '${grade['grade']}/5',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue.shade700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )).toList(),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Sin evaluaciones',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Esta entrega aún no ha sido evaluada por otros estudiantes.',
+                          style: TextStyle(color: Colors.orange.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -196,9 +196,9 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
                         print('📊 Ver notas - Actividad: $title');
-                        // TODO: Navegar a página de ver notas
+                        await controller.showGradesViewDialog(activity);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
@@ -233,9 +233,9 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
                         print('🔍 Evaluar a mis compañeros - Actividad: $title');
-                        // TODO: Navegar a página de evaluación
+                        await controller.showPeerEvaluationDialog(activity);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
