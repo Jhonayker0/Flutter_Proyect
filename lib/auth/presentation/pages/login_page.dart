@@ -138,7 +138,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 6),
 
-                        // Recordarme + olvidé contraseña
+                        // Recordarme
                         Obx(
                           () => Row(
                             children: [
@@ -147,11 +147,6 @@ class _LoginPageState extends State<LoginPage> {
                                 onChanged: (v) => rememberMe.value = v ?? false,
                               ),
                               const Text('Recordarme'),
-                              const Spacer(),
-                              TextButton(
-                                onPressed: () {},
-                                child: const Text('¿Olvidaste tu contraseña?'),
-                              ),
                             ],
                           ),
                         ),
@@ -228,14 +223,6 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         ),
                         const SizedBox(height: 20),
-                        const Divider(),
-                        const Text("o continúa con"),
-                        const SizedBox(height: 10),
-                        OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.g_mobiledata),
-                          label: const Text('Google'),
-                        ),
                       ],
                     ),
                   ),

@@ -88,7 +88,7 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                         children: [
                           _buildStatRow(
                             'Total de actividades',
-                            '${controller.activities.length}',
+                            '${controller.activityCount.value}',
                             Icons.assignment,
                             Colors.blue,
                           ),

@@ -104,16 +104,130 @@ class CourseDetailController extends GetxController {
       final activitiesData = await _activityService.getActivitiesByCourse(
         course.id ?? '',
       );
+      
+      // Asignar datos raw para uso en la UI de actividades
       courseActivities.assignAll(activitiesData);
+      
+      // Para estudiantes, verificar qué actividades ya han sido enviadas
+      List<Activity> activityObjects;
+      if (!isProfessor) {
+        activityObjects = await _loadActivitiesWithCompletionStatus(activitiesData);
+      } else {
+        // Para profesores, solo convertir los datos sin verificar completado
+        activityObjects = activitiesData
+            .map((data) => Activity.fromRoble(data))
+            .toList();
+      }
+      
+      activities.assignAll(activityObjects);
       activityCount.value = activitiesData.length;
 
       print('✅ Actividades cargadas: ${activityCount.value}');
+      print('✅ Objetos Activity creados: ${activities.length}');
+      if (!isProfessor) {
+        final completed = activities.where((a) => a.isCompleted).length;
+        final pending = activities.where((a) => !a.isCompleted).length;
+        print('✅ Completadas: $completed, Pendientes: $pending');
+      }
     } catch (e) {
       print('❌ Error cargando actividades: $e');
       courseActivities.clear();
+      activities.clear();
       activityCount.value = 0;
     } finally {
       isLoadingActivities.value = false;
+    }
+  }
+
+  /// Cargar actividades con estado de completado para estudiantes
+  Future<List<Activity>> _loadActivitiesWithCompletionStatus(
+      List<Map<String, dynamic>> activitiesData) async {
+    try {
+      final authController = Get.find<AuthController>();
+      final currentUserId = authController.currentUser.value?.uuid;
+      
+      if (currentUserId == null) {
+        // Si no hay usuario, marcar todas como no completadas
+        return activitiesData
+            .map((data) => Activity.fromRoble(data))
+            .toList();
+      }
+
+      // Obtener todas las submissions del usuario actual
+      final httpService = RobleHttpService();
+      final databaseService = RobleDatabaseService(httpService);
+      final submissions = await databaseService.read('submissions');
+      
+      // Filtrar submissions del usuario actual
+      final userSubmissions = submissions.where((submission) =>
+          submission['student_id'] == currentUserId
+      ).toList();
+      
+      // Crear set de IDs de actividades enviadas por el usuario
+      final submittedActivityIds = userSubmissions
+          .map((submission) => submission['activity_id'])
+          .toSet();
+
+      // Convertir actividades y marcar las completadas
+      final activityObjects = activitiesData.map((data) {
+        final activity = Activity.fromRoble(data);
+        final activityId = activity.id;
+        
+        // Marcar como completada si el usuario ya envió una submission
+        final isCompleted = activityId != null && 
+                           submittedActivityIds.contains(activityId);
+        
+        return activity.copyWith(isCompleted: isCompleted);
+      }).toList();
+
+      print('✅ Estado de completado verificado para ${activityObjects.length} actividades');
+      print('✅ Usuario tiene submissions para: ${submittedActivityIds.length} actividades');
+      
+      return activityObjects;
+    } catch (e) {
+      print('❌ Error verificando estado de completado: $e');
+      // En caso de error, devolver actividades sin marcar como completadas
+      return activitiesData
+          .map((data) => Activity.fromRoble(data))
+          .toList();
+    }
+  }
+
+  /// Actualizar el estado de completado de una actividad específica
+  void _updateActivityCompletionStatus(String activityId, bool isCompleted) {
+    try {
+      // Buscar la actividad en la lista y actualizar su estado
+      final index = activities.indexWhere((activity) => activity.id == activityId);
+      if (index != -1) {
+        final updatedActivity = activities[index].copyWith(isCompleted: isCompleted);
+        activities[index] = updatedActivity;
+        
+        final completed = activities.where((a) => a.isCompleted).length;
+        final pending = activities.where((a) => !a.isCompleted).length;
+        print('✅ Estado actualizado - Completadas: $completed, Pendientes: $pending');
+      } else {
+        print('⚠️ No se encontró la actividad con ID: $activityId');
+      }
+    } catch (e) {
+      print('❌ Error actualizando estado de completado: $e');
+    }
+  }
+
+  /// Refrescar estadísticas de actividades para estudiantes
+  Future<void> refreshActivityStatistics() async {
+    if (!isProfessor && courseActivities.isNotEmpty) {
+      try {
+        print('🔄 Refrescando estadísticas de actividades...');
+        final activitiesData = courseActivities.map((activity) => activity).toList();
+        final updatedActivities = await _loadActivitiesWithCompletionStatus(activitiesData);
+        activities.assignAll(updatedActivities);
+        
+        final completed = activities.where((a) => a.isCompleted).length;
+        final pending = activities.where((a) => !a.isCompleted).length;
+        print('✅ Estadísticas actualizadas - Completadas: $completed, Pendientes: $pending');
+      } catch (e) {
+        print('❌ Error refrescando estadísticas: $e');
+      }
     }
   }
 
@@ -745,8 +859,9 @@ class CourseDetailController extends GetxController {
       // Eliminar la actividad de la base de datos
       await databaseService.delete('activities', activity['_id']);
 
-      // Remover de la lista local
+      // Remover de ambas listas locales
       courseActivities.removeWhere((a) => a['_id'] == activity['_id']);
+      activities.removeWhere((a) => a.id == activity['_id']);
 
       // Actualizar contador
       activityCount.value = courseActivities.length;
@@ -856,6 +971,9 @@ class CourseDetailController extends GetxController {
 
         await databaseService.update('submissions', existingSubmission['_id'], updates);
         
+        // Asegurar que la actividad esté marcada como completada
+        _updateActivityCompletionStatus(activity['_id'], true);
+        
         Get.snackbar(
           'Éxito',
           'Tu respuesta ha sido actualizada correctamente',
@@ -878,6 +996,9 @@ class CourseDetailController extends GetxController {
         };
 
         await databaseService.insert('submissions', [submissionData]);
+        
+        // Actualizar el estado de completado en la lista de actividades
+        _updateActivityCompletionStatus(activity['_id'], true);
         
         Get.snackbar(
           'Éxito',
