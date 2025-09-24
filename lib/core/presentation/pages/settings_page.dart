@@ -15,10 +15,7 @@ class SettingsPage extends GetView<SettingsController> {
         icon: Icons.notifications_outlined,
         title: "Notificaciones",
       ),
-      const _SettingsOption(
-        icon: Icons.color_lens_outlined,
-        title: "Apariencia",
-      ),
+
       const _SettingsOption(icon: Icons.language, title: "Idioma"),
       const _SettingsOption(
         icon: Icons.lock_outline,
@@ -93,13 +90,7 @@ class _SettingsOption extends GetView<SettingsController> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    final trailing = title == 'Apariencia'
-        // Opción sin Obx; si se usa Rx en el controller, envolver en Obx
-        ? Switch(
-            value: controller.isDark, // o Get.isDarkMode
-            onChanged: (_) => controller.toggleTheme(),
-          )
-        : const Icon(Icons.arrow_forward_ios, size: 18);
+    final trailing = const Icon(Icons.arrow_forward_ios, size: 18);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -108,13 +99,7 @@ class _SettingsOption extends GetView<SettingsController> {
         leading: Icon(icon, color: cs.primary),
         title: Text(title),
         trailing: trailing,
-        onTap: () {
-          if (title == 'Apariencia') {
-            controller.toggleTheme(); // alterna con tap
-            return;
-          }
-          onTap?.call(); // delega al callback general
-        },
+        onTap: onTap,
       ),
     );
   }
