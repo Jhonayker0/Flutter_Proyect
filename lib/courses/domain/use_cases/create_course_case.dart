@@ -20,13 +20,18 @@ class CreateCourse {
   final CourseRepository repo;
 
   Future<Result<int>> call(Course course) async {
-    final cursos = await repo.getCoursesByProfesor(
-      int.tryParse(course.professorId) ?? 0,
-    );
-    if (cursos.length >= 3) {
-      return const Err('ya tienes 3');
+    try {
+      print('📋 Caso de uso CreateCourse iniciado');
+      print('📝 Datos recibidos: ${course.toRoble()}');
+      
+      // Crear el curso directamente sin restricción de cantidad por ahora
+      await repo.create(course);
+      
+      print('✅ Curso creado exitosamente en repositorio');
+      return const Ok(0);
+    } catch (e) {
+      print('❌ Error en caso de uso CreateCourse: $e');
+      return Err('Error al crear curso: $e');
     }
-    await repo.create(course);
-    return Ok(0);
   }
 }

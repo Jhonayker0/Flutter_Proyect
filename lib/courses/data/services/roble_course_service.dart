@@ -98,9 +98,42 @@ class RobleCourseService {
   /// Crear un nuevo curso
   Future<void> createCourse(Course course) async {
     try {
+      print('🔄 Iniciando creación de curso...');
+      print('📝 Datos del curso: ${course.toRoble()}');
+      print('🗂️ Tabla destino: $tableName');
+      
+      // 1. Crear el curso
       await _databaseService.insert(tableName, [course.toRoble()]);
+      print('✅ Curso creado exitosamente en ROBLE');
+      
+      // 2. Obtener el ID del curso recién creado
+      // Necesitamos leer la tabla courses para obtener el ID del curso recién creado
+      final allCourses = await _databaseService.read(tableName);
+      final createdCourse = allCourses
+          .where((c) => c['professor_id'] == course.professorId && c['title'] == course.title)
+          .firstOrNull;
+      
+      if (createdCourse != null && createdCourse['_id'] != null) {
+        final courseId = createdCourse['_id'] as String;
+        print('🆔 ID del curso creado: $courseId');
+        
+        // 3. Crear enrollment del profesor automáticamente
+        final professorEnrollment = {
+          'student_id': course.professorId, // En enrollments, el campo se llama student_id pero puede ser profesor
+          'course_id': courseId,
+          'role': 'professor',
+        };
+        
+        print('👨‍🏫 Creando enrollment del profesor: $professorEnrollment');
+        await _databaseService.insert('enrollments', [professorEnrollment]);
+        print('✅ Profesor añadido automáticamente a enrollments');
+      } else {
+        print('⚠️ No se pudo obtener el ID del curso creado, enrollment no creado');
+      }
+      
     } catch (e) {
       print('❌ Error creando curso: $e');
+      print('🔍 Stack trace: ${StackTrace.current}');
       rethrow;
     }
   }

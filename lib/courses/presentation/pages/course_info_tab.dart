@@ -176,6 +176,47 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                 ),
               ),
 
+            const SizedBox(height: 16),
+
+            // Zona peligrosa para profesores
+            if (controller.isProfessor)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.warning,
+                            color: Colors.red.shade700,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Zona Peligrosa',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildActionButton(
+                        'Eliminar Curso',
+                        'Eliminar permanentemente este curso y todos sus datos',
+                        Icons.delete_forever,
+                        Colors.red,
+                        controller.deleteCourse,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             // Acciones para estudiantes
             if (!controller.isProfessor)
               Card(

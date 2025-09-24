@@ -64,7 +64,31 @@ class HomeController extends GetxController {
         userIdString,
       );
 
-      _allCourses.addAll([...studentCourses, ...professorCourses]);
+      // Combinar y eliminar duplicados basándose en ID del curso
+      final allCourses = [...studentCourses, ...professorCourses];
+      final courseMap = <String, Course>{};
+      
+      for (final course in allCourses) {
+        final courseId = course.id ?? 'unknown';
+        
+        // Si ya existe un curso con el mismo ID
+        if (courseMap.containsKey(courseId)) {
+          final existingCourse = courseMap[courseId]!;
+          
+          // Priorizar rol de profesor sobre estudiante
+          if (course.role == 'Profesor' && existingCourse.role != 'Profesor') {
+            courseMap[courseId] = course;
+            print('🔄 Actualizando curso ${course.title} de ${existingCourse.role} a ${course.role}');
+          }
+          // Si ambos tienen el mismo rol, mantener el existente
+          print('📋 Curso duplicado detectado: ${course.title} (${course.role})');
+        } else {
+          courseMap[courseId] = course;
+        }
+      }
+
+      _allCourses.addAll(courseMap.values);
+      print('✅ Cursos únicos cargados: ${_allCourses.length}');
     } catch (e) {
       print('❌ Error cargando cursos ROBLE: $e');
       // Fallback a métodos SQLite si falla ROBLE

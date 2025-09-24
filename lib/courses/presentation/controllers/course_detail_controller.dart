@@ -547,4 +547,162 @@ class CourseDetailController extends GetxController {
   void refreshData() {
     loadCourseData();
   }
+
+  /// Eliminar curso (solo para profesores)
+  void deleteCourse() async {
+    if (!isProfessor) {
+      Get.snackbar(
+        'No permitido',
+        'Solo los profesores pueden eliminar cursos',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Mostrar diálogo de confirmación
+    final confirmed = await _showDeleteCourseDialog();
+    
+    if (confirmed == true) {
+      await _performDeleteCourse();
+    }
+  }
+
+  Future<bool?> _showDeleteCourseDialog() {
+    return Get.dialog<bool>(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.delete_forever,
+              color: Colors.red,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Text('Eliminar Curso'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Estás seguro de que quieres eliminar "${course.title}" permanentemente?',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.warning, color: Colors.red[700], size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Esta acción es irreversible:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '• Se eliminarán todas las actividades\n'
+                    '• Se perderá el progreso de los estudiantes\n'
+                    '• Se eliminarán todas las inscripciones\n'
+                    '• Esta acción no se puede deshacer',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.red[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar Curso'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Future<void> _performDeleteCourse() async {
+    try {
+      isLoading.value = true;
+
+      // Obtener servicios
+      final httpService = RobleHttpService();
+      final databaseService = RobleDatabaseService(httpService);
+
+      // Eliminar el curso de la base de datos
+      await databaseService.delete('courses', course.id!);
+
+      // También eliminar todos los enrollments relacionados
+      final enrollments = await databaseService.read('enrollments');
+      final courseEnrollments = enrollments
+          .where((e) => e['course_id'] == course.id)
+          .toList();
+
+      for (final enrollment in courseEnrollments) {
+        await databaseService.delete('enrollments', enrollment['_id']);
+      }
+
+      Get.snackbar(
+        'Éxito',
+        'El curso "${course.title}" ha sido eliminado correctamente',
+        icon: Icon(Icons.check_circle, color: Colors.white),
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+
+      // Recargar cursos en el home
+      final homeController = Get.find<HomeController>();
+      homeController.loadCourses();
+
+      // Volver al home
+      Get.offNamed('/home');
+
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo eliminar el curso: $e',
+        icon: Icon(Icons.error, color: Colors.white),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      print('❌ Error deleting course: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

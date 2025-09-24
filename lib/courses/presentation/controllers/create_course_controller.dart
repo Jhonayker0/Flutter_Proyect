@@ -37,24 +37,37 @@ class CreateCourseController extends GetxController with GetSingleTickerProvider
   ) async {
     if (!(formKey.currentState?.validate() ?? false)) return;
 
-    final userId = authController.currentUser.value?.id;
-    if (userId == null) {
+    final user = authController.currentUser.value;
+    if (user == null) {
       error.value = 'Usuario no logeado';
       return;
     }
+
+    // Usar UUID si está disponible, sino usar el id como fallback
+    final professorId = user.uuid ?? user.id.toString();
 
     isLoading.value = true;
     error.value = null;
 
     try {
+      print('🚀 Iniciando creación de curso desde controlador...');
+      print('👤 Usuario ID: ${user.id}');
+      print('🔑 Usuario UUID: ${user.uuid}');
+      print('📝 Professor ID a usar: $professorId');
+      print('📝 Título: ${nameCtrl.text.trim()}');
+      print('📄 Descripción: ${descCtrl.text.trim()}');
+      
       final course = Course(
         title: nameCtrl.text.trim(),
         description: descCtrl.text.trim(),
-        professorId: userId.toString(), // Convertir a String
+        professorId: professorId, // Usar UUID
         role: 'Professor', // rol del creador
         createdAt: DateTime.now(),
       );
+      
+      print('🏗️ Objeto curso creado: ${course.toRoble()}');
       final res = await createCourseUseCase(course);
+      print('📥 Resultado del caso de uso: $res');
       switch (res) {
         case Ok():
           Get.snackbar(
