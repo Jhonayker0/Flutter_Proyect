@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/course_detail_controller.dart';
 import '../../../core/services/roble_category_service.dart';
+import '../../../core/services/roble_user_service.dart';
 
 class CourseCategoriesTab extends GetView<CourseDetailController> {
   const CourseCategoriesTab({super.key});
@@ -264,7 +265,7 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Grupos - ${category['name']}',
+                    'Grupos',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -315,22 +316,37 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
   }
 
   void _editCategory(Map<String, dynamic> category) {
-    // Implementar edición de categoría
-    showDialog(
-      context: Get.context!,
-      builder: (context) => AlertDialog(
-        title: Text('Editar ${category['name']}'),
-        content: const Text('Funcionalidad para editar esta categoría'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+    Get.dialog(
+      Dialog(
+        child: Container(
+          width: 700,
+          height: 600,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Gestionar Grupos}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: _buildGroupManagement(category),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Guardar'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -560,5 +576,893 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
         ],
       ),
     );
+  }
+
+  Widget _buildGroupManagement(Map<String, dynamic> category) {
+    final categoryType = category['type']?.toString() ?? '';
+    final isRandom = categoryType == 'Aleatorio';
+    
+    return Column(
+      children: [
+        // Header con información de la categoría
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isRandom ? Icons.shuffle : Icons.how_to_vote,
+                color: isRandom ? Colors.orange : Colors.blue,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tipo: $categoryType',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      isRandom 
+                        ? 'Asignación automática de estudiantes'  
+                        : 'Los estudiantes pueden elegir su grupo',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        // Botón para crear grupo
+        Row(
+          children: [
+            ElevatedButton.icon(
+              onPressed: () => _showCreateGroupDialog(category),
+              icon: const Icon(Icons.add),
+              label: const Text('Crear Grupo'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
+        const SizedBox(height: 16),
+        
+        // Lista de grupos
+        Expanded(
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _loadCategoryGroups(category),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text('Error: ${snapshot.error}'),
+                );
+              }
+              
+              final groups = snapshot.data ?? [];
+              
+              if (groups.isEmpty) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.group_off, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text(
+                        'No hay grupos creados',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              
+              return ListView.builder(
+                itemCount: groups.length,
+                itemBuilder: (context, index) {
+                  final group = groups[index];
+                  return _buildGroupManagementCard(group, category);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGroupManagementCard(Map<String, dynamic> group, Map<String, dynamic> category) {
+    final name = group['name']?.toString() ?? 'Grupo sin nombre';
+    final capacity = group['capacity'] as int? ?? 0;
+    final members = group['members'] as List? ?? [];
+    final memberCount = members.length;
+    final capacityPercentage = capacity > 0 ? ((memberCount / capacity) * 100).round() : 0;
+    final isRandom = category['type'] == 'Aleatorio';
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ExpansionTile(
+        leading: CircleAvatar(
+          backgroundColor: capacityPercentage > 80 
+            ? Colors.red.shade100 
+            : capacityPercentage > 60 
+              ? Colors.orange.shade100 
+              : Colors.green.shade100,
+          child: Icon(
+            Icons.group,
+            color: capacityPercentage > 80 
+              ? Colors.red.shade700 
+              : capacityPercentage > 60 
+                ? Colors.orange.shade700 
+                : Colors.green.shade700,
+            size: 20,
+          ),
+        ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                name,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) => _handleGroupAction(value, group, category),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 16),
+                      SizedBox(width: 8),
+                      Text('Editar'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 16, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Eliminar', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.people, size: 14, color: Colors.grey.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  '$memberCount/$capacity miembros',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+                if (capacity > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: capacityPercentage > 80 
+                        ? Colors.red.shade100 
+                        : capacityPercentage > 60 
+                          ? Colors.orange.shade100 
+                          : Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$capacityPercentage%',
+                      style: TextStyle(
+                        color: capacityPercentage > 80 
+                          ? Colors.red.shade700 
+                          : capacityPercentage > 60 
+                            ? Colors.orange.shade700 
+                            : Colors.green.shade700,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+        children: [
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Miembros:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (!isRandom && memberCount < capacity)
+                      ElevatedButton.icon(
+                        onPressed: () => _showAddStudentDialog(group, category),
+                        icon: const Icon(Icons.person_add, size: 16),
+                        label: const Text('Añadir'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (members.isNotEmpty) ...[
+                  ...members.map((member) => _buildMemberManagementItem(member, group, category)),
+                ] else ...[
+                  const Text(
+                    'No hay miembros en este grupo',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMemberManagementItem(Map<String, dynamic> member, Map<String, dynamic> group, Map<String, dynamic> category) {
+    final name = member['name']?.toString() ?? 'Usuario sin nombre';
+    final email = member['email']?.toString() ?? '';
+    final role = member['role']?.toString() ?? 'Estudiante';
+    final isRandom = category['type'] == 'Aleatorio';
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: role == 'Profesor' ? Colors.green.shade100 : Colors.blue.shade100,
+            child: Icon(
+              role == 'Profesor' ? Icons.school : Icons.person,
+              size: 16,
+              color: role == 'Profesor' ? Colors.green.shade700 : Colors.blue.shade700,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                ),
+                if (email.isNotEmpty)
+                  Text(
+                    email,
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 11,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: role == 'Profesor' ? Colors.green.shade50 : Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: role == 'Profesor' ? Colors.green.shade200 : Colors.blue.shade200,
+                width: 1,
+              ),
+            ),
+            child: Text(
+              role,
+              style: TextStyle(
+                color: role == 'Profesor' ? Colors.green.shade700 : Colors.blue.shade700,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          if (!isRandom && role == 'Estudiante') ...[
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: () => _removeStudentFromGroup(member, category),
+              icon: const Icon(Icons.remove_circle, color: Colors.red, size: 20),
+              tooltip: 'Remover del grupo',
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _handleGroupAction(String action, Map<String, dynamic> group, Map<String, dynamic> category) {
+    switch (action) {
+      case 'edit':
+        _showEditGroupDialog(group, category);
+        break;
+      case 'delete':
+        _showDeleteGroupConfirmation(group, category);
+        break;
+    }
+  }
+
+  void _showCreateGroupDialog(Map<String, dynamic> category) {
+    final nameController = TextEditingController();
+    final capacityController = TextEditingController();
+    final descriptionController = TextEditingController();
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Crear Nuevo Grupo'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del grupo',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: capacityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Capacidad máxima',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción (opcional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty || 
+                  capacityController.text.trim().isEmpty) {
+                Get.snackbar(
+                  'Error',
+                  'El nombre y la capacidad son obligatorios',
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+
+              final capacity = int.tryParse(capacityController.text.trim());
+              if (capacity == null || capacity <= 0) {
+                Get.snackbar(
+                  'Error',
+                  'La capacidad debe ser un número mayor a 0',
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+
+              await _createGroup(
+                category: category,
+                name: nameController.text.trim(),
+                capacity: capacity,
+                description: descriptionController.text.trim(),
+              );
+            },
+            child: const Text('Crear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditGroupDialog(Map<String, dynamic> group, Map<String, dynamic> category) {
+    final nameController = TextEditingController(text: group['name']?.toString() ?? '');
+    final capacityController = TextEditingController(text: group['capacity']?.toString() ?? '');
+    final descriptionController = TextEditingController(text: group['description']?.toString() ?? '');
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Editar Grupo'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del grupo',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: capacityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Capacidad máxima',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción (opcional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty || 
+                  capacityController.text.trim().isEmpty) {
+                Get.snackbar(
+                  'Error',
+                  'El nombre y la capacidad son obligatorios',
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+
+              final capacity = int.tryParse(capacityController.text.trim());
+              if (capacity == null || capacity <= 0) {
+                Get.snackbar(
+                  'Error',
+                  'La capacidad debe ser un número mayor a 0',
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+                return;
+              }
+
+              await _updateGroup(
+                group: group,
+                category: category,
+                name: nameController.text.trim(),
+                capacity: capacity,
+                description: descriptionController.text.trim(),
+              );
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteGroupConfirmation(Map<String, dynamic> group, Map<String, dynamic> category) {
+    final name = group['name']?.toString() ?? 'Grupo';
+    final memberCount = (group['members'] as List?)?.length ?? 0;
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Confirmar Eliminación'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('¿Estás seguro de que deseas eliminar el grupo "$name"?'),
+            if (memberCount > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Advertencia: Este grupo tiene $memberCount miembro(s) que serán removidos.',
+                style: const TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _deleteGroup(group, category);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddStudentDialog(Map<String, dynamic> group, Map<String, dynamic> category) {
+    Get.dialog(
+      Dialog(
+        child: Container(
+          width: 500,
+          height: 400,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Añadir Estudiante - ${group['name']}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _loadAvailableStudents(category),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+                    
+                    final students = snapshot.data ?? [];
+                    
+                    if (students.isEmpty) {
+                      return const Center(
+                        child: Text('No hay estudiantes disponibles'),
+                      );
+                    }
+                    
+                    return ListView.builder(
+                      itemCount: students.length,
+                      itemBuilder: (context, index) {
+                        final student = students[index];
+                        return _buildAvailableStudentItem(student, group, category);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvailableStudentItem(Map<String, dynamic> student, Map<String, dynamic> group, Map<String, dynamic> category) {
+    final name = student['name']?.toString() ?? 'Usuario sin nombre';
+    final email = student['email']?.toString() ?? student['student_id']?.toString() ?? '';
+    
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: Colors.blue.shade100,
+        child: Icon(
+          Icons.person,
+          color: Colors.blue.shade700,
+          size: 20,
+        ),
+      ),
+      title: Text(name),
+      subtitle: Text(email),
+      trailing: ElevatedButton(
+        onPressed: () => _addStudentToGroup(student, group, category),
+        child: const Text('Añadir'),
+      ),
+    );
+  }
+
+  // Métodos de acción
+  Future<void> _createGroup({
+    required Map<String, dynamic> category,
+    required String name,
+    required int capacity,
+    required String description,
+  }) async {
+    try {
+      final categoryService = Get.find<RobleCategoryService>();
+      
+      final result = await categoryService.createGroup(
+        categoryId: category['_id'],
+        name: name,
+        capacity: capacity,
+        description: description.isEmpty ? null : description,
+      );
+      
+      if (result != null) {
+        Get.back(); // Cerrar diálogo
+        Get.snackbar(
+          'Éxito',
+          'Grupo creado correctamente',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        
+        // Recargar la vista
+        controller.loadRobleCategories();
+      } else {
+        Get.snackbar(
+          'Error',
+          'No se pudo crear el grupo',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error al crear el grupo: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _updateGroup({
+    required Map<String, dynamic> group,
+    required Map<String, dynamic> category,
+    required String name,
+    required int capacity,
+    required String description,
+  }) async {
+    try {
+      final categoryService = Get.find<RobleCategoryService>();
+      
+      final success = await categoryService.updateGroup(
+        groupId: group['_id'],
+        name: name,
+        capacity: capacity,
+        description: description.isEmpty ? null : description,
+      );
+      
+      if (success) {
+        Get.back(); // Cerrar diálogo
+        Get.snackbar(
+          'Éxito',
+          'Grupo actualizado correctamente',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        
+        // Recargar la vista
+        controller.loadRobleCategories();
+      } else {
+        Get.snackbar(
+          'Error',
+          'No se pudo actualizar el grupo',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error al actualizar el grupo: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _deleteGroup(Map<String, dynamic> group, Map<String, dynamic> category) async {
+    try {
+      final categoryService = Get.find<RobleCategoryService>();
+      
+      final success = await categoryService.deleteGroup(group['_id']);
+      
+      if (success) {
+        Get.back(); // Cerrar diálogo de confirmación
+        Get.back(); // Cerrar diálogo de gestión si está abierto
+        Get.snackbar(
+          'Éxito',
+          'Grupo eliminado correctamente',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        
+        // Recargar la vista
+        controller.loadRobleCategories();
+      } else {
+        Get.snackbar(
+          'Error',
+          'No se pudo eliminar el grupo',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error al eliminar el grupo: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _addStudentToGroup(Map<String, dynamic> student, Map<String, dynamic> group, Map<String, dynamic> category) async {
+    try {
+      final categoryService = Get.find<RobleCategoryService>();
+      
+      final success = await categoryService.addStudentToGroup(
+        groupId: group['_id'],
+        studentId: student['student_id'],
+        categoryId: category['_id'],
+      );
+      
+      if (success) {
+        Get.back(); // Cerrar diálogo de añadir estudiante
+        Get.snackbar(
+          'Éxito',
+          'Estudiante añadido al grupo',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        
+        // Recargar la vista
+        controller.loadRobleCategories();
+      } else {
+        Get.snackbar(
+          'Error',
+          'No se pudo añadir el estudiante al grupo',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error al añadir estudiante: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<void> _removeStudentFromGroup(Map<String, dynamic> member, Map<String, dynamic> category) async {
+    try {
+      final categoryService = Get.find<RobleCategoryService>();
+      
+      final success = await categoryService.removeStudentFromGroup(
+        studentId: member['student_id'],
+        categoryId: category['_id'],
+      );
+      
+      if (success) {
+        Get.snackbar(
+          'Éxito',
+          'Estudiante removido del grupo',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        
+        // Recargar la vista
+        controller.loadRobleCategories();
+      } else {
+        Get.snackbar(
+          'Error',
+          'No se pudo remover el estudiante del grupo',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error al remover estudiante: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _loadAvailableStudents(Map<String, dynamic> category) async {
+    try {
+      final categoryService = Get.find<RobleCategoryService>();
+      final courseId = controller.course.id ?? '';
+      
+      final availableStudents = await categoryService.getAvailableStudents(
+        categoryId: category['_id'],
+        courseId: courseId,
+      );
+      
+      // Obtener nombres reales de los estudiantes usando el servicio de usuarios
+      final userService = Get.find<RobleUserService>();
+      final processedStudents = <Map<String, dynamic>>[];
+      
+      for (final student in availableStudents) {
+        final studentId = student['student_id'];
+        final userInfo = await userService.getUserInfo(studentId);
+        
+        processedStudents.add({
+          ...student,
+          'name': userInfo['name'] ?? 'Usuario sin nombre',
+          'email': userInfo['email'] ?? studentId,
+        });
+      }
+      
+      return processedStudents;
+    } catch (e) {
+      print('❌ Error loading available students: $e');
+      return [];
+    }
   }
 }

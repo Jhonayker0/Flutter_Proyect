@@ -9,6 +9,25 @@ class RobleUserService {
 
   RobleUserService(this._databaseService);
 
+  /// Obtener información de un usuario específico
+  Future<Map<String, dynamic>> getUserInfo(String userId) async {
+    try {
+      print('👤 Obteniendo información del usuario: $userId');
+      
+      final userInfo = await _getUserRealInfo(userId, 'student');
+      
+      if (userInfo != null) {
+        return userInfo;
+      } else {
+        // Crear información fallback si no se puede obtener la real
+        return _createFallbackUser(userId, 'student');
+      }
+    } catch (e) {
+      print('❌ Error obteniendo información del usuario $userId: $e');
+      return _createFallbackUser(userId, 'student');
+    }
+  }
+
   /// Obtener usuarios por curso con información de rol
   Future<List<Map<String, dynamic>>> getUsersByCourse(String courseId) async {
     try {

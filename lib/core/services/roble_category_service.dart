@@ -20,9 +20,13 @@ class RobleCategoryService {
         return [];
       }
 
-      // Filtrar por curso específico
+      // Filtrar por curso específico con limpieza de IDs
       final courseCategories = categories
-          .where((category) => category['course_id'] == courseId)
+          .where((category) {
+            final categoryId = category['course_id']?.toString().trim() ?? '';
+            final cleanCourseId = courseId.trim();
+            return categoryId == cleanCourseId;
+          })
           .toList();
 
       print('📂 Categorías del curso: ${courseCategories.length}');
@@ -279,6 +283,272 @@ class RobleCategoryService {
     } catch (e) {
       print('❌ Error obteniendo grupos de categoría: $e');
       return [];
+    }
+  }
+
+  /// Crear un nuevo grupo
+  Future<Map<String, dynamic>?> createGroup({
+    required String categoryId,
+    required String name,
+    required int capacity,
+    String? description,
+  }) async {
+    try {
+      print('🆕 Creando grupo: $name en categoría $categoryId');
+      
+      final groupData = {
+        'category_id': categoryId,
+        'name': name,
+        'capacity': capacity,
+        if (description != null && description.isNotEmpty) 'description': description,
+      };
+      
+      await _databaseService.insert('groups', [groupData]);
+      print('✅ Grupo creado');
+      
+      // Obtener el grupo recién creado (simplificado por ahora)
+      final groups = await _databaseService.read('groups');
+      final newGroup = groups.where((g) => 
+        g['category_id'] == categoryId && 
+        g['name'] == name
+      ).last;
+      
+      // Si es categoría aleatoria, asignar estudiantes automáticamente
+      await _assignStudentsIfRandom(categoryId, newGroup['_id']);
+      
+      return newGroup;
+    } catch (e) {
+      print('❌ Error creando grupo: $e');
+      return null;
+    }
+  }
+
+  /// Actualizar un grupo existente
+  Future<bool> updateGroup({
+    required String groupId,
+    String? name,
+    int? capacity,
+    String? description,
+  }) async {
+    try {
+      print('✏️ Actualizando grupo: $groupId');
+      
+      final updateData = <String, dynamic>{};
+      if (name != null) updateData['name'] = name;
+      if (capacity != null) updateData['capacity'] = capacity;
+      if (description != null) updateData['description'] = description;
+      
+      await _databaseService.update('groups', groupId, updateData);
+      print('✅ Grupo actualizado');
+      
+      return true;
+    } catch (e) {
+      print('❌ Error actualizando grupo: $e');
+      return false;
+    }
+  }
+
+  /// Eliminar un grupo
+  Future<bool> deleteGroup(String groupId) async {
+    try {
+      print('🗑️ Eliminando grupo: $groupId');
+      
+      // Primero eliminar todos los miembros
+      final members = await _getGroupMembers(groupId);
+      for (final member in members) {
+        await _databaseService.delete('group_members', member['_id']);
+      }
+      
+      // Luego eliminar el grupo
+      await _databaseService.delete('groups', groupId);
+      print('✅ Grupo eliminado');
+      
+      return true;
+    } catch (e) {
+      print('❌ Error eliminando grupo: $e');
+      return false;
+    }
+  }
+
+  /// Añadir estudiante a grupo
+  Future<bool> addStudentToGroup({
+    required String groupId,
+    required String studentId,
+    required String categoryId,
+  }) async {
+    try {
+      print('👥 Añadiendo estudiante $studentId al grupo $groupId');
+      
+      // Verificar que el estudiante no esté ya en otro grupo de esta categoría
+      final existingMembership = await _getStudentGroupInCategory(studentId, categoryId);
+      if (existingMembership != null) {
+        print('❌ El estudiante ya está en otro grupo de esta categoría');
+        return false;
+      }
+      
+      // Verificar capacidad del grupo
+      final group = await _getGroupById(groupId);
+      if (group == null) return false;
+      
+      final currentMembers = await _getGroupMembers(groupId);
+      if (currentMembers.length >= group['capacity']) {
+        print('❌ El grupo está lleno');
+        return false;
+      }
+      
+      // Añadir estudiante
+      await _databaseService.insert('group_members', [{
+        'group_id': groupId,
+        'student_id': studentId,
+      }]);
+      
+      print('✅ Estudiante añadido al grupo');
+      return true;
+    } catch (e) {
+      print('❌ Error añadiendo estudiante al grupo: $e');
+      return false;
+    }
+  }
+
+  /// Remover estudiante del grupo
+  Future<bool> removeStudentFromGroup({
+    required String studentId,
+    required String categoryId,
+  }) async {
+    try {
+      print('👥 Removiendo estudiante $studentId de grupo en categoría $categoryId');
+      
+      final membership = await _getStudentGroupInCategory(studentId, categoryId);
+      if (membership == null) {
+        print('❌ El estudiante no está en ningún grupo de esta categoría');
+        return false;
+      }
+      
+      await _databaseService.delete('group_members', membership['_id']);
+      print('✅ Estudiante removido del grupo');
+      
+      return true;
+    } catch (e) {
+      print('❌ Error removiendo estudiante del grupo: $e');
+      return false;
+    }
+  }
+
+  /// Obtener estudiantes disponibles para añadir a un grupo
+  Future<List<Map<String, dynamic>>> getAvailableStudents({
+    required String categoryId,
+    required String courseId,
+  }) async {
+    try {
+      // Obtener todos los estudiantes del curso
+      final enrollments = await _databaseService.read('enrollments');
+      final courseStudents = enrollments
+          .where((e) => e['course_id'] == courseId && e['role'] == 'student')
+          .toList();
+
+      // Obtener estudiantes que ya están en grupos de esta categoría
+      final groups = await _databaseService.read('groups');
+      final categoryGroups = groups.where((g) => g['category_id'] == categoryId).toList();
+      
+      final occupiedStudents = <String>{};
+      for (final group in categoryGroups) {
+        final members = await _getGroupMembers(group['_id']);
+        for (final member in members) {
+          occupiedStudents.add(member['student_id']);
+        }
+      }
+
+      // Filtrar estudiantes disponibles
+      final availableStudents = courseStudents
+          .where((student) => !occupiedStudents.contains(student['student_id']))
+          .toList();
+
+      return availableStudents;
+    } catch (e) {
+      print('❌ Error obteniendo estudiantes disponibles: $e');
+      return [];
+    }
+  }
+
+  /// Métodos auxiliares privados
+  
+  Future<Map<String, dynamic>?> _getGroupById(String groupId) async {
+    try {
+      final groups = await _databaseService.read('groups');
+      for (final group in groups) {
+        if (group['_id'] == groupId) {
+          return group;
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> _getStudentGroupInCategory(String studentId, String categoryId) async {
+    try {
+      final groups = await _databaseService.read('groups');
+      final categoryGroups = groups.where((g) => g['category_id'] == categoryId).toList();
+      
+      for (final group in categoryGroups) {
+        final members = await _getGroupMembers(group['_id']);
+        for (final member in members) {
+          if (member['student_id'] == studentId) {
+            return member;
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> _assignStudentsIfRandom(String categoryId, String groupId) async {
+    try {
+      // Obtener información de la categoría
+      final categories = await _databaseService.read('categories');
+      Map<String, dynamic>? category;
+      for (final cat in categories) {
+        if (cat['_id'] == categoryId) {
+          category = cat;
+          break;
+        }
+      }
+      
+      if (category == null || category['type'] != 'Aleatorio') {
+        return; // Solo asignar automáticamente en categorías aleatorias
+      }
+
+      print('🎲 Asignando estudiantes automáticamente (categoría aleatoria)');
+      
+      // Obtener estudiantes disponibles
+      final courseId = category['course_id'];
+      final availableStudents = await getAvailableStudents(
+        categoryId: categoryId,
+        courseId: courseId,
+      );
+
+      // Obtener capacidad del grupo
+      final group = await _getGroupById(groupId);
+      if (group == null) return;
+      
+      final capacity = group['capacity'] as int;
+      final studentsToAssign = availableStudents.take(capacity).toList();
+
+      // Asignar estudiantes
+      for (final student in studentsToAssign) {
+        await addStudentToGroup(
+          groupId: groupId,
+          studentId: student['student_id'],
+          categoryId: categoryId,
+        );
+      }
+
+      print('✅ Asignados ${studentsToAssign.length} estudiantes automáticamente');
+    } catch (e) {
+      print('❌ Error asignando estudiantes automáticamente: $e');
     }
   }
 
