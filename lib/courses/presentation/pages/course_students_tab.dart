@@ -73,7 +73,7 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
     final String email = userData['email'] ?? '';
     final String? imagePath = userData['imagepathh'];
     final String role = userData['role'] ?? 'student';
-    final String uuid = userData['uuid'] ?? '';
+    // final String uuid = userData['uuid'] ?? '';
 
     // Configurar colores y etiquetas según el rol
     Color roleColor;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/course_detail_controller.dart';
-import 'package:flutter_application/activities/domain/models/activity.dart';
+
 
 class CourseActivitiesTab extends GetView<CourseDetailController> {
   const CourseActivitiesTab({super.key});
@@ -157,100 +157,13 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
     );
   }
 
+  // Método temporalmente deshabilitado
+  // TODO: Implementar cuando sea necesario
+  /*
   Widget _buildActivityCard(Activity activity) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: _getActivityColor(activity.type).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            _getActivityIcon(activity.type),
-            color: _getActivityColor(activity.type),
-          ),
-        ),
-        title: Text(
-          activity.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(activity.description),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
-                const SizedBox(width: 4),
-                Text(
-                  'Vence: ${_formatDate(activity.dueDate)}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-                const Spacer(),
-                if (activity.isCompleted)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check,
-                          size: 12,
-                          color: Colors.green.shade700,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          activity.grade != null
-                              ? '${activity.grade}%'
-                              : 'Completado',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Pendiente',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.orange.shade700,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        isThreeLine: true,
-        onTap: () => controller.viewActivity(activity),
-      ),
-    );
+    // Implementación del método aquí
   }
+  */
 
   Color _getActivityColor(String type) {
     switch (type.toLowerCase()) {
@@ -278,20 +191,20 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = date.difference(now).inDays;
+  // String _formatDate(DateTime date) {
+  //   final now = DateTime.now();
+  //   final difference = date.difference(now).inDays;
 
-    if (difference < 0) {
-      return 'Vencido';
-    } else if (difference == 0) {
-      return 'Hoy';
-    } else if (difference == 1) {
-      return 'Mañana';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
-  }
+  //   if (difference < 0) {
+  //     return 'Vencido';
+  //   } else if (difference == 0) {
+  //     return 'Hoy';
+  //   } else if (difference == 1) {
+  //     return 'Mañana';
+  //   } else {
+  //     return '${date.day}/${date.month}/${date.year}';
+  //   }
+  // }
 
   // Métodos para el nuevo formato de ROBLE
   Color _getActivityColorFromType(String type) {

@@ -1,4 +1,4 @@
-import 'package:flutter_application/categories/data/repositories/category_repository_impl.dart';
+
 import 'package:flutter_application/categories/domain/use_cases/delete_category_use_case.dart';
 import 'package:flutter_application/auth/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
@@ -7,17 +7,17 @@ import '../../domain/models/category.dart';
 
 // ViewModels para la UI
 class CategoryVM {
-  final int id;
+  final String id;
   final String name;
   final String type;
-  final int? capacity;
-  final int courseId;
+  final String description;
+  final String courseId;
 
   CategoryVM({
     required this.id,
     required this.name,
     required this.type,
-    required this.capacity,
+    required this.description,
     required this.courseId,
   });
 
@@ -25,7 +25,7 @@ class CategoryVM {
     id: c.id!,
     name: c.name,
     type: c.type,
-    capacity: c.capacity,
+    description: c.description ?? '',
     courseId: c.courseId,
   );
 }
@@ -50,8 +50,8 @@ class GroupVM {
     required this.members,
   });
 
-  factory GroupVM.fromDomain(GroupSummary g) =>
-      GroupVM(id: g.id, name: g.name, capacity: g.capacity, members: g.members);
+  // factory GroupVM.fromDomain(GroupSummary g) =>
+  //     GroupVM(id: g.id, name: g.name, capacity: g.capacity, members: g.members);
 }
 
 class CategoryGroupsController extends GetxController {
@@ -84,7 +84,7 @@ class CategoryGroupsController extends GetxController {
     isLoading.value = true;
     error.value = null;
     try {
-      final list = await repo.getAll(courseId); // List<Category>
+      final list = await repo.getAll(courseId.toString()); // List<Category>
       categories.assignAll(list.map(CategoryVM.fromDomain).toList());
       groupsByCat.clear(); // limpiar cache de grupos
     } catch (e) {
@@ -94,7 +94,10 @@ class CategoryGroupsController extends GetxController {
     }
   }
 
-  Future<void> loadGroupsFor(int categoriaId) async {
+  Future<void> loadGroupsFor(String categoriaId) async {
+    // Funcionalidad de grupos temporalmente deshabilitada
+    // TODO: Implementar cuando se requieran grupos
+    /*
     if (groupsByCat.containsKey(categoriaId)) return;
     loadingCat.add(categoriaId);
     try {
@@ -121,6 +124,7 @@ class CategoryGroupsController extends GetxController {
     } finally {
       loadingCat.remove(categoriaId);
     }
+    */
   }
 
   Future<void> refreshAll() async {
@@ -128,7 +132,10 @@ class CategoryGroupsController extends GetxController {
     await _loadCategories();
   }
 
-  Future<List<MemberVM>> getMembersByGroup(int groupId, int categoriaId) async {
+  // Funcionalidad de grupos temporalmente deshabilitada
+  // TODO: Implementar cuando se requieran grupos
+  /*
+  Future<List<MemberVM>> getMembersByGroup(int groupId, String categoriaId) async {
     final rows = await repo.getMembersByGroup(
       groupId,
       categoriaId,
@@ -137,8 +144,9 @@ class CategoryGroupsController extends GetxController {
         .map((m) => MemberVM(id: m.id, name: m.name, email: m.email))
         .toList();
   }
+  */
 
-  Future<void> deleteCategory(int categoryId) async {
+  Future<void> deleteCategory(String categoryId) async {
     try {
       await deleteCategoryUseCase(categoryId);
 
@@ -157,6 +165,9 @@ class CategoryGroupsController extends GetxController {
     }
   }
 
+  // Funcionalidad de grupos temporalmente deshabilitada
+  // TODO: Implementar cuando se requieran grupos
+  /*
   Future<void> joinGroup(int groupId) async {
     final userId = authController.currentUser.value?.id;
     try {
@@ -173,7 +184,7 @@ class CategoryGroupsController extends GetxController {
   Future<void> assignStudentToGroup(
     int studentId,
     int groupId,
-    int categoryId,
+    String categoryId,
   ) async {
     try {
       await repo.assignStudentToGroup(studentId, groupId, categoryId);
@@ -184,7 +195,7 @@ class CategoryGroupsController extends GetxController {
     }
   }
 
-  Future<void> removeStudentFromGroup(int studentId, int categoryId) async {
+  Future<void> removeStudentFromGroup(int studentId, String categoryId) async {
     try {
       await repo.removeStudentFromGroup(studentId, categoryId);
       refreshAll();
@@ -194,7 +205,7 @@ class CategoryGroupsController extends GetxController {
     }
   }
 
-  Future<List<MemberVM>> getUnassignedStudents(int categoryId) async {
+  Future<List<MemberVM>> getUnassignedStudents(String categoryId) async {
     try {
       final students = await repo.getUnassignedStudents(courseId, categoryId);
       return students
@@ -204,5 +215,29 @@ class CategoryGroupsController extends GetxController {
       Get.snackbar("Error", "No se pudieron cargar los estudiantes: $e");
       return [];
     }
+  }
+  */
+
+  // Métodos temporales vacíos para evitar errores en la UI
+  // TODO: Implementar cuando se requiera funcionalidad de grupos
+  
+  Future<void> joinGroup(int groupId) async {
+    Get.snackbar("Info", "Funcionalidad de grupos próximamente disponible");
+  }
+
+  Future<List<MemberVM>> getMembersByGroup(int groupId, String categoryId) async {
+    return [];
+  }
+
+  Future<List<MemberVM>> getUnassignedStudents(String categoryId) async {
+    return [];
+  }
+
+  Future<void> assignStudentToGroup(int studentId, int groupId, String categoryId) async {
+    Get.snackbar("Info", "Funcionalidad de grupos próximamente disponible");
+  }
+
+  Future<void> removeStudentFromGroup(int studentId, String categoryId) async {
+    Get.snackbar("Info", "Funcionalidad de grupos próximamente disponible");
   }
 }

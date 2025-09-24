@@ -139,11 +139,10 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
                       : Colors.green.shade100,
                 ),
                 const SizedBox(width: 8),
-                if (category.capacity != null)
-                  Text(
-                    'Capacidad: ${category.capacity}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
+                Text(
+                  'Descripción: ${category.description}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ],
@@ -218,7 +217,7 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
     });
   }
 
-  Widget _buildGroupTile(GroupVM group, int categoryId) {
+  Widget _buildGroupTile(GroupVM group, String categoryId) {
     return Obx(() {
       final userGroupId = controller.userGroupByCategory[categoryId];
       final isUserInThisGroup = userGroupId == group.id;
@@ -254,7 +253,7 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
     });
   }
 
-  Future<void> _showGroupMembers(GroupVM group, int categoryId) async {
+  Future<void> _showGroupMembers(GroupVM group, String categoryId) async {
     try {
       final members = await controller.getMembersByGroup(group.id, categoryId);
 

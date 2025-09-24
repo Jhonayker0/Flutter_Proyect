@@ -67,17 +67,7 @@ class EditCategoryPage extends GetView<EditCategoryController> {
                   onChanged: controller.setType,
                   validator: controller.validateType,
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: controller.capacityCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Capacidad',
-                    hintText: 'Número de participantes',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: controller.validateCapacity,
-                ),
+
                 const SizedBox(height: 32),
                 if (controller.error.value != null)
                   Container(

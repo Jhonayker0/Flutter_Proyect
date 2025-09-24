@@ -37,7 +37,7 @@ class CategoriesController extends GetxController {
     error.value = null;
 
     try {
-      final result = await getCategoriesUseCase(courseid);
+      final result = await getCategoriesUseCase(courseid.toString());
       categories.assignAll(result);
     } catch (e) {
       error.value = 'Error al cargar categorías';
@@ -46,7 +46,7 @@ class CategoriesController extends GetxController {
     }
   }
 
-  Future<void> deleteCategory(int id) async {
+  Future<void> deleteCategory(String id) async {
     try {
       await deleteCategoryUseCase(id);
       categories.removeWhere((cat) => cat.id == id);

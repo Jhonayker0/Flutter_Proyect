@@ -6,6 +6,7 @@ import 'package:flutter_application/core/services/roble_user_service.dart';
 import 'package:flutter_application/core/services/roble_activity_service.dart';
 import 'package:flutter_application/core/services/roble_category_service.dart';
 import 'package:flutter_application/core/services/roble_http_service.dart';
+import 'package:flutter_application/auth/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -383,6 +384,164 @@ class CourseDetailController extends GetxController {
       backgroundColor: Colors.orange,
       colorText: Colors.white,
     );
+  }
+
+  void leaveCourse() async {
+    if (isProfessor) {
+      Get.snackbar(
+        'No permitido',
+        'Los profesores no pueden salir de sus cursos',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Mostrar diálogo de confirmación
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning,
+              color: Colors.red,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Text('Salir del Curso'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Estás seguro de que quieres salir de "${course.title}"?',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.red[700], size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Ten en cuenta:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '• Perderás acceso a todas las actividades\n'
+                    '• Se eliminará tu progreso del curso\n'
+                    '• Necesitarás un nuevo código para volver',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.red[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Salir del Curso'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+
+    if (confirmed == true) {
+      await _performLeaveCourse();
+    }
+  }
+
+  Future<void> _performLeaveCourse() async {
+    try {
+      isLoading.value = true;
+
+      // Obtener el ID del usuario actual
+      final userUuid = Get.find<AuthController>().currentUser.value?.uuid;
+      if (userUuid == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
+      // Obtener servicios
+      final httpService = RobleHttpService();
+      final databaseService = RobleDatabaseService(httpService);
+
+      // Buscar el enrollment
+      final enrollments = await databaseService.read('enrollments');
+      final enrollment = enrollments.firstWhereOrNull(
+        (e) => e['student_id'] == userUuid && e['course_id'] == course.id,
+      );
+
+      if (enrollment == null) {
+        throw Exception('No se encontró la inscripción al curso');
+      }
+
+      // Eliminar el enrollment
+      await databaseService.delete('enrollments', enrollment['_id']);
+
+      Get.snackbar(
+        'Éxito',
+        'Has salido del curso "${course.title}" correctamente',
+        icon: Icon(Icons.check_circle, color: Colors.white),
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+
+      // Recargar cursos en el home
+      final homeController = Get.find<HomeController>();
+      homeController.loadCourses();
+
+      // Volver al home
+      Get.offNamed('/home');
+
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo salir del curso: $e',
+        icon: Icon(Icons.error, color: Colors.white),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      print('❌ Error leaving course: $e');
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void refreshData() {

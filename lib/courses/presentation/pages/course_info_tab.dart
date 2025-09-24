@@ -122,7 +122,7 @@ class CourseInfoTab extends GetView<CourseDetailController> {
 
             const SizedBox(height: 16),
 
-            // Acciones rápidas
+            // Acciones rápidas para profesores
             if (controller.isProfessor)
               Card(
                 child: Padding(
@@ -170,6 +170,44 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                         Icons.add_circle,
                         Colors.orange,
                         controller.createNewCategory,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // Acciones para estudiantes
+            if (!controller.isProfessor)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.account_circle,
+                            color: Colors.blue.shade700,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Opciones del Estudiante',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildActionButton(
+                        'Salir del Curso',
+                        'Abandonar este curso permanentemente',
+                        Icons.exit_to_app,
+                        Colors.red,
+                        controller.leaveCourse,
                       ),
                     ],
                   ),

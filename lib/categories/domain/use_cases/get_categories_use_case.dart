@@ -5,5 +5,5 @@ class GetCategories {
   final CategoryRepository repo;
   GetCategories(this.repo);
 
-  Future<List<Category>> call(int courseId) => repo.getAll(courseId);
+  Future<List<Category>> call(String courseId) => repo.getAll(courseId);
 }

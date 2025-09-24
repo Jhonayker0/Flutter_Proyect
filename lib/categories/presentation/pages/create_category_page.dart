@@ -36,46 +36,31 @@ class CreateCategoryPage extends GetView<CreateCategoryController> {
                 TextFormField(
                   controller: controller.descCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Descripción',
-                    hintText: 'Escribe aquí...',
+                    labelText: 'Descripción (Opcional)',
+                    hintText: 'Describe el propósito de esta categoría...',
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
-                  validator: (v) => controller.validateRequired(
-                    v,
-                    'Por favor ingresa una descripción',
-                  ),
                 ),
                 const SizedBox(height: 20),
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(
-                    labelText: 'Tipo',
+                    labelText: 'Tipo de Agrupamiento',
                     border: OutlineInputBorder(),
                   ),
                   initialValue: controller.type.value,
                   items: const [
                     DropdownMenuItem(
-                      value: 'Auto-asignado',
-                      child: Text('Auto-asignado'),
+                      value: 'aleatorio',
+                      child: Text('Aleatorio'),
                     ),
                     DropdownMenuItem(
-                      value: 'Aleatorio',
-                      child: Text('Aleatorio'),
+                      value: 'eleccion',
+                      child: Text('Por Elección'),
                     ),
                   ],
                   onChanged: controller.setType,
                   validator: controller.validateType,
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: controller.capacityCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Capacidad',
-                    hintText: 'Ingresa un número...',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: controller.validateCapacity,
                 ),
                 const SizedBox(height: 30),
                 if (controller.error.value != null)

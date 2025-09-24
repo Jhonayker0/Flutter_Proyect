@@ -1,19 +1,18 @@
 // presentation/controllers/create_category_controller.dart
 import 'package:flutter_application/categories/domain/models/category.dart';
 import 'package:flutter_application/categories/domain/use_cases/create_category_case.dart';
-import 'package:flutter_application/categories/presentation/controllers/view_categories_controller.dart';
+import 'package:flutter_application/courses/presentation/controllers/course_detail_controller.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
 class CreateCategoryController extends GetxController {
   final CreateCategory createCategoryUseCase;
   CreateCategoryController({required this.createCategoryUseCase});
-  late final int courseId;
+  late final String courseId;
   final nameCtrl = TextEditingController();
   final descCtrl = TextEditingController();
-  final capacityCtrl = TextEditingController();
 
-  final type = RxnString(); // "Auto-asignado" | "Aleatorio"
+  final type = RxnString(); // "aleatorio" | "eleccion"
   final isLoading = false.obs;
   final error = RxnString();
 
@@ -22,7 +21,7 @@ class CreateCategoryController extends GetxController {
     super.onInit();
     final args = Get.arguments as Map?;
     if (args != null && args['courseId'] != null) {
-      courseId = (args['courseId'] as num).toInt();
+      courseId = (args['courseId'] as String);
     } else {
       // Valor por defecto o manejo de error
       Get.snackbar(
@@ -41,13 +40,6 @@ class CreateCategoryController extends GetxController {
 
   String? validateType(String? v) => v == null ? 'Selecciona un tipo' : null;
 
-  String? validateCapacity(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Ingresa la capacidad';
-    final n = int.tryParse(v);
-    if (n == null || n <= 0) return 'Debe ser un número mayor a 0';
-    return null;
-  }
-
   void setType(String? v) => type.value = v;
 
   Future<void> submit(
@@ -58,25 +50,24 @@ class CreateCategoryController extends GetxController {
     isLoading.value = true;
     error.value = null;
     try {
-      final n = int.parse(capacityCtrl.text.trim());
       final category = Category(
         name: nameCtrl.text.trim(),
         description: descCtrl.text.trim(),
         type: type.value!, // validado
-        capacity: n,
-        courseId: courseId,
+        courseId: courseId, // Ya es String
       );
       await createCategoryUseCase.call(category);
 
-      if (Get.isRegistered<CategoryGroupsController>()) {
-        Get.find<CategoryGroupsController>().refreshAll();
+      // Refrescar las categorías en el curso
+      if (Get.isRegistered<CourseDetailController>()) {
+        Get.find<CourseDetailController>().loadRobleCategories();
       }
       Get.back(result: true);
       Get.snackbar('Exito', 'Categoría creada');
     } catch (e) {
       Get.snackbar(
         'Error',
-        'No se pudo crear el curso $e',
+        'No se pudo crear la categoría $e',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -89,7 +80,6 @@ class CreateCategoryController extends GetxController {
   void onClose() {
     nameCtrl.dispose();
     descCtrl.dispose();
-    capacityCtrl.dispose();
     super.onClose();
   }
 }

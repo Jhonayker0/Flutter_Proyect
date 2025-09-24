@@ -16,7 +16,6 @@ class EditCategoryController extends GetxController {
 
   final nameCtrl = TextEditingController();
   final descCtrl = TextEditingController();
-  final capacityCtrl = TextEditingController();
 
   final type = RxnString();
   final isLoading = false.obs;
@@ -36,11 +35,10 @@ class EditCategoryController extends GetxController {
   Future<void> loadCategory(int id) async {
     isLoading.value = true;
     try {
-      _originalCategory = await categoryRepository.getById(id);
+      _originalCategory = await categoryRepository.getById(id.toString());
       if (_originalCategory != null) {
         nameCtrl.text = _originalCategory!.name;
-        descCtrl.text = _originalCategory!.description!;
-        capacityCtrl.text = _originalCategory!.capacity.toString();
+        descCtrl.text = _originalCategory!.description ?? '';
         type.value = _originalCategory!.type;
       }
     } catch (e) {
@@ -74,12 +72,10 @@ class EditCategoryController extends GetxController {
     isLoading.value = true;
     error.value = null;
     try {
-      final n = int.parse(capacityCtrl.text.trim());
       final updatedCategory = _originalCategory!.copyWith(
         name: nameCtrl.text.trim(),
         description: descCtrl.text.trim(),
         type: type.value!,
-        capacity: n,
       );
 
       await updateCategoryUseCase(updatedCategory);
@@ -100,7 +96,6 @@ class EditCategoryController extends GetxController {
   void onClose() {
     nameCtrl.dispose();
     descCtrl.dispose();
-    capacityCtrl.dispose();
     super.onClose();
   }
 }

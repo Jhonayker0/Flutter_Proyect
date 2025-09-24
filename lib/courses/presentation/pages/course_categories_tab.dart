@@ -83,7 +83,7 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                       'Agregar una nueva categoría para organizar actividades',
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => _showCreateCategoryDialog(),
+                    onTap: () => controller.createNewCategory(),
                   ),
                 );
               }
@@ -348,44 +348,6 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showCreateCategoryDialog() {
-    showDialog(
-      context: Get.context!,
-      builder: (context) => AlertDialog(
-        title: const Text('Crear Nueva Categoría'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Nombre de la categoría',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Descripción',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Crear'),
-          ),
-        ],
       ),
     );
   }

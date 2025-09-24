@@ -183,11 +183,8 @@ class CoursesPage extends GetView<HomeController> {
             Expanded(
               child: Obx(() {
                 final courses = controller.courses;
-                if (courses.isEmpty) {
-                  return const Center(child: Text('No se encontraron cursos'));
-                }
-
-                // Mostrar el botón de crear curso para todos los usuarios
+                
+                // Siempre mostrar el botón de crear/unirse, incluso si no hay cursos
                 final itemCount = courses.length + 1;
 
                 return ListView.builder(
@@ -221,6 +218,41 @@ class CoursesPage extends GetView<HomeController> {
                             size: 16,
                           ),
                           onTap: () => Get.toNamed(Routes.createCourse),
+                        ),
+                      );
+                    }
+                    
+                    // Si no hay cursos, mostrar mensaje después del botón
+                    if (courses.isEmpty) {
+                      return Container(
+                        margin: const EdgeInsets.only(top: 20),
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.school_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No tienes cursos aún',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Usa el botón de arriba para crear un curso nuevo o unirte a uno existente con un código',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }
