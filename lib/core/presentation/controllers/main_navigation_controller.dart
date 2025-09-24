@@ -20,10 +20,3 @@ class MainNavigationController extends GetxController {
     }
   }
 }
-
-
-
-
-
-
-

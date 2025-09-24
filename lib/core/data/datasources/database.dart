@@ -75,7 +75,7 @@ class DatabaseService {
             FOREIGN KEY (curso_id) REFERENCES curso(id)
           )
         ''');
-       
+
         await db.execute('''
           CREATE TABLE grupo (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,7 +85,7 @@ class DatabaseService {
               FOREIGN KEY (categoria_id) REFERENCES categoria(id)
             )
           ''');
-        
+
         await db.execute('''
           CREATE TABLE categoria_estudiante (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -146,10 +146,3 @@ class DatabaseService {
     );
   }
 }
-
-
-
-
-
-
-

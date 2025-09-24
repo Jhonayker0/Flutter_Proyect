@@ -1,4 +1,4 @@
-import 'package:flutter_application/core/data/datasources/database.dart'; 
+import 'package:flutter_application/core/data/datasources/database.dart';
 
 class AuthService {
   final DatabaseService _dbService = DatabaseService();
@@ -10,7 +10,10 @@ class AuthService {
   }
 
   /// Obtiene un usuario por email y contraseña
-  Future<Map<String, dynamic>?> getUserByCredentials(String email, String password) async {
+  Future<Map<String, dynamic>?> getUserByCredentials(
+    String email,
+    String password,
+  ) async {
     final db = await _dbService.database;
     final res = await db.query(
       'persona',
@@ -28,13 +31,12 @@ class AuthService {
   Future<int> addUser(Map<String, dynamic> user) async {
     final db = await _dbService.database;
     final id = await db.insert('persona', user);
-  
-  // DEBUG: muestra todos los usuarios después de la inserción
+
+    // DEBUG: muestra todos los usuarios después de la inserción
     final all = await db.query('persona');
     print('Usuarios en DB: $all');
 
     return id;
-    
   }
 
   /// Elimina un usuario
@@ -54,10 +56,3 @@ class AuthService {
     );
   }
 }
-
-
-
-
-
-
-

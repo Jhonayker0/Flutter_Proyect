@@ -20,10 +20,3 @@ class ThemeService {
 
   bool get isDark => _load();
 }
-
-
-
-
-
-
-

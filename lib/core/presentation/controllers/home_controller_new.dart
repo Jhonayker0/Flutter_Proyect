@@ -1,9 +1,8 @@
 import 'package:flutter_application/courses/domain/models/course.dart';
 import 'package:flutter_application/courses/domain/repositories/course_repository.dart';
+import 'package:flutter_application/courses/data/repositories/roble_course_repository_impl.dart';
 import 'package:flutter_application/auth/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
-import 'package:flutter_application/routes.dart';
-
 
 enum SortOption {
   nameAsc,
@@ -37,21 +36,72 @@ class HomeController extends GetxController {
 
   Future<void> loadCourses() async {
     final authController = Get.find<AuthController>();
-    final userId = authController.currentUser.value?.id;
+    final user = authController.currentUser.value;
 
-    if (userId == null) return;
+    if (user == null) return;
+
+    // Debug: Mostrar información del usuario
+    print(
+      '🧐 Usuario actual: ID=${user.id}, UUID=${user.uuid}, Email=${user.email}',
+    );
+
+    // Usar UUID si está disponible, sino usar el id como fallback
+    final userIdString = user.uuid ?? user.id.toString();
+    print('🔍 UserIdString a usar: $userIdString');
 
     _allCourses.clear();
 
-    // Traer cursos del estudiante
-    final studentCourses = await courseRepository.getCoursesByStudent(userId);
-    // Traer cursos del profesor
-    final professorCourses = await courseRepository.getCoursesByProfesor(userId);
+    try {
+      // Obtener el repository como RobleCourseRepositoryImpl para usar métodos ROBLE
+      final robleRepo = courseRepository as RobleCourseRepositoryImpl;
 
-    _allCourses.addAll([...studentCourses, ...professorCourses]);
+      // Traer cursos del estudiante
+      final studentCourses = await robleRepo.getRobleCoursesByStudent(
+        userIdString,
+      );
+      // Traer cursos del profesor
+      final professorCourses = await robleRepo.getRobleCoursesByProfesor(
+        userIdString,
+      );
+
+      // Combinar y eliminar duplicados basándose en ID del curso
+      final allCourses = [...studentCourses, ...professorCourses];
+      final courseMap = <String, Course>{};
+      
+      for (final course in allCourses) {
+        final courseId = course.id ?? 'unknown';
+        
+        // Si ya existe un curso con el mismo ID
+        if (courseMap.containsKey(courseId)) {
+          final existingCourse = courseMap[courseId]!;
+          
+          // Priorizar rol de profesor sobre estudiante
+          if (course.role == 'Profesor' && existingCourse.role != 'Profesor') {
+            courseMap[courseId] = course;
+            print('🔄 Actualizando curso ${course.title} de ${existingCourse.role} a ${course.role}');
+          }
+          // Si ambos tienen el mismo rol, mantener el existente
+          print('📋 Curso duplicado detectado: ${course.title} (${course.role})');
+        } else {
+          courseMap[courseId] = course;
+        }
+      }
+
+      _allCourses.addAll(courseMap.values);
+      print('✅ Cursos únicos cargados: ${_allCourses.length}');
+    } catch (e) {
+      print('❌ Error cargando cursos ROBLE: $e');
+      // Fallback a métodos SQLite si falla ROBLE
+      final userId = user.id;
+      final studentCourses = await courseRepository.getCoursesByStudent(userId);
+      final professorCourses = await courseRepository.getCoursesByProfesor(
+        userId,
+      );
+      _allCourses.addAll([...studentCourses, ...professorCourses]);
+    }
+
     applyFilters();
   }
-
 
   // FUNCIONALIDAD DE BÚSQUEDA
   void setSearchQuery(String q) {
@@ -83,11 +133,11 @@ class HomeController extends GetxController {
     currentSort.value = option;
     applyFilters();
   }
+
   void addCourse(Course course) {
     _allCourses.add(course);
     applyFilters(); // esto actualiza la lista observable `courses`
   }
-
 
   String get sortLabel {
     switch (currentSort.value) {
@@ -99,7 +149,7 @@ class HomeController extends GetxController {
         return 'Oldest First';
       case SortOption.dateDesc:
         return 'Newest First';
-     /* case SortOption.studentsAsc:
+      /* case SortOption.studentsAsc:
         return 'Less Students';
       case SortOption.studentsDesc:
         return 'More Students';*/
@@ -162,20 +212,26 @@ class HomeController extends GetxController {
       default:
         return '';
     }
-  } 
+  }
 
   RxString get currentUserName {
     final authController = Get.find<AuthController>();
     return (authController.currentUser.value?.name ?? 'Usuario').obs;
   }
 
+  // Verificar si el usuario actual es profesor (tiene cursos como profesor)
+  /*bool get isProfessor {
+    return _allCourses.any((course) => course.role == roleProfessor);
+  }*/
+
   void goToProfile() {
-    Get.toNamed(Routes.settings);
+    // Como ya no hay página de configuraciones, directamente hacemos logout
+    logout();
   }
 
   void logout() {
     final authController = Get.find<AuthController>();
-    authController.logout(); 
+    authController.logout();
   }
 
   void onOptionSelected(String value) {
@@ -188,10 +244,3 @@ class HomeController extends GetxController {
     }
   }
 }
-
-
-
-
-
-
-

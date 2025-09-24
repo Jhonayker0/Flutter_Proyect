@@ -78,10 +78,3 @@ class Student {
     return (completedActivities / totalActivities) * 100;
   }
 }
-
-
-
-
-
-
-

@@ -29,7 +29,9 @@ class CourseService {
   }
 
   /// Obtener cursos donde el usuario es profesor
-  Future<List<Map<String, dynamic>>> getCoursesByProfesor(int profesorId) async {
+  Future<List<Map<String, dynamic>>> getCoursesByProfesor(
+    int profesorId,
+  ) async {
     final db = await database;
     return await db.query(
       'curso',
@@ -39,39 +41,45 @@ class CourseService {
   }
 
   /// Obtener cursos donde el usuario es estudiante
-  Future<List<Map<String, dynamic>>> getCoursesByEstudiante(int estudianteId) async {
+  Future<List<Map<String, dynamic>>> getCoursesByEstudiante(
+    int estudianteId,
+  ) async {
     final db = await database;
 
-    return await db.rawQuery('''
+    return await db.rawQuery(
+      '''
       SELECT c.*
       FROM curso c
       INNER JOIN estudiante_curso ec ON c.id = ec.curso_id
       WHERE ec.estudiante_id = ?
-    ''', [estudianteId]);
+    ''',
+      [estudianteId],
+    );
   }
 
   /// Borrar curso
   Future<int> deleteCourse(int id) async {
     final db = await database;
-    return await db.delete(
-      'curso',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('curso', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<Map<String, dynamic>>> getUsersByCourse(int courseId) async {
-  final db = await database;
-  return await db.rawQuery('''
+    final db = await database;
+    return await db.rawQuery(
+      '''
     SELECT p.id, p.nombre, p.correo, p.imagen
     FROM persona p
     INNER JOIN estudiante_curso ec ON p.id = ec.estudiante_id
     WHERE ec.curso_id = ?
-  ''', [courseId]);
-}
+  ''',
+      [courseId],
+    );
+  }
 
-
-  Future<int> joinCourseByCode({required int studentId, required String courseCode}) async {
+  Future<int> joinCourseByCode({
+    required int studentId,
+    required String courseCode,
+  }) async {
     final db = await database;
     return await db.transaction<int>((txn) async {
       // 1) Resolver curso por código
@@ -107,20 +115,10 @@ class CourseService {
       // 4) Insertar inscripción
       final insertedId = await txn.insert(
         'estudiante_curso',
-        {
-          'estudiante_id': studentId,
-          'curso_id': courseId,
-        },
+        {'estudiante_id': studentId, 'curso_id': courseId},
         conflictAlgorithm: ConflictAlgorithm.abort, // no debería chocar
       );
       return insertedId;
     });
   }
-
 }
-
-
-
-
-
-

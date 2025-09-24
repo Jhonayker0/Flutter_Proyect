@@ -21,7 +21,10 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
           ),
           IconButton(
             onPressed: () {
-              Get.toNamed('/create-category', arguments: {'courseId': controller.courseId});
+              Get.toNamed(
+                '/create-category',
+                arguments: {'courseId': controller.courseId},
+              );
             },
             icon: const Icon(Icons.add),
             tooltip: 'Crear categoría',
@@ -79,12 +82,15 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
-                      Get.toNamed('/create-category', arguments: {'courseId': controller.courseId});
+                      Get.toNamed(
+                        '/create-category',
+                        arguments: {'courseId': controller.courseId},
+                      );
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('Crear primera categoría'),
                   ),
-                ]
+                ],
               ],
             ),
           );
@@ -111,10 +117,7 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
       child: ExpansionTile(
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).primaryColor,
-          child: const Icon(
-            Icons.category,
-            color: Colors.white,
-          ),
+          child: const Icon(Icons.category, color: Colors.white),
         ),
         title: Text(
           category.name,
@@ -136,14 +139,10 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
                       : Colors.green.shade100,
                 ),
                 const SizedBox(width: 8),
-                if (category.capacity != null)
-                  Text(
-                    'Capacidad: ${category.capacity}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                  ),
+                Text(
+                  'Descripción: ${category.description}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ],
@@ -184,9 +183,7 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
             controller.loadGroupsFor(category.id);
           }
         },
-        children: [
-          _buildGroupsList(category),
-        ],
+        children: [_buildGroupsList(category)],
       ),
     );
   }
@@ -201,7 +198,7 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
       }
 
       final groups = controller.groupsByCat[category.id] ?? [];
-      
+
       if (groups.isEmpty) {
         return const Padding(
           padding: EdgeInsets.all(16.0),
@@ -213,47 +210,53 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
       }
 
       return Column(
-        children: groups.map((group) => _buildGroupTile(group, category.id)).toList(),
+        children: groups
+            .map((group) => _buildGroupTile(group, category.id))
+            .toList(),
       );
     });
   }
 
-  Widget _buildGroupTile(GroupVM group, int categoryId) {
+  Widget _buildGroupTile(GroupVM group, String categoryId) {
     return Obx(() {
       final userGroupId = controller.userGroupByCategory[categoryId];
       final isUserInThisGroup = userGroupId == group.id;
-      
+
       return ListTile(
         leading: CircleAvatar(
-          backgroundColor: isUserInThisGroup ? Colors.green : Colors.grey.shade300,
+          backgroundColor: isUserInThisGroup
+              ? Colors.green
+              : Colors.grey.shade300,
           child: Icon(
             Icons.group,
             color: isUserInThisGroup ? Colors.white : Colors.grey.shade600,
           ),
         ),
         title: Text(group.name),
-        subtitle: Text('${group.members} miembros${group.capacity != null ? ' / ${group.capacity}' : ''}'),
+        subtitle: Text(
+          '${group.members} miembros${group.capacity != null ? ' / ${group.capacity}' : ''}',
+        ),
         trailing: controller.role == 'estudiante' && !isUserInThisGroup
             ? ElevatedButton(
                 onPressed: () => controller.joinGroup(group.id),
                 child: const Text('Unirse'),
               )
             : isUserInThisGroup
-                ? const Chip(
-                    label: Text('Mi grupo'),
-                    backgroundColor: Colors.green,
-                    labelStyle: TextStyle(color: Colors.white),
-                  )
-                : null,
+            ? const Chip(
+                label: Text('Mi grupo'),
+                backgroundColor: Colors.green,
+                labelStyle: TextStyle(color: Colors.white),
+              )
+            : null,
         onTap: () => _showGroupMembers(group, categoryId),
       );
     });
   }
 
-  Future<void> _showGroupMembers(GroupVM group, int categoryId) async {
+  Future<void> _showGroupMembers(GroupVM group, String categoryId) async {
     try {
       final members = await controller.getMembersByGroup(group.id, categoryId);
-      
+
       Get.dialog(
         AlertDialog(
           title: Text('Miembros de ${group.name}'),
@@ -271,7 +274,9 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
                           child: Text(member.name[0].toUpperCase()),
                         ),
                         title: Text(member.name),
-                        subtitle: member.email != null ? Text(member.email!) : null,
+                        subtitle: member.email != null
+                            ? Text(member.email!)
+                            : null,
                       );
                     },
                   ),
@@ -293,7 +298,9 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
     final result = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Confirmar eliminación'),
-        content: Text('¿Estás seguro de que quieres eliminar la categoría "${category.name}"?'),
+        content: Text(
+          '¿Estás seguro de que quieres eliminar la categoría "${category.name}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
@@ -349,11 +356,14 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
                         subtitle: Text('Tipo: ${category.type}'),
                         children: [
                           FutureBuilder<List<MemberVM>>(
-                            future: controller.getUnassignedStudents(category.id),
+                            future: controller.getUnassignedStudents(
+                              category.id,
+                            ),
                             builder: (context, snapshot) {
                               final unassigned = snapshot.data ?? [];
-                              final groups = controller.groupsByCat[category.id] ?? [];
-                              
+                              final groups =
+                                  controller.groupsByCat[category.id] ?? [];
+
                               return Column(
                                 children: [
                                   if (unassigned.isNotEmpty) ...[
@@ -361,26 +371,46 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
                                       title: Text('Estudiantes sin asignar:'),
                                       dense: true,
                                     ),
-                                    ...unassigned.map((student) => ListTile(
-                                      leading: CircleAvatar(
-                                        child: Text(student.name[0].toUpperCase()),
+                                    ...unassigned.map(
+                                      (student) => ListTile(
+                                        leading: CircleAvatar(
+                                          child: Text(
+                                            student.name[0].toUpperCase(),
+                                          ),
+                                        ),
+                                        title: Text(student.name),
+                                        subtitle: student.email != null
+                                            ? Text(student.email!)
+                                            : null,
+                                        trailing: groups.isNotEmpty
+                                            ? PopupMenuButton<int>(
+                                                icon: const Icon(
+                                                  Icons.add_circle,
+                                                  color: Colors.green,
+                                                ),
+                                                tooltip: 'Asignar a grupo',
+                                                onSelected: (groupId) {
+                                                  controller
+                                                      .assignStudentToGroup(
+                                                        student.id,
+                                                        groupId,
+                                                        category.id,
+                                                      );
+                                                },
+                                                itemBuilder: (context) => groups
+                                                    .map(
+                                                      (group) => PopupMenuItem(
+                                                        value: group.id,
+                                                        child: Text(
+                                                          'Asignar a ${group.name}',
+                                                        ),
+                                                      ),
+                                                    )
+                                                    .toList(),
+                                              )
+                                            : null,
                                       ),
-                                      title: Text(student.name),
-                                      subtitle: student.email != null ? Text(student.email!) : null,
-                                      trailing: groups.isNotEmpty ? PopupMenuButton<int>(
-                                        icon: const Icon(Icons.add_circle, color: Colors.green),
-                                        tooltip: 'Asignar a grupo',
-                                        onSelected: (groupId) {
-                                          controller.assignStudentToGroup(student.id, groupId, category.id);
-                                        },
-                                        itemBuilder: (context) => groups
-                                            .map((group) => PopupMenuItem(
-                                                  value: group.id,
-                                                  child: Text('Asignar a ${group.name}'),
-                                                ))
-                                            .toList(),
-                                      ) : null,
-                                    )),
+                                    ),
                                   ],
                                   if (groups.isNotEmpty) ...[
                                     const Divider(),
@@ -388,44 +418,79 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
                                       title: Text('Grupos existentes:'),
                                       dense: true,
                                     ),
-                                    ...groups.map((group) => ExpansionTile(
-                                      title: Text(group.name),
-                                      subtitle: Text('${group.members} miembros'),
-                                      children: [
-                                        FutureBuilder<List<MemberVM>>(
-                                          future: controller.getMembersByGroup(group.id, category.id),
-                                          builder: (context, memberSnapshot) {
-                                            final members = memberSnapshot.data ?? [];
-                                            if (members.isEmpty) {
-                                              return const ListTile(
-                                                title: Text('Sin miembros'),
-                                                dense: true,
-                                              );
-                                            }
-                                            return Column(
-                                              children: members.map((member) => ListTile(
-                                                leading: CircleAvatar(
-                                                  backgroundColor: Colors.blue.shade100,
-                                                  child: Text(member.name[0].toUpperCase()),
-                                                ),
-                                                title: Text(member.name),
-                                                subtitle: member.email != null ? Text(member.email!) : null,
-                                                trailing: IconButton(
-                                                  icon: const Icon(Icons.remove_circle, color: Colors.red),
-                                                  onPressed: () {
-                                                    controller.removeStudentFromGroup(member.id, category.id);
-                                                  },
-                                                ),
-                                              )).toList(),
-                                            );
-                                          },
+                                    ...groups.map(
+                                      (group) => ExpansionTile(
+                                        title: Text(group.name),
+                                        subtitle: Text(
+                                          '${group.members} miembros',
                                         ),
-                                      ],
-                                    )),
+                                        children: [
+                                          FutureBuilder<List<MemberVM>>(
+                                            future: controller
+                                                .getMembersByGroup(
+                                                  group.id,
+                                                  category.id,
+                                                ),
+                                            builder: (context, memberSnapshot) {
+                                              final members =
+                                                  memberSnapshot.data ?? [];
+                                              if (members.isEmpty) {
+                                                return const ListTile(
+                                                  title: Text('Sin miembros'),
+                                                  dense: true,
+                                                );
+                                              }
+                                              return Column(
+                                                children: members
+                                                    .map(
+                                                      (member) => ListTile(
+                                                        leading: CircleAvatar(
+                                                          backgroundColor:
+                                                              Colors
+                                                                  .blue
+                                                                  .shade100,
+                                                          child: Text(
+                                                            member.name[0]
+                                                                .toUpperCase(),
+                                                          ),
+                                                        ),
+                                                        title: Text(
+                                                          member.name,
+                                                        ),
+                                                        subtitle:
+                                                            member.email != null
+                                                            ? Text(
+                                                                member.email!,
+                                                              )
+                                                            : null,
+                                                        trailing: IconButton(
+                                                          icon: const Icon(
+                                                            Icons.remove_circle,
+                                                            color: Colors.red,
+                                                          ),
+                                                          onPressed: () {
+                                                            controller
+                                                                .removeStudentFromGroup(
+                                                                  member.id,
+                                                                  category.id,
+                                                                );
+                                                          },
+                                                        ),
+                                                      ),
+                                                    )
+                                                    .toList(),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                   if (unassigned.isEmpty && groups.isEmpty)
                                     const ListTile(
-                                      title: Text('No hay grupos en esta categoría'),
+                                      title: Text(
+                                        'No hay grupos en esta categoría',
+                                      ),
                                       dense: true,
                                     ),
                                 ],
@@ -454,10 +519,3 @@ class CategoriesPage extends GetView<CategoryGroupsController> {
     );
   }
 }
-
-
-
-
-
-
-

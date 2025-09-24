@@ -4,12 +4,5 @@ class DeleteCategory {
   final CategoryRepository repo;
   DeleteCategory(this.repo);
 
-  Future<void> call(int id) => repo.delete(id);
+  Future<void> call(String id) => repo.delete(id);
 }
-
-
-
-
-
-
-

@@ -1,6 +1,5 @@
 import 'package:flutter_application/auth/presentation/controllers/auth_controller.dart';
 import 'package:get/get.dart';
-import 'package:flutter_application/routes.dart';
 
 class Course {
   final int? id;
@@ -9,10 +8,10 @@ class Course {
   final DateTime createdAt;
   final int students; // Número de estudiantes
   final String? description;
-  
+
   Course({
     this.id,
-    required this.title, 
+    required this.title,
     required this.role,
     DateTime? createdAt,
     this.students = 0,
@@ -54,7 +53,7 @@ class HomeController extends GetxController {
     _allCourses.addAll([
       Course(
         id: 1,
-        title: "Alicia's Course", 
+        title: "Alicia's Course",
         role: roleStudent,
         createdAt: DateTime.now().subtract(const Duration(days: 5)),
         students: 25,
@@ -62,7 +61,7 @@ class HomeController extends GetxController {
       ),
       Course(
         id: 2,
-        title: "UI/UX Design", 
+        title: "UI/UX Design",
         role: roleStudent,
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
         students: 18,
@@ -70,7 +69,7 @@ class HomeController extends GetxController {
       ),
       Course(
         id: 3,
-        title: "DATA STRUCTURE II", 
+        title: "DATA STRUCTURE II",
         role: roleStudent,
         createdAt: DateTime.now().subtract(const Duration(days: 10)),
         students: 30,
@@ -78,7 +77,7 @@ class HomeController extends GetxController {
       ),
       Course(
         id: 4,
-        title: "Desarrollo Móvil", 
+        title: "Desarrollo Móvil",
         role: roleProfessor,
         createdAt: DateTime.now().subtract(const Duration(days: 1)),
         students: 22,
@@ -86,7 +85,7 @@ class HomeController extends GetxController {
       ),
       Course(
         id: 5,
-        title: "Flutter Avanzado", 
+        title: "Flutter Avanzado",
         role: roleProfessor,
         createdAt: DateTime.now().subtract(const Duration(days: 7)),
         students: 15,
@@ -94,7 +93,7 @@ class HomeController extends GetxController {
       ),
       Course(
         id: 6,
-        title: "JavaScript Básico", 
+        title: "JavaScript Básico",
         role: roleStudent,
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
         students: 35,
@@ -208,7 +207,7 @@ class HomeController extends GetxController {
       default:
         return '';
     }
-  } 
+  }
 
   RxString get currentUserName {
     final authController = Get.find<AuthController>();
@@ -216,12 +215,13 @@ class HomeController extends GetxController {
   }
 
   void goToProfile() {
-    Get.toNamed(Routes.settings);
+    // Como ya no hay página de configuraciones, directamente hacemos logout
+    logout();
   }
 
   void logout() {
     final authController = Get.find<AuthController>();
-    authController.logout(); 
+    authController.logout();
   }
 
   void onOptionSelected(String value) {
@@ -234,10 +234,3 @@ class HomeController extends GetxController {
     }
   }
 }
-
-
-
-
-
-
-

@@ -10,9 +10,7 @@ class JoinCourseController extends GetxController {
   final isLoading = false.obs;
   final AuthController authController = Get.find<AuthController>();
   final CourseRepository repo;
-  JoinCourseController({
-    required this.repo,
-  });
+  JoinCourseController({required this.repo});
   Future<void> submit() async {
     final isValid = formKey.currentState?.validate() ?? false;
     if (!isValid) return;
@@ -25,9 +23,9 @@ class JoinCourseController extends GetxController {
         studentId: userId!,
         courseCode: code,
       );
-      final  homeController = Get.find<HomeController>();
-      homeController.loadCourses(); 
-      Get.back(result: enrollmentId); 
+      final homeController = Get.find<HomeController>();
+      homeController.loadCourses();
+      Get.back(result: enrollmentId);
     } catch (e) {
       Get.snackbar('Error', e.toString());
     } finally {
@@ -41,9 +39,3 @@ class JoinCourseController extends GetxController {
     super.onClose();
   }
 }
-
-
-
-
-
-

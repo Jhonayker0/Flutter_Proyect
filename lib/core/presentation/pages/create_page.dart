@@ -16,13 +16,10 @@ class CreatePage extends StatelessWidget {
             const SizedBox(height: 20),
             const Text(
               'Crea o ingresa a un curso nuevo',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
-            
+
             // Crear Curso
             Card(
               elevation: 2,
@@ -81,9 +78,9 @@ class CreatePage extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Crear Categoría
             Card(
               elevation: 2,
@@ -144,8 +141,8 @@ class CreatePage extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-            
-     /*       // Crear Actividad
+
+            /*       // Crear Actividad
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(
@@ -278,10 +275,3 @@ class CreatePage extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-

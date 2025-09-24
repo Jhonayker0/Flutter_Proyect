@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application/core/presentation/controllers/home_controller_new.dart';
+import 'package:flutter_application/routes.dart';
 
 class CoursesPage extends GetView<HomeController> {
   const CoursesPage({super.key});
@@ -24,18 +25,22 @@ class CoursesPage extends GetView<HomeController> {
               ('Nombre Z-A', SortOption.nameDesc),
               ('Más recientes', SortOption.dateDesc),
               ('Más antiguos', SortOption.dateAsc),
-             // ('Más estudiantes', SortOption.studentsDesc),
+              // ('Más estudiantes', SortOption.studentsDesc),
               //('Menos estudiantes', SortOption.studentsAsc),
-            ].map((option) => ListTile(
-                  title: Text(option.$1),
-                  trailing: Obx(() => controller.currentSort.value == option.$2
+            ].map(
+              (option) => ListTile(
+                title: Text(option.$1),
+                trailing: Obx(
+                  () => controller.currentSort.value == option.$2
                       ? const Icon(Icons.check, color: Colors.blue)
-                      : const SizedBox()),
-                  onTap: () {
-                    controller.setSortOption(option.$2);
-                    Navigator.pop(ctx);
-                  },
-                )),
+                      : const SizedBox(),
+                ),
+                onTap: () {
+                  controller.setSortOption(option.$2);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -59,10 +64,13 @@ class CoursesPage extends GetView<HomeController> {
             ListTile(
               leading: const Icon(Icons.school),
               title: const Text('Profesor'),
-              trailing: Obx(() => controller.activeRoleFilter.value ==
-                      HomeController.roleProfessor
-                  ? const Icon(Icons.check, color: Colors.blue)
-                  : const SizedBox()),
+              trailing: Obx(
+                () =>
+                    controller.activeRoleFilter.value ==
+                        HomeController.roleProfessor
+                    ? const Icon(Icons.check, color: Colors.blue)
+                    : const SizedBox(),
+              ),
               onTap: () {
                 controller.setRoleFilter(HomeController.roleProfessor);
                 Navigator.pop(ctx);
@@ -71,10 +79,13 @@ class CoursesPage extends GetView<HomeController> {
             ListTile(
               leading: const Icon(Icons.person),
               title: const Text('Estudiante'),
-              trailing: Obx(() => controller.activeRoleFilter.value ==
-                      HomeController.roleStudent
-                  ? const Icon(Icons.check, color: Colors.blue)
-                  : const SizedBox()),
+              trailing: Obx(
+                () =>
+                    controller.activeRoleFilter.value ==
+                        HomeController.roleStudent
+                    ? const Icon(Icons.check, color: Colors.blue)
+                    : const SizedBox(),
+              ),
               onTap: () {
                 controller.setRoleFilter(HomeController.roleStudent);
                 Navigator.pop(ctx);
@@ -139,23 +150,25 @@ class CoursesPage extends GetView<HomeController> {
                       const SizedBox(width: 4),
                       const Text('Filtrar'),
                       const SizedBox(width: 8),
-                      Obx(() => controller.activeFilters.value > 0
-                          ? Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.blue,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '${controller.activeFilters.value}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                      Obx(
+                        () => controller.activeFilters.value > 0
+                            ? Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.blue,
+                                  shape: BoxShape.circle,
                                 ),
-                              ),
-                            )
-                          : const SizedBox()),
+                                child: Text(
+                                  '${controller.activeFilters.value}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              )
+                            : const SizedBox(),
+                      ),
                     ],
                   ),
                 ),
@@ -164,26 +177,101 @@ class CoursesPage extends GetView<HomeController> {
             const SizedBox(height: 20),
             const Text(
               'Tus cursos',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: Obx(() {
                 final courses = controller.courses;
-                if (courses.isEmpty) {
-                  return const Center(child: Text('No se encontraron cursos'));
-                }
+                
+                // Siempre mostrar el botón de crear/unirse, incluso si no hay cursos
+                final itemCount = courses.length + 1;
+
                 return ListView.builder(
-                  itemCount: courses.length,
+                  itemCount: itemCount,
                   itemBuilder: (context, index) {
-                    final course = courses[index];
+                    // Mostrar el botón de crear curso primero
+                    if (index == 0) {
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.add, color: Colors.blue.shade700),
+                          ),
+                          title: const Text(
+                            'Crear o unirse a un curso',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'Crear un curso nuevo o unirse a uno existente',
+                          ),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                          ),
+                          onTap: () => Get.toNamed(Routes.createCourse),
+                        ),
+                      );
+                    }
+                    
+                    // Si no hay cursos, mostrar mensaje después del botón
+                    if (courses.isEmpty) {
+                      return Container(
+                        margin: const EdgeInsets.only(top: 20),
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.school_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No tienes cursos aún',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Usa el botón de arriba para crear un curso nuevo o unirte a uno existente con un código',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    // Ajustar índice para los cursos
+                    final courseIndex = index - 1;
+
+                    // Verificar que el índice esté dentro del rango
+                    if (courseIndex >= courses.length) {
+                      return const SizedBox();
+                    }
+
+                    final course = courses[courseIndex];
                     return GestureDetector(
                       onTap: () {
-                        Get.toNamed('/course-detail',
-                            arguments: {'course': course, 'role': course.role});
+                        Get.toNamed(
+                          '/course-detail',
+                          arguments: {'course': course, 'role': course.role},
+                        );
                       },
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -256,10 +344,3 @@ class CoursesPage extends GetView<HomeController> {
     );
   }
 }
-
-
-
-
-
-
-

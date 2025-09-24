@@ -107,100 +107,109 @@ class _LoginPageState extends State<LoginPage> {
                             prefixIcon: Icon(Icons.email_outlined),
                             border: OutlineInputBorder(),
                           ),
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Ingresa tu email' : null,
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Ingresa tu email'
+                              : null,
                         ),
                         const SizedBox(height: 14),
 
                         // Password
-                        Obx(() => TextFormField(
-                              controller: passCtrl,
-                              obscureText: obscure.value,
-                              decoration: InputDecoration(
-                                labelText: 'Contraseña',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                border: const OutlineInputBorder(),
-                                suffixIcon: IconButton(
-                                  onPressed: () => obscure.value = !obscure.value,
-                                  icon: Icon(
-                                    obscure.value
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                  ),
+                        Obx(
+                          () => TextFormField(
+                            controller: passCtrl,
+                            obscureText: obscure.value,
+                            decoration: InputDecoration(
+                              labelText: 'Contraseña',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              border: const OutlineInputBorder(),
+                              suffixIcon: IconButton(
+                                onPressed: () => obscure.value = !obscure.value,
+                                icon: Icon(
+                                  obscure.value
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
                               ),
-                              validator: (v) =>
-                                  v == null || v.isEmpty ? 'Ingresa tu contraseña' : null,
-                            )),
+                            ),
+                            validator: (v) => v == null || v.isEmpty
+                                ? 'Ingresa tu contraseña'
+                                : null,
+                          ),
+                        ),
                         const SizedBox(height: 6),
 
-                        // Recordarme + olvidé contraseña
-                        Obx(() => Row(
-                              children: [
-                                Checkbox(
-                                  value: rememberMe.value,
-                                  onChanged: (v) => rememberMe.value = v ?? false,
-                                ),
-                                const Text('Recordarme'),
-                                const Spacer(),
-                                TextButton(
-                                  onPressed: () {},
-                                  child: const Text('¿Olvidaste tu contraseña?'),
-                                ),
-                              ],
-                            )),
+                        // Recordarme
+                        Obx(
+                          () => Row(
+                            children: [
+                              Checkbox(
+                                value: rememberMe.value,
+                                onChanged: (v) => rememberMe.value = v ?? false,
+                              ),
+                              const Text('Recordarme'),
+                            ],
+                          ),
+                        ),
 
                         const SizedBox(height: 6),
 
                         // Error
-                        Obx(() => controller.error.value != null
-                            ? Row(
-                                children: [
-                                  Icon(Icons.error_outline,
-                                      size: 18, color: cs.error),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      controller.error.value ?? '',
-                                      style: TextStyle(
-                                        color: cs.error,
-                                        fontWeight: FontWeight.w500,
+                        Obx(
+                          () => controller.error.value != null
+                              ? Row(
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline,
+                                      size: 18,
+                                      color: cs.error,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        controller.error.value ?? '',
+                                        style: TextStyle(
+                                          color: cs.error,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              )
-                            : const SizedBox()),
+                                  ],
+                                )
+                              : const SizedBox(),
+                        ),
 
                         const SizedBox(height: 12),
-                        Obx(() => SizedBox(
-                              width: double.infinity,
-                              height: 52,
-                              child: FilledButton(
-                                onPressed: controller.isLoading.value
-                                    ? null
-                                    : () async {
-                                        if (!formKey.currentState!.validate()) return;
-                                        await controller.login(
-                                          emailCtrl.text.trim(),
-                                          passCtrl.text,
-                                          remember: rememberMe.value,
-                                        );
-                                      },
-                                child: controller.isLoading.value
-                                    ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.6,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Iniciar sesión',
-                                        style: TextStyle(fontSize: 16),
+                        Obx(
+                          () => SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: FilledButton(
+                              onPressed: controller.isLoading.value
+                                  ? null
+                                  : () async {
+                                      if (!formKey.currentState!.validate())
+                                        return;
+                                      await controller.login(
+                                        emailCtrl.text.trim(),
+                                        passCtrl.text,
+                                        remember: rememberMe.value,
+                                      );
+                                    },
+                              child: controller.isLoading.value
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.6,
                                       ),
-                              ),
-                            )),
+                                    )
+                                  : const Text(
+                                      'Iniciar sesión',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 10),
 
                         Row(
@@ -214,14 +223,6 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         ),
                         const SizedBox(height: 20),
-                        const Divider(),
-                        const Text("o continúa con"),
-                        const SizedBox(height: 10),
-                        OutlinedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.g_mobiledata),
-                          label: const Text('Google'),
-                        )
                       ],
                     ),
                   ),
@@ -234,10 +235,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
-
-
-
-
-
-

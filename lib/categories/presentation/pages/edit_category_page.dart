@@ -28,8 +28,10 @@ class EditCategoryPage extends GetView<EditCategoryController> {
                     hintText: 'Escribe aquí...',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (v) =>
-                      controller.validateRequired(v, 'Por favor ingresa un nombre'),
+                  validator: (v) => controller.validateRequired(
+                    v,
+                    'Por favor ingresa un nombre',
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
@@ -40,8 +42,10 @@ class EditCategoryPage extends GetView<EditCategoryController> {
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
-                  validator: (v) => controller
-                      .validateRequired(v, 'Por favor ingresa una descripción'),
+                  validator: (v) => controller.validateRequired(
+                    v,
+                    'Por favor ingresa una descripción',
+                  ),
                 ),
                 const SizedBox(height: 20),
                 DropdownButtonFormField<String>(
@@ -63,17 +67,7 @@ class EditCategoryPage extends GetView<EditCategoryController> {
                   onChanged: controller.setType,
                   validator: controller.validateType,
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: controller.capacityCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Capacidad',
-                    hintText: 'Número de participantes',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: controller.validateCapacity,
-                ),
+
                 const SizedBox(height: 32),
                 if (controller.error.value != null)
                   Container(
@@ -108,10 +102,3 @@ class EditCategoryPage extends GetView<EditCategoryController> {
     );
   }
 }
-
-
-
-
-
-
-

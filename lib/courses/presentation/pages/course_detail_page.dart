@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/categories/presentation/pages/categories_page.dart';
-import 'package:flutter_application/courses/domain/models/course.dart';
 import 'package:flutter_application/courses/presentation/pages/course_students_tab.dart';
+import 'package:flutter_application/courses/presentation/pages/course_categories_tab.dart';
 import 'package:get/get.dart';
 import '../controllers/course_detail_controller.dart';
 import 'course_activities_tab.dart';
@@ -26,64 +25,44 @@ class CourseDetailPage extends GetView<CourseDetailController> {
           ),
         ],
       ),
-      body: Obx(() => IndexedStack(
-            index: controller.currentTabIndex.value,
-            children: [
-              const CourseActivitiesTab(),
-              const CourseStudentsTab(),
-              controller.isProfessor
-                  ? _CourseCategoriesTab(course: controller.course, role: controller.userRole)
-                  : const CourseStudentsTab(),
-              const CourseInfoTab(),
-            ],
-          )),
-      bottomNavigationBar: Obx(() => BottomNavigationBar(
-            currentIndex: controller.currentTabIndex.value,
-            onTap: controller.changeTab,
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: Colors.blue,
-            unselectedItemColor: Colors.grey,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.assignment),
-                label: 'Actividades',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.people),
-                label: 'Estudiantes',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.group),
-                label: 'Categorías',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.info),
-                label: 'Información',
-              ),
-            ],
-          )),
+      body: Obx(
+        () => IndexedStack(
+          index: controller.currentTabIndex.value,
+          children: [
+            const CourseActivitiesTab(),
+            const CourseStudentsTab(),
+            const CourseCategoriesTab(),
+            const CourseInfoTab(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Obx(
+        () => BottomNavigationBar(
+          currentIndex: controller.currentTabIndex.value,
+          onTap: controller.changeTab,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.assignment),
+              label: 'Actividades',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: 'Estudiantes',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.group),
+              label: 'Categorías',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.info),
+              label: 'Información',
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
-
-class _CourseCategoriesTab extends StatelessWidget {
-  final Course course;
-  final String role;
-
-  const _CourseCategoriesTab({
-    required this.course,
-    required this.role,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return const CategoriesPage();
-  }
-}
-
-
-
-
-
-
-

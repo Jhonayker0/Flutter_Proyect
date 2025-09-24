@@ -41,15 +41,23 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                     _buildInfoRow('Nombre', controller.course.title),
                     _buildInfoRow('Descripción', controller.course.description),
                     _buildInfoRow('Tu rol', controller.course.role),
-                    Obx(() =>_buildInfoRow('Total de estudiantes', '${controller.studentCount.value}')),
-                    _buildInfoRow('Fecha de creación', _formatDate(controller.course.createdAt)),
+                    Obx(
+                      () => _buildInfoRow(
+                        'Total de estudiantes',
+                        '${controller.studentCount.value}',
+                      ),
+                    ),
+                    _buildInfoRow(
+                      'Fecha de creación',
+                      _formatDate(controller.course.createdAt),
+                    ),
                   ],
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Estadísticas del curso
             Card(
               child: Padding(
@@ -75,44 +83,46 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Obx(() => Column(
-                      children: [
-                        _buildStatRow(
-                          'Total de actividades',
-                          '${controller.activities.length}',
-                          Icons.assignment,
-                          Colors.blue,
-                        ),
-                        _buildStatRow(
-                          'Estudiantes inscritos',
-                          '${controller.studentCount.value}',
-                          Icons.people,
-                          Colors.green,
-                        ),
-                        if (!controller.isProfessor) ...[
+                    Obx(
+                      () => Column(
+                        children: [
                           _buildStatRow(
-                            'Actividades completadas',
-                            '${controller.activities.where((a) => a.isCompleted).length}',
-                            Icons.check_circle,
+                            'Total de actividades',
+                            '${controller.activityCount.value}',
+                            Icons.assignment,
+                            Colors.blue,
+                          ),
+                          _buildStatRow(
+                            'Estudiantes inscritos',
+                            '${controller.studentCount.value}',
+                            Icons.people,
                             Colors.green,
                           ),
-                          _buildStatRow(
-                            'Actividades pendientes',
-                            '${controller.activities.where((a) => !a.isCompleted).length}',
-                            Icons.pending,
-                            Colors.orange,
-                          ),
+                          if (!controller.isProfessor) ...[
+                            _buildStatRow(
+                              'Actividades completadas',
+                              '${controller.activities.where((a) => a.isCompleted).length}',
+                              Icons.check_circle,
+                              Colors.green,
+                            ),
+                            _buildStatRow(
+                              'Actividades pendientes',
+                              '${controller.activities.where((a) => !a.isCompleted).length}',
+                              Icons.pending,
+                              Colors.orange,
+                            ),
+                          ],
                         ],
-                      ],
-                    )),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
-            // Acciones rápidas
+
+            // Acciones rápidas para profesores
             if (controller.isProfessor)
               Card(
                 child: Padding(
@@ -165,6 +175,85 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                   ),
                 ),
               ),
+
+            const SizedBox(height: 16),
+
+            // Zona peligrosa para profesores
+            if (controller.isProfessor)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.warning,
+                            color: Colors.red.shade700,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Zona Peligrosa',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildActionButton(
+                        'Eliminar Curso',
+                        'Eliminar permanentemente este curso y todos sus datos',
+                        Icons.delete_forever,
+                        Colors.red,
+                        controller.deleteCourse,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // Acciones para estudiantes
+            if (!controller.isProfessor)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.account_circle,
+                            color: Colors.blue.shade700,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Opciones del Estudiante',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildActionButton(
+                        'Salir del Curso',
+                        'Abandonar este curso permanentemente',
+                        Icons.exit_to_app,
+                        Colors.red,
+                        controller.leaveCourse,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -212,18 +301,10 @@ class CourseInfoTab extends GetView<CourseDetailController> {
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -270,10 +351,7 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                   ),
                 ],
               ),
@@ -289,10 +367,3 @@ class CourseInfoTab extends GetView<CourseDetailController> {
     return '${date.day}/${date.month}/${date.year}';
   }
 }
-
-
-
-
-
-
-

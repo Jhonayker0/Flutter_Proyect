@@ -10,13 +10,5 @@ class JoinCourseBinding extends Bindings {
     final service = CourseService();
     final repo = CourseRepositoryImpl(service);
     Get.put<JoinCourseController>(JoinCourseController(repo: repo));
-
   }
 }
-
-
-
-
-
-
-

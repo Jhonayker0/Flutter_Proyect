@@ -11,11 +11,20 @@ class SettingsPage extends GetView<SettingsController> {
       const _SettingsOption(icon: Icons.person_outline, title: "Cuenta"),
       const _SettingsOption(icon: Icons.history, title: "Actividad reciente"),
       const _SettingsOption(icon: Icons.devices, title: "Dispositivos"),
-      const _SettingsOption(icon: Icons.notifications_outlined, title: "Notificaciones"),
-      const _SettingsOption(icon: Icons.color_lens_outlined, title: "Apariencia"),
+      const _SettingsOption(
+        icon: Icons.notifications_outlined,
+        title: "Notificaciones",
+      ),
+
       const _SettingsOption(icon: Icons.language, title: "Idioma"),
-      const _SettingsOption(icon: Icons.lock_outline, title: "Privacidad y seguridad"),
-      const _SettingsOption(icon: Icons.storage_outlined, title: "Almacenamiento"),
+      const _SettingsOption(
+        icon: Icons.lock_outline,
+        title: "Privacidad y seguridad",
+      ),
+      const _SettingsOption(
+        icon: Icons.storage_outlined,
+        title: "Almacenamiento",
+      ),
       const _SettingsOption(icon: Icons.logout, title: "Cerrar sesión"),
     ];
 
@@ -35,9 +44,14 @@ class SettingsPage extends GetView<SettingsController> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Jhonayker Echeverria",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text("@jhonay_ker", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                  Text(
+                    "Jhonayker Echeverria",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "@jhonay_ker",
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
                 ],
               ),
             ],
@@ -65,20 +79,18 @@ class _SettingsOption extends GetView<SettingsController> {
   const _SettingsOption({required this.icon, required this.title, this.onTap});
 
   _SettingsOption copyWith({VoidCallback? onTap}) {
-    return _SettingsOption(icon: icon, title: title, onTap: onTap ?? this.onTap);
+    return _SettingsOption(
+      icon: icon,
+      title: title,
+      onTap: onTap ?? this.onTap,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    final trailing = title == 'Apariencia'
-        // Opción sin Obx; si se usa Rx en el controller, envolver en Obx
-        ? Switch(
-            value: controller.isDark, // o Get.isDarkMode
-            onChanged: (_) => controller.toggleTheme(),
-          )
-        : const Icon(Icons.arrow_forward_ios, size: 18);
+    final trailing = const Icon(Icons.arrow_forward_ios, size: 18);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -87,22 +99,8 @@ class _SettingsOption extends GetView<SettingsController> {
         leading: Icon(icon, color: cs.primary),
         title: Text(title),
         trailing: trailing,
-        onTap: () {
-          if (title == 'Apariencia') {
-            controller.toggleTheme(); // alterna con tap
-            return;
-          }
-          onTap?.call(); // delega al callback general
-        },
+        onTap: onTap,
       ),
     );
   }
 }
-
-
-
-
-
-
-
-

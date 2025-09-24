@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/app.dart';
-import 'package:flutter_application/core/data/datasources/database.dart';
+import 'package:get_storage/get_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await DatabaseService().database;
+
+  // Inicializar GetStorage para el manejo de tokens
+  await GetStorage.init();
+
   runApp(const MyApp());
 }
-
-
-
-
-
-
-

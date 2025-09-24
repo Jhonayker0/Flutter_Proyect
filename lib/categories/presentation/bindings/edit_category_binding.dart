@@ -10,17 +10,12 @@ class EditCategoryBinding extends Bindings {
     final service = CategoryService();
     final repo = CategoryRepositoryImpl(service);
     final updateCategoryUseCase = UpdateCategory(repo);
-    
-    Get.put(EditCategoryController(
-      updateCategoryUseCase: updateCategoryUseCase,
-      categoryRepository: repo,
-    ));
+
+    Get.put(
+      EditCategoryController(
+        updateCategoryUseCase: updateCategoryUseCase,
+        categoryRepository: repo,
+      ),
+    );
   }
 }
-
-
-
-
-
-
-
