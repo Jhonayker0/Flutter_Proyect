@@ -229,7 +229,7 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
                     ),
                   ),
                 ] else ...[
-                  // Vista del estudiante: Evaluar compañeros y Responder actividad
+                  // Vista del estudiante: Solo evaluar compañeros
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -244,25 +244,6 @@ class CourseActivitiesTab extends GetView<CourseDetailController> {
                       ),
                       icon: const Icon(Icons.people_alt),
                       label: const Text('Evaluar a mis compañeros'),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        print('📝 Responder actividad - Actividad: $title');
-                        await controller.showResponseDialog(activity);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Responder actividad'),
                     ),
                   ),
                 ],

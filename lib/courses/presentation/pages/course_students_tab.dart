@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/course_detail_controller.dart';
-import 'package:flutter_application/auth/domain/models/user.dart';
 
 class CourseStudentsTab extends GetView<CourseDetailController> {
   const CourseStudentsTab({super.key});
@@ -101,18 +100,7 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => controller.viewStudent(
-          User(
-            id: userData['uuid'].hashCode.abs(),
-            name: name,
-            email: email,
-            imagepathh: imagePath,
-            uuid: userData['uuid'],
-          ),
-        ),
-        child: Padding(
+      child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
@@ -234,7 +222,6 @@ class CourseStudentsTab extends GetView<CourseDetailController> {
               ),
             ],
           ),
-        ),
       ),
     );
   }

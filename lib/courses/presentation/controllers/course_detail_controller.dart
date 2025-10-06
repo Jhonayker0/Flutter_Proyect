@@ -153,35 +153,13 @@ class CourseDetailController extends GetxController {
             .toList();
       }
 
-      // Obtener todas las submissions del usuario actual
-      final httpService = RobleHttpService();
-      final databaseService = RobleDatabaseService(httpService);
-      final submissions = await databaseService.read('submissions');
-      
-      // Filtrar submissions del usuario actual
-      final userSubmissions = submissions.where((submission) =>
-          submission['student_id'] == currentUserId
-      ).toList();
-      
-      // Crear set de IDs de actividades enviadas por el usuario
-      final submittedActivityIds = userSubmissions
-          .map((submission) => submission['activity_id'])
-          .toSet();
+      // Las actividades ya no se "completan" individualmente
+      // Los estudiantes pueden calificar a sus compañeros en cualquier momento
+      final activityObjects = activitiesData
+          .map((data) => Activity.fromRoble(data))
+          .toList();
 
-      // Convertir actividades y marcar las completadas
-      final activityObjects = activitiesData.map((data) {
-        final activity = Activity.fromRoble(data);
-        final activityId = activity.id;
-        
-        // Marcar como completada si el usuario ya envió una submission
-        final isCompleted = activityId != null && 
-                           submittedActivityIds.contains(activityId);
-        
-        return activity.copyWith(isCompleted: isCompleted);
-      }).toList();
-
-      print('✅ Estado de completado verificado para ${activityObjects.length} actividades');
-      print('✅ Usuario tiene submissions para: ${submittedActivityIds.length} actividades');
+      print('✅ ${activityObjects.length} actividades cargadas para evaluación peer');
       
       return activityObjects;
     } catch (e) {
@@ -193,25 +171,7 @@ class CourseDetailController extends GetxController {
     }
   }
 
-  /// Actualizar el estado de completado de una actividad específica
-  void _updateActivityCompletionStatus(String activityId, bool isCompleted) {
-    try {
-      // Buscar la actividad en la lista y actualizar su estado
-      final index = activities.indexWhere((activity) => activity.id == activityId);
-      if (index != -1) {
-        final updatedActivity = activities[index].copyWith(isCompleted: isCompleted);
-        activities[index] = updatedActivity;
-        
-        final completed = activities.where((a) => a.isCompleted).length;
-        final pending = activities.where((a) => !a.isCompleted).length;
-        print('✅ Estado actualizado - Completadas: $completed, Pendientes: $pending');
-      } else {
-        print('⚠️ No se encontró la actividad con ID: $activityId');
-      }
-    } catch (e) {
-      print('❌ Error actualizando estado de completado: $e');
-    }
-  }
+
 
   /// Refrescar estadísticas de actividades para estudiantes
   Future<void> refreshActivityStatistics() async {
@@ -494,15 +454,7 @@ class CourseDetailController extends GetxController {
     );
   }
 
-  void viewStudent(User student) {
-    // Get.toNamed('/student-detail', arguments: {'student': student});
-    Get.snackbar(
-      'En desarrollo',
-      'El detalle de estudiantes está en desarrollo',
-      backgroundColor: Colors.orange,
-      colorText: Colors.white,
-    );
-  }
+
 
   void leaveCourse() async {
     if (isProfessor) {
@@ -891,282 +843,96 @@ class CourseDetailController extends GetxController {
     }
   }
 
-  /// Obtiene la respuesta existente de un estudiante para una actividad
-  Future<Map<String, dynamic>?> getExistingSubmission(String activityId) async {
+
+
+
+
+
+
+  /// Verifica si el usuario está en un grupo de la categoría de la actividad
+  Future<bool> _isUserInActivityCategory(Map<String, dynamic> activity) async {
     try {
       final authController = Get.find<AuthController>();
       final currentUserId = authController.currentUser.value?.uuid;
+      final currentUserIdStr = authController.currentUser.value?.id.toString();
       
-      if (currentUserId == null) return null;
-
+      if (currentUserId == null && currentUserIdStr == null) {
+        print('❌ No se pudo obtener ID de usuario');
+        return false;
+      }
+      
+      // Obtener la categoría de la actividad
+      final categoryId = activity['category_id'];
+      if (categoryId == null) {
+        print('❌ No se encontró category_id en la actividad');
+        return false;
+      }
+      
+      print('🔍 Verificando si usuario está en categoría');
+      print('🔍 Usuario UUID: $currentUserId');
+      print('🔍 Usuario ID: $currentUserIdStr'); 
+      print('🔍 Categoría ID: $categoryId');
+      
+      // Usar base de datos directamente para verificar membresía
       final httpService = RobleHttpService();
       final databaseService = RobleDatabaseService(httpService);
-
-      // Obtener todas las submissions
-      final submissions = await databaseService.read('submissions');
       
-      // Buscar la submission del estudiante para esta actividad
-      final existingSubmission = submissions.firstWhere(
-        (submission) =>
-            submission['activity_id'] == activityId &&
-            submission['student_id'] == currentUserId,
-        orElse: () => <String, dynamic>{},
-      );
-
-      return existingSubmission.isEmpty ? null : existingSubmission;
-    } catch (e) {
-      print('❌ Error obteniendo submission existente: $e');
-      return null;
-    }
-  }
-
-  /// Responde o actualiza la respuesta de una actividad
-  Future<void> respondToActivity(
-    Map<String, dynamic> activity,
-    String content,
-    String? fileUrl,
-  ) async {
-    try {
-      isLoading.value = true;
-
-      final authController = Get.find<AuthController>();
-      final currentUserId = authController.currentUser.value?.uuid;
+      // Obtener todos los miembros de grupos (group_members)
+      final groupMembers = await databaseService.read('group_members');
+      print('🔍 Total group_members encontrados: ${groupMembers.length}');
       
-      if (currentUserId == null) {
-        throw Exception('Usuario no encontrado');
+      // Debug: Mostrar algunos group_members de ejemplo
+      if (groupMembers.isNotEmpty) {
+        print('🔍 Ejemplo de group_member: ${groupMembers.first}');
+        print('🔍 Estructura de student_id: ${groupMembers.first['student_id']}');
       }
-
-      // Verificar si la fecha límite no ha pasado
-      final dueDateStr = activity['due_date'] as String?;
-      if (dueDateStr != null) {
-        final dueDate = DateTime.parse(dueDateStr);
-        final now = DateTime.now();
+      
+      // Obtener todos los grupos de esta categoría
+      final groups = await databaseService.read('groups');
+      final categoryGroups = groups.where((g) => g['category_id'] == categoryId).toList();
+      print('🔍 Grupos en categoría $categoryId: ${categoryGroups.length}');
+      
+      // Debug: Mostrar los grupos de la categoría
+      for (final group in categoryGroups) {
+        print('🔍 Grupo encontrado: ${group['name']} (ID: ${group['_id']})');
+      }
+      
+      // Verificar si el usuario está en algún grupo de esta categoría
+      for (final group in categoryGroups) {
+        final groupId = group['_id'];
+        print('🔍 Revisando grupo ${group['name']} (ID: $groupId)');
         
-        if (now.isAfter(dueDate)) {
-          Get.snackbar(
-            'Fecha límite vencida',
-            'No puedes responder esta actividad porque la fecha límite ha pasado',
-            icon: Icon(Icons.access_time, color: Colors.white),
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 4),
-          );
-          return;
+        final membersInThisGroup = groupMembers.where((member) => member['group_id'] == groupId).toList();
+        print('🔍 Miembros en este grupo: ${membersInThisGroup.length}');
+        
+        for (final member in membersInThisGroup) {
+          print('🔍 Miembro: ${member['student_id']} (tipo: ${member['student_id'].runtimeType})');
+          
+          // Intentar múltiples formas de comparación
+          final memberStudentId = member['student_id']?.toString();
+          final userMatch1 = memberStudentId == currentUserId?.toString();
+          final userMatch2 = memberStudentId == currentUserIdStr;
+          
+          print('🔍 Comparación 1 (UUID): $memberStudentId == $currentUserId = $userMatch1');
+          print('🔍 Comparación 2 (ID): $memberStudentId == $currentUserIdStr = $userMatch2');
+          
+          if (userMatch1 || userMatch2) {
+            print('✅ Usuario está en grupo ${group['name']} de categoría ${activity['category_name']}');
+            return true;
+          }
         }
       }
-
-      final httpService = RobleHttpService();
-      final databaseService = RobleDatabaseService(httpService);
-
-      // Verificar si ya existe una respuesta
-      final existingSubmission = await getExistingSubmission(activity['_id']);
       
-      if (existingSubmission != null) {
-        // Actualizar respuesta existente
-        final updates = {
-          'content': content,
-          'file_url': fileUrl ?? '',
-          'status': 'delivered',
-        };
-
-        await databaseService.update('submissions', existingSubmission['_id'], updates);
-        
-        // Asegurar que la actividad esté marcada como completada
-        _updateActivityCompletionStatus(activity['_id'], true);
-        
-        Get.snackbar(
-          'Éxito',
-          'Tu respuesta ha sido actualizada correctamente',
-          icon: Icon(Icons.check_circle, color: Colors.white),
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
-        );
-
-        print('✅ Respuesta actualizada para actividad: ${activity['title']}');
-      } else {
-        // Crear nueva respuesta
-        final submissionData = {
-          'activity_id': activity['_id'].toString(),
-          'student_id': currentUserId.toString(),
-          'group_id': activity['category_id'].toString(),
-          'content': content,
-          'file_url': fileUrl ?? '',
-          'status': 'delivered',
-        };
-
-        await databaseService.insert('submissions', [submissionData]);
-        
-        // Actualizar el estado de completado en la lista de actividades
-        _updateActivityCompletionStatus(activity['_id'], true);
-        
-        Get.snackbar(
-          'Éxito',
-          'Tu respuesta ha sido enviada correctamente',
-          icon: Icon(Icons.check_circle, color: Colors.white),
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
-        );
-
-        print('✅ Nueva respuesta creada para actividad: ${activity['title']}');
-      }
-
+      print('❌ Usuario no está en ningún grupo de la categoría ${activity['category_name']}');
+      return false;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'No se pudo enviar la respuesta: $e',
-        icon: Icon(Icons.error, color: Colors.white),
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      print('❌ Error respondiendo actividad: $e');
-    } finally {
-      isLoading.value = false;
+      print('❌ Error verificando grupo de usuario: $e');
+      return false;
     }
   }
 
-  /// Muestra el diálogo para responder una actividad
-  Future<void> showResponseDialog(Map<String, dynamic> activity) async {
-    // Verificar si la fecha límite no ha pasado
-    final dueDateStr = activity['due_date'] as String?;
-    if (dueDateStr != null) {
-      final dueDate = DateTime.parse(dueDateStr);
-      final now = DateTime.now();
-      
-      if (now.isAfter(dueDate)) {
-        Get.snackbar(
-          'Fecha límite vencida',
-          'No puedes responder esta actividad porque la fecha límite ha pasado',
-          icon: Icon(Icons.access_time, color: Colors.white),
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 4),
-        );
-        return;
-      }
-    }
-
-    // Obtener respuesta existente si la hay
-    final existingSubmission = await getExistingSubmission(activity['_id']);
-    
-    // Crear controladores dentro del diálogo
-    TextEditingController? contentController;
-    TextEditingController? urlController;
-    
-    try {
-      contentController = TextEditingController(
-        text: existingSubmission?['content'] ?? '',
-      );
-      urlController = TextEditingController(
-        text: existingSubmission?['file_url'] ?? '',
-      );
-
-      final result = await Get.dialog<Map<String, String>?>(
-        AlertDialog(
-          title: Text('Responder Actividad'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Actividad: ${activity['title']}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Respuesta *',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: contentController,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      hintText: 'Escribe tu respuesta aquí...',
-                      border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Colors.grey[50],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'URL (Opcional)',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: urlController,
-                    decoration: InputDecoration(
-                      hintText: 'https://ejemplo.com/archivo',
-                      border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Colors.grey[50],
-                      prefixIcon: Icon(Icons.link),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(result: null),
-              child: Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final content = contentController!.text.trim();
-                
-                if (content.isEmpty) {
-                  Get.snackbar(
-                    'Campo requerido',
-                    'La respuesta es obligatoria',
-                    icon: Icon(Icons.error, color: Colors.white),
-                    backgroundColor: Colors.red,
-                    colorText: Colors.white,
-                  );
-                  return;
-                }
-
-                final fileUrl = urlController!.text.trim();
-                
-                Get.back(result: {
-                  'content': content,
-                  'fileUrl': fileUrl,
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: Text('Enviar'),
-            ),
-          ],
-        ),
-        barrierDismissible: false,
-      );
-
-      // Si el usuario envió los datos, procesar la respuesta
-      if (result != null) {
-        await respondToActivity(
-          activity,
-          result['content']!,
-          result['fileUrl']!.isEmpty ? null : result['fileUrl'],
-        );
-      }
-    } finally {
-      // Siempre dispose de los controladores, sin importar qué pase
-      contentController?.dispose();
-      urlController?.dispose();
-    }
-  }
-
-  /// Obtiene todas las submissions de una actividad para evaluación peer
-  Future<List<Map<String, dynamic>>> getActivitySubmissions(String activityId) async {
+  /// Obtiene los estudiantes del mismo grupo para evaluación peer
+  Future<List<Map<String, dynamic>>> getStudentsForPeerEvaluation(String activityId) async {
     try {
       final authController = Get.find<AuthController>();
       final currentUserId = authController.currentUser.value?.uuid;
@@ -1176,35 +942,104 @@ class CourseDetailController extends GetxController {
       final httpService = RobleHttpService();
       final databaseService = RobleDatabaseService(httpService);
 
-      // Obtener todas las submissions de la actividad
-      final submissions = await databaseService.read('submissions');
+      // Obtener información de la actividad
+      final activities = await databaseService.read('activities');
+      final activity = activities.firstWhere(
+        (a) => a['_id'] == activityId,
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (activity.isEmpty) return [];
       
-      // Filtrar submissions de esta actividad, excluyendo la propia
-      final activitySubmissions = submissions.where((submission) =>
-          submission['activity_id'] == activityId &&
-          submission['student_id'] != currentUserId
-      ).toList();
-
-      // Obtener las calificaciones ya dadas por el usuario actual
+      final categoryId = activity['category_id'];
+      if (categoryId == null) return [];
+      
+      print('🔍 Buscando compañeros del mismo grupo para actividad $activityId en categoría $categoryId');
+      
+      // Encontrar el grupo del usuario actual en esta categoría
+      final groups = await databaseService.read('groups');
+      final categoryGroups = groups.where((g) => g['category_id'] == categoryId).toList();
+      
+      String? userGroupId;
+      final groupMembers = await databaseService.read('group_members');
+      
+      // Buscar en qué grupo está el usuario actual
+      final currentUserIdStr = authController.currentUser.value?.id.toString();
+      
+      for (final group in categoryGroups) {
+        final groupId = group['_id'];
+        print('🔍 Revisando grupo ${group['name']} para buscar usuario');
+        
+        final membersInThisGroup = groupMembers.where((member) => member['group_id'] == groupId).toList();
+        
+        for (final member in membersInThisGroup) {
+          final memberStudentId = member['student_id']?.toString();
+          final userMatch1 = memberStudentId == currentUserId.toString();
+          final userMatch2 = memberStudentId == currentUserIdStr;
+          
+          if (userMatch1 || userMatch2) {
+            userGroupId = groupId;
+            print('✅ Usuario está en grupo: ${group['name']} (ID: $groupId)');
+            break;
+          }
+        }
+        
+        if (userGroupId != null) break;
+      }
+      
+      if (userGroupId == null) {
+        print('❌ Usuario no está en ningún grupo de esta categoría');
+        return [];
+      }
+      
+      // Obtener todos los miembros del mismo grupo (excluyendo al usuario actual)
+      final sameGroupMembers = groupMembers
+          .where((member) => 
+            member['group_id'] == userGroupId && 
+            member['student_id']?.toString() != currentUserId.toString() &&
+            member['student_id']?.toString() != currentUserIdStr)
+          .map((member) => member['student_id'].toString())
+          .toList();
+      
+      print('👥 Compañeros del mismo grupo: ${sameGroupMembers.length}');
+      
+      // Obtener información de usuarios y calificaciones existentes
+      final students = <Map<String, dynamic>>[];
       final grades = await databaseService.read('grades');
-      final myGrades = grades.where((grade) => 
-          grade['graded_by'] == currentUserId
-      ).toList();
 
-      // Agregar información de calificación a cada submission
-      for (var submission in activitySubmissions) {
-        final existingGrade = myGrades.firstWhere(
-          (grade) => grade['submission_id'] == submission['_id'],
+      for (final studentId in sameGroupMembers) {
+        // Buscar calificación existente de este usuario para este estudiante en esta actividad
+        final existingGrade = grades.firstWhere(
+          (g) => 
+            g['activity_id']?.toString() == activityId.toString() &&
+            g['student_id']?.toString() == studentId.toString() &&
+            g['graded_by']?.toString() == currentUserId.toString(),
           orElse: () => <String, dynamic>{},
         );
         
-        submission['my_grade'] = existingGrade.isEmpty ? null : existingGrade['grade'];
-        submission['grade_id'] = existingGrade.isEmpty ? null : existingGrade['_id'];
+        print('🔍 Buscando calificación para estudiante $studentId:');
+        print('   - Activity ID: $activityId');
+        print('   - Student ID: $studentId'); 
+        print('   - Graded by: $currentUserId');
+        print('   - Calificación encontrada: ${existingGrade.isNotEmpty ? existingGrade['grade'] : 'Ninguna'}');
+
+        // Obtener información del usuario
+        final userInfo = await _userService.getUserInfo(studentId);
+
+        students.add({
+          '_id': studentId,
+          'name': userInfo['name'] ?? 'Usuario sin nombre',
+          'email': userInfo['email'] ?? studentId,
+          'my_grade': existingGrade.isNotEmpty ? existingGrade['grade'] : null,
+          'max_grade': existingGrade.isNotEmpty ? existingGrade['max_grade'] : activity['max_grade'] ?? 5,
+          'grade_id': existingGrade.isNotEmpty ? existingGrade['_id'] : null,
+        });
       }
 
-      return activitySubmissions;
+      print('✅ Compañeros del mismo grupo para evaluación: ${students.length}');
+      return students;
     } catch (e) {
-      print('❌ Error obteniendo submissions para evaluación: $e');
+      print('❌ Error obteniendo estudiantes del mismo grupo: $e');
       return [];
     }
   }
@@ -1214,12 +1049,26 @@ class CourseDetailController extends GetxController {
     try {
       isLoading.value = true;
       
-      final submissions = await getActivitySubmissions(activity['_id']);
-      
-      if (submissions.isEmpty) {
+      // Verificar que el usuario esté en un grupo de la categoría de la actividad
+      final userInCategory = await _isUserInActivityCategory(activity);
+      if (!userInCategory) {
         Get.snackbar(
-          'Sin entregas',
-          'No hay entregas de compañeros para evaluar en esta actividad',
+          'No puedes evaluar',
+          'Debes estar inscrito en un grupo de la categoría "${activity['category_name']}" para evaluar esta actividad',
+          icon: Icon(Icons.warning, color: Colors.white),
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 5),
+        );
+        return;
+      }
+      
+      final students = await getStudentsForPeerEvaluation(activity['_id']);
+      
+      if (students.isEmpty) {
+        Get.snackbar(
+          'Sin estudiantes',
+          'No hay compañeros para evaluar en esta actividad',
           icon: Icon(Icons.info, color: Colors.white),
           backgroundColor: Colors.blue,
           colorText: Colors.white,
@@ -1242,16 +1091,16 @@ class CourseDetailController extends GetxController {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Entregas de compañeros:',
+                  'Compañeros a evaluar:',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: submissions.length,
+                    itemCount: students.length,
                     itemBuilder: (context, index) {
-                      final submission = submissions[index];
-                      final hasGrade = submission['my_grade'] != null;
+                      final student = students[index];
+                      final hasGrade = student['my_grade'] != null;
                       
                       return Card(
                         margin: EdgeInsets.only(bottom: 8),
@@ -1263,13 +1112,14 @@ class CourseDetailController extends GetxController {
                               color: Colors.white,
                             ),
                           ),
-                          title: Text('Estudiante: ${submission['student_id'].toString().substring(0, 8)}...'),
+                          title: Text('${student['name']}'),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Text(student['email']),
                               if (hasGrade)
                                 Text(
-                                  'Mi calificación: ${submission['my_grade']}/5',
+                                  'Mi calificación: ${student['my_grade']}/${student['max_grade'] ?? 5}',
                                   style: TextStyle(
                                     color: Colors.green,
                                     fontWeight: FontWeight.bold,
@@ -1278,7 +1128,7 @@ class CourseDetailController extends GetxController {
                             ],
                           ),
                           trailing: Icon(Icons.arrow_forward_ios),
-                          onTap: () => _showSubmissionEvaluationDialog(submission),
+                          onTap: () => _showStudentEvaluationDialog(student, activity),
                         ),
                       );
                     },
@@ -1308,13 +1158,14 @@ class CourseDetailController extends GetxController {
     }
   }
 
-  /// Muestra el diálogo para evaluar una submission específica
-  Future<void> _showSubmissionEvaluationDialog(Map<String, dynamic> submission) async {
-    int selectedGrade = submission['my_grade']?.toInt() ?? 3;
+  /// Muestra el diálogo para evaluar un estudiante específico
+  Future<void> _showStudentEvaluationDialog(Map<String, dynamic> student, Map<String, dynamic> activity) async {
+    int selectedGrade = student['my_grade']?.toInt() ?? 3;
+    int maxGrade = student['max_grade']?.toInt() ?? 5;
     
     final result = await Get.dialog<int?>(
       AlertDialog(
-        title: Text('Evaluar Entrega'),
+        title: Text('Evaluar Compañero'),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
@@ -1323,12 +1174,17 @@ class CourseDetailController extends GetxController {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Estudiante: ${submission['student_id'].toString().substring(0, 8)}...',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  'Estudiante: ${student['name']}',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Email: ${student['email']}',
+                  style: TextStyle(color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Respuesta:',
+                  'Actividad: ${activity['title']}',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
@@ -1341,34 +1197,13 @@ class CourseDetailController extends GetxController {
                     color: Colors.grey.shade50,
                   ),
                   child: Text(
-                    submission['content'] ?? 'Sin respuesta',
+                    activity['description'] ?? 'Sin descripción',
                     style: TextStyle(fontSize: 14),
                   ),
                 ),
-                if (submission['file_url'] != null && submission['file_url'].toString().isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    'URL adjunta:',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blue.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                      color: Colors.blue.shade50,
-                    ),
-                    child: Text(
-                      submission['file_url'],
-                      style: TextStyle(color: Colors.blue.shade700, fontSize: 12),
-                    ),
-                  ),
-                ],
                 const SizedBox(height: 20),
                 Text(
-                  'Calificación (1-5):',
+                  'Calificación (1-$maxGrade):',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 12),
@@ -1378,7 +1213,7 @@ class CourseDetailController extends GetxController {
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: List.generate(5, (index) {
+                          children: List.generate(maxGrade, (index) {
                             final grade = index + 1;
                             return GestureDetector(
                               onTap: () {
@@ -1419,7 +1254,7 @@ class CourseDetailController extends GetxController {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Calificación seleccionada: $selectedGrade/5',
+                          'Calificación seleccionada: $selectedGrade/$maxGrade',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1452,12 +1287,12 @@ class CourseDetailController extends GetxController {
     );
 
     if (result != null) {
-      await _saveGrade(submission, result);
+      await _saveStudentGrade(student, activity, result, maxGrade);
     }
   }
 
-  /// Guarda o actualiza una calificación en la tabla grades
-  Future<void> _saveGrade(Map<String, dynamic> submission, int grade) async {
+  /// Guarda o actualiza una calificación de estudiante en la tabla grades
+  Future<void> _saveStudentGrade(Map<String, dynamic> student, Map<String, dynamic> activity, int grade, int maxGrade) async {
     try {
       isLoading.value = true;
 
@@ -1468,17 +1303,33 @@ class CourseDetailController extends GetxController {
         throw Exception('Usuario no encontrado');
       }
 
+      print('🔍 Datos para guardar calificación:');
+      print('   - Student: ${student['_id']} (${student['username']})');
+      print('   - Activity: ${activity['_id']} (${activity['title']})');
+      print('   - Grade: $grade/$maxGrade');
+      print('   - Graded by: $currentUserId');
+
       final httpService = RobleHttpService();
       final databaseService = RobleDatabaseService(httpService);
 
-      if (submission['grade_id'] != null) {
+      // Verificar si ya existe una calificación para este estudiante y actividad
+      final existingGrades = await databaseService.read('grades');
+      final existingGrade = existingGrades.where((g) => 
+        g['student_id']?.toString() == student['_id']?.toString() && 
+        g['activity_id']?.toString() == activity['_id']?.toString() &&
+        g['graded_by']?.toString() == currentUserId.toString()
+      ).firstOrNull;
+
+      if (existingGrade != null) {
         // Actualizar calificación existente
+        print('🔄 Actualizando calificación existente con ID: ${existingGrade['_id']}');
+        
         final updates = {
           'grade': grade.toDouble(),
-          'max_grade': 5.0,
+          'max_grade': maxGrade.toDouble(),
         };
 
-        await databaseService.update('grades', submission['grade_id'], updates);
+        await databaseService.update('grades', existingGrade['_id'], updates);
         
         Get.snackbar(
           'Éxito',
@@ -1489,18 +1340,24 @@ class CourseDetailController extends GetxController {
           duration: const Duration(seconds: 3),
         );
 
-        print('✅ Calificación actualizada: ${grade}/5');
+        print('✅ Calificación actualizada: ${grade}/$maxGrade para ${student['username']}');
       } else {
         // Crear nueva calificación
+        print('➕ Creando nueva calificación');
+        
         final gradeData = {
-          'submission_id': submission['_id'].toString(),
+          'activity_id': activity['_id']?.toString() ?? activity['_id'],
+          'student_id': student['_id']?.toString() ?? student['_id'],
           'grade': grade.toDouble(),
-          'max_grade': 5.0,
-          'feedback': '',
+          'max_grade': maxGrade.toDouble(),
           'graded_by': currentUserId.toString(),
         };
 
+        print('📝 Datos a insertar: $gradeData');
+
         await databaseService.insert('grades', [gradeData]);
+        
+        print('💾 Calificación insertada exitosamente');
         
         Get.snackbar(
           'Éxito',
@@ -1511,8 +1368,11 @@ class CourseDetailController extends GetxController {
           duration: const Duration(seconds: 3),
         );
 
-        print('✅ Nueva calificación creada: ${grade}/5');
+        print('✅ Nueva calificación creada: ${grade}/$maxGrade para ${student['username']}');
       }
+
+      // Actualizar la lista de estudiantes para reflejar la nueva calificación
+      await getStudentsForPeerEvaluation(activity['_id']?.toString() ?? activity['_id']);
 
     } catch (e) {
       Get.snackbar(
@@ -1523,6 +1383,7 @@ class CourseDetailController extends GetxController {
         colorText: Colors.white,
       );
       print('❌ Error guardando calificación: $e');
+      print('Stack trace: ${StackTrace.current}');
     } finally {
       isLoading.value = false;
     }
