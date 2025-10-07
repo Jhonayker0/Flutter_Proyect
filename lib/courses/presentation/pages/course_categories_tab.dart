@@ -404,7 +404,20 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
   Widget _buildGroupCard(Map<String, dynamic> group, Map<String, dynamic> category) {
     final name = group['name']?.toString() ?? 'Grupo sin nombre';
     final description = group['description']?.toString() ?? 'Sin descripción';
-    final capacity = group['capacity'] as int? ?? 0;
+    
+    // Obtener capacidad del campo capacity de la tabla categories
+    int capacity = 5; // Solo como fallback si no existe el campo
+    if (category['capacity'] != null) {
+      capacity = category['capacity'] as int;
+    }
+    
+    // Debug: Verificar qué datos están llegando
+    print('🔍 DEBUG _buildGroupCard:');
+    print('   - Grupo: ${group['name']}');
+    print('   - Category data: $category');
+    print('   - Capacity field: ${category['capacity']}');
+    print('   - Capacity used: $capacity');
+    
     final members = group['members'] as List? ?? [];
     final memberCount = members.length;
     final capacityPercentage = capacity > 0
@@ -718,7 +731,20 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
 
   Widget _buildGroupManagementCard(Map<String, dynamic> group, Map<String, dynamic> category) {
     final name = group['name']?.toString() ?? 'Grupo sin nombre';
-    final capacity = group['capacity'] as int? ?? 0;
+    
+    // Obtener capacidad del campo capacity de la tabla categories
+    int capacity = 5; // Solo como fallback si no existe el campo
+    if (category['capacity'] != null) {
+      capacity = category['capacity'] as int;
+    }
+    
+    // Debug: Verificar qué datos están llegando
+    print('🔍 DEBUG _buildGroupManagementCard:');
+    print('   - Grupo: ${group['name']}');
+    print('   - Category data: $category');
+    print('   - Capacity field: ${category['capacity']}');
+    print('   - Capacity used: $capacity');
+    
     final members = group['members'] as List? ?? [];
     final memberCount = members.length;
     final capacityPercentage = capacity > 0 ? ((memberCount / capacity) * 100).round() : 0;
@@ -1044,8 +1070,13 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
 
   void _showEditGroupDialog(Map<String, dynamic> group, Map<String, dynamic> category) {
     final nameController = TextEditingController(text: group['name']?.toString() ?? '');
-    final capacityController = TextEditingController(text: group['capacity']?.toString() ?? '');
     final descriptionController = TextEditingController(text: group['description']?.toString() ?? '');
+    
+    // Obtener capacidad del campo capacity de la tabla categories
+    int categoryCapacity = 5; // Solo como fallback si no existe el campo
+    if (category['capacity'] != null) {
+      categoryCapacity = category['capacity'] as int;
+    }
 
     Get.dialog(
       AlertDialog(
@@ -1063,12 +1094,27 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: capacityController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Capacidad máxima',
-                  border: OutlineInputBorder(),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue.shade600, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Capacidad máxima: $categoryCapacity estudiantes (definida por la categoría)',
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -1090,22 +1136,10 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (nameController.text.trim().isEmpty || 
-                  capacityController.text.trim().isEmpty) {
+              if (nameController.text.trim().isEmpty) {
                 Get.snackbar(
                   'Error',
-                  'El nombre y la capacidad son obligatorios',
-                  backgroundColor: Colors.red,
-                  colorText: Colors.white,
-                );
-                return;
-              }
-
-              final capacity = int.tryParse(capacityController.text.trim());
-              if (capacity == null || capacity <= 0) {
-                Get.snackbar(
-                  'Error',
-                  'La capacidad debe ser un número mayor a 0',
+                  'El nombre es obligatorio',
                   backgroundColor: Colors.red,
                   colorText: Colors.white,
                 );
@@ -1116,7 +1150,6 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
                 group: group,
                 category: category,
                 name: nameController.text.trim(),
-                capacity: capacity,
                 description: descriptionController.text.trim(),
               );
             },
@@ -1306,7 +1339,6 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
     required Map<String, dynamic> group,
     required Map<String, dynamic> category,
     required String name,
-    required int capacity,
     required String description,
   }) async {
     try {
@@ -1315,7 +1347,7 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
       final success = await categoryService.updateGroup(
         groupId: group['_id'],
         name: name,
-        capacity: capacity,
+        capacity: null, // La capacidad ya no se actualiza en grupos
         description: description.isEmpty ? null : description,
       );
       

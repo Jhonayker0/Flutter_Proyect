@@ -4,6 +4,7 @@ class Category {
   final String? description;
   final String type;
   final String courseId;
+  final int capacity;
 
   const Category({
     this.id,
@@ -11,6 +12,7 @@ class Category {
     this.description,
     required this.type,
     required this.courseId,
+    required this.capacity,
   });
 
   // Normaliza tipo a los valores esperados por la DB (minúsculas)
@@ -29,6 +31,7 @@ class Category {
       description: map['description'] as String?,
       type: normalizeType((map['type'] as String?) ?? ''),
       courseId: map['course_id']?.toString() ?? '',
+      capacity: (map['capacity'] as int?) ?? 5, // Solo como fallback si no existe el campo
     );
   }
 
@@ -39,6 +42,7 @@ class Category {
       'name': name,
       'type': normalizeType(type),
       'course_id': courseId,
+      'capacity': capacity,
       if (description != null) 'description': description,
     };
   }
@@ -51,6 +55,7 @@ class Category {
       description: (map['description'] ?? map['descripcion']) as String?,
       type: normalizeType((map['type'] ?? map['tipo'] ?? '') as String),
       courseId: (map['courseId'] ?? map['curso_id'] ?? '').toString(),
+      capacity: (map['capacity'] ?? map['capacidad'] ?? 5) as int,
     );
   }
 
@@ -62,6 +67,7 @@ class Category {
       'description': description,
       'type': normalizeType(type),
       'courseId': courseId,
+      'capacity': capacity,
     };
   }
 
@@ -71,6 +77,7 @@ class Category {
     String? description,
     String? type,
     String? courseId,
+    int? capacity,
   }) {
     return Category(
       id: id ?? this.id,
@@ -78,6 +85,7 @@ class Category {
       description: description ?? this.description,
       type: type != null ? normalizeType(type) : this.type,
       courseId: courseId ?? this.courseId,
+      capacity: capacity ?? this.capacity,
     );
   }
 }

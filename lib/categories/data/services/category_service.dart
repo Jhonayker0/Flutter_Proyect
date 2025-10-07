@@ -14,6 +14,7 @@ class CategoryService {
     required String tipo, // 'aleatorio' | 'eleccion'
     required String? descripcion,
     required String cursoId,
+    required int capacity, // Agregar capacidad
   }) async {
     try {
       // Crear la categoría en la tabla 'categories' con los campos correctos
@@ -22,6 +23,7 @@ class CategoryService {
         'description': descripcion ?? '',
         'type': tipo,
         'course_id': cursoId,
+        'capacity': capacity, // Incluir capacidad
       };
       
       // El servicio insert espera una lista de registros

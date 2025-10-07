@@ -22,6 +22,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       description: (row['description'] as String?) ?? '',
       type: (row['type'] as String?) ?? '',
       courseId: row['course_id']?.toString() ?? '',
+      capacity: (row['capacity'] as int?) ?? 5,
     );
   }
 
@@ -32,6 +33,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       tipo: _normalizeType(category.type),
       descripcion: category.description,
       cursoId: category.courseId.toString(),
+      capacity: category.capacity, // Agregar capacidad
     );
   }
 
