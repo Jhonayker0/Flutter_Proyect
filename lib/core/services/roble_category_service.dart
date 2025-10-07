@@ -37,6 +37,11 @@ class RobleCategoryService {
       for (final category in courseCategories) {
         final processedCategory = Map<String, dynamic>.from(category);
 
+        // Debug: Verificar capacidad de la categoría
+        print('🔍 DEBUG getCategoriesByCourse:');
+        print('   - Category: ${category['name']}');
+        print('   - Capacity field: ${category['capacity']}');
+
         // Obtener estadísticas de actividades en esta categoría
         final activityStats = await _getActivityStatsForCategory(
           category['_id'],
@@ -236,6 +241,21 @@ class RobleCategoryService {
         return [];
       }
 
+      // Obtener información de la categoría UNA SOLA VEZ
+      final categories = await _databaseService.read('categories');
+      final parentCategory = categories.firstWhere(
+        (cat) => cat['_id'] == categoryId,
+        orElse: () => <String, dynamic>{},
+      );
+      
+      // Obtener capacidad del campo capacity de la tabla categories
+      int categoryCapacity = 5; // Valor por defecto solo si no existe el campo
+      if (parentCategory.isNotEmpty && parentCategory['capacity'] != null) {
+        categoryCapacity = parentCategory['capacity'] as int;
+      }
+      
+      print('🔍 Capacidad de la categoría $categoryId: $categoryCapacity');
+
       // Procesar cada grupo para agregar información de miembros
       final processedGroups = <Map<String, dynamic>>[];
 
@@ -261,13 +281,16 @@ class RobleCategoryService {
         }
         processedGroup['member_details'] = memberDetails;
 
-        // Calcular porcentaje de capacidad utilizada
-        final capacity = processedGroup['capacity'] as int? ?? 0;
+        // Usar la capacidad de la categoría obtenida una sola vez
         final memberCount = processedGroup['member_count'] as int? ?? 0;
-        if (capacity > 0) {
+        
+        processedGroup['capacity'] = categoryCapacity; // Usar capacidad de la categoría
+        if (categoryCapacity > 0) {
           processedGroup['capacity_percentage'] =
-              ((memberCount / capacity) * 100).round();
+              ((memberCount / categoryCapacity) * 100).round();
         }
+
+        print('📊 Grupo ${group['name']}: $memberCount/$categoryCapacity miembros (${processedGroup['capacity_percentage']}%)');
 
         processedGroups.add(processedGroup);
       }
@@ -290,7 +313,7 @@ class RobleCategoryService {
   Future<Map<String, dynamic>?> createGroup({
     required String categoryId,
     required String name,
-    required int capacity,
+    int? capacity, // Ahora opcional, la capacidad se obtiene de la categoría
     String? description,
   }) async {
     try {
@@ -299,7 +322,7 @@ class RobleCategoryService {
       final groupData = {
         'category_id': categoryId,
         'name': name,
-        'capacity': capacity,
+        // No incluir capacity, se obtiene de la categoría padre
         if (description != null && description.isNotEmpty) 'description': description,
       };
       
@@ -335,7 +358,7 @@ class RobleCategoryService {
       
       final updateData = <String, dynamic>{};
       if (name != null) updateData['name'] = name;
-      if (capacity != null) updateData['capacity'] = capacity;
+      // La capacidad ya no se actualiza en grupos individuales
       if (description != null) updateData['description'] = description;
       
       await _databaseService.update('groups', groupId, updateData);
@@ -386,13 +409,26 @@ class RobleCategoryService {
         return false;
       }
       
-      // Verificar capacidad del grupo
+      // Verificar capacidad del grupo (capacidad viene de la categoría)
       final group = await _getGroupById(groupId);
       if (group == null) return false;
       
+      // Obtener capacidad de la categoría desde el campo capacity de la tabla categories
+      final categories = await _databaseService.read('categories');
+      final category = categories.firstWhere(
+        (cat) => cat['_id'] == group['category_id'],
+        orElse: () => <String, dynamic>{},
+      );
+      
+      // Obtener capacidad del campo capacity, usar 5 solo como fallback
+      int capacity = 5;
+      if (category.isNotEmpty && category['capacity'] != null) {
+        capacity = category['capacity'] as int;
+      }
+      
       final currentMembers = await _getGroupMembers(groupId);
-      if (currentMembers.length >= group['capacity']) {
-        print('❌ El grupo está lleno');
+      if (currentMembers.length >= capacity) {
+        print('❌ El grupo está lleno (${currentMembers.length}/$capacity)');
         return false;
       }
       
@@ -557,11 +593,15 @@ class RobleCategoryService {
         courseId: courseId,
       );
 
-      // Obtener capacidad del grupo
+      // Obtener capacidad desde el campo capacity de la tabla categories
       final group = await _getGroupById(groupId);
       if (group == null) return;
       
-      final capacity = group['capacity'] as int;
+      // Obtener capacidad del campo capacity de la categoría, usar 5 solo como fallback
+      int capacity = 5;
+      if (category['capacity'] != null) {
+        capacity = category['capacity'] as int;
+      }
       final studentsToAssign = availableStudents.take(capacity).toList();
 
       // Asignar estudiantes

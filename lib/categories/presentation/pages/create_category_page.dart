@@ -43,10 +43,23 @@ class CreateCategoryPage extends GetView<CreateCategoryController> {
                   maxLines: 3,
                 ),
                 const SizedBox(height: 20),
+                TextFormField(
+                  controller: controller.capacityCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Capacidad por Grupo',
+                    hintText: 'Ej: 5',
+                    border: OutlineInputBorder(),
+                    helperText: 'Número máximo de estudiantes por grupo',
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: controller.validateCapacity,
+                ),
+                const SizedBox(height: 20),
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(
                     labelText: 'Tipo de Agrupamiento',
                     border: OutlineInputBorder(),
+                    helperText: 'Aleatorio: asigna automáticamente\nElección: estudiantes eligen grupo',
                   ),
                   initialValue: controller.type.value,
                   items: const [
