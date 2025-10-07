@@ -24,31 +24,69 @@ class CourseCategoriesTab extends GetView<CourseDetailController> {
             onRefresh: controller.loadRobleCategories,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.7,
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.category_outlined,
-                        size: 64,
-                        color: Colors.grey,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Si es profesor, mostrar botón de crear categoría
+                  if (controller.isProfessor) ...[
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      child: ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(Icons.add_box, color: Colors.purple.shade700),
+                        ),
+                        title: const Text(
+                          'Crear Primera Categoría',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'Crear una categoría para organizar actividades y grupos',
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () => controller.createNewCategory(),
                       ),
-                      SizedBox(height: 16),
-                      Text(
-                        'No hay categorías disponibles',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                  ],
+                  // Mensaje de estado vacío
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.5,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.category_outlined,
+                            size: 64,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            controller.isProfessor 
+                                ? 'Aún no has creado categorías'
+                                : 'No hay categorías disponibles',
+                            style: const TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            controller.isProfessor 
+                                ? 'Crea tu primera categoría para comenzar a organizar actividades'
+                                : 'Las categorías aparecerán aquí cuando estén disponibles',
+                            style: const TextStyle(color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Las categorías aparecerán aquí cuando estén disponibles',
-                        style: TextStyle(color: Colors.grey),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           );
