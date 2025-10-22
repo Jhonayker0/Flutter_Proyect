@@ -1395,46 +1395,77 @@ class CourseDetailController extends GetxController {
       final httpService = RobleHttpService();
       final databaseService = RobleDatabaseService(httpService);
 
-      // Obtener todas las submissions de la actividad
-      final submissions = await databaseService.read('submissions');
-      final activitySubmissions = submissions.where((submission) =>
-          submission['activity_id'] == activityId
-      ).toList();
+      print('🔍 Buscando calificaciones para activity_id: $activityId');
 
-      // Obtener todas las calificaciones
+      // Obtener todas las calificaciones directamente (no hay tabla submissions separada)
       final grades = await databaseService.read('grades');
+      print('📊 Total calificaciones en BD: ${grades.length}');
 
-      // Calcular promedio de notas para cada submission
-      for (var submission in activitySubmissions) {
-        final submissionGrades = grades.where((grade) => 
-            grade['submission_id'] == submission['_id']
-        ).toList();
-        
-        if (submissionGrades.isNotEmpty) {
-          final gradeSum = submissionGrades.fold<double>(0.0, (sum, grade) => 
-              sum + (grade['grade']?.toDouble() ?? 0.0));
-          final averageGrade = gradeSum / submissionGrades.length;
-          
-          submission['average_grade'] = averageGrade;
-          submission['total_evaluations'] = submissionGrades.length;
-          submission['grades_list'] = submissionGrades;
-        } else {
-          submission['average_grade'] = null;
-          submission['total_evaluations'] = 0;
-          submission['grades_list'] = [];
+      // Filtrar calificaciones por activity_id
+      final activityGrades = grades.where((grade) {
+        final gradeActivityId = grade['activity_id']?.toString();
+        final match = gradeActivityId == activityId.toString();
+        if (match) {
+          print('   ✅ Calificación encontrada: student=${grade['student_id']}, grade=${grade['grade']}/${grade['max_grade']}');
         }
+        return match;
+      }).toList();
+
+      print('📝 Total calificaciones encontradas: ${activityGrades.length}');
+
+      // Agrupar calificaciones por estudiante
+      Map<String, List<Map<String, dynamic>>> gradesByStudent = {};
+      for (var grade in activityGrades) {
+        final studentId = grade['student_id']?.toString() ?? 'unknown';
+        if (!gradesByStudent.containsKey(studentId)) {
+          gradesByStudent[studentId] = [];
+        }
+        gradesByStudent[studentId]!.add(grade);
       }
 
+      // Crear "submissions" a partir de las calificaciones agrupadas por estudiante
+      List<Map<String, dynamic>> submissions = [];
+      gradesByStudent.forEach((studentId, studentGrades) {
+        // Calcular promedio de calificaciones del estudiante
+        double totalGrade = 0.0;
+        double totalMaxGrade = 0.0;
+        
+        for (var grade in studentGrades) {
+          final gradeValue = (grade['grade'] is int) 
+              ? (grade['grade'] as int).toDouble() 
+              : (grade['grade']?.toDouble() ?? 0.0);
+          final maxGradeValue = (grade['max_grade'] is int)
+              ? (grade['max_grade'] as int).toDouble()
+              : (grade['max_grade']?.toDouble() ?? 5.0);
+              
+          totalGrade += gradeValue;
+          totalMaxGrade += maxGradeValue;
+        }
+        
+        final averageGrade = totalMaxGrade > 0 ? (totalGrade / totalMaxGrade) * 5.0 : 0.0;
+        
+        submissions.add({
+          '_id': 'student_${studentId}_${activityId}',
+          'student_id': studentId,
+          'activity_id': activityId,
+          'average_grade': averageGrade,
+          'total_evaluations': studentGrades.length,
+          'grades_list': studentGrades,
+        });
+      });
+
       // Ordenar por promedio de nota (mayor a menor)
-      activitySubmissions.sort((a, b) {
+      submissions.sort((a, b) {
         final aGrade = a['average_grade'] ?? 0.0;
         final bGrade = b['average_grade'] ?? 0.0;
         return bGrade.compareTo(aGrade);
       });
 
-      return activitySubmissions;
-    } catch (e) {
-      print('❌ Error obteniendo submissions para profesor: $e');
+      print('✅ Submissions creadas: ${submissions.length}');
+      return submissions;
+    } catch (e, stackTrace) {
+      print('❌ Error obteniendo calificaciones: $e');
+      print('❌ Stack trace: $stackTrace');
       return [];
     }
   }
@@ -1444,7 +1475,10 @@ class CourseDetailController extends GetxController {
     try {
       isLoading.value = true;
       
-      final submissions = await getActivitySubmissionsForProfessor(activity['_id']);
+      print('🔍 DEBUG - Actividad: ${activity['title']}, ID: ${activity['_id']}');
+      final activityId = activity['_id']?.toString() ?? '';
+      
+      final submissions = await getActivitySubmissionsForProfessor(activityId);
       
       if (submissions.isEmpty) {
         Get.snackbar(
