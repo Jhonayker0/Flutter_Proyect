@@ -94,7 +94,7 @@ class CourseInfoTab extends GetView<CourseDetailController> {
                           ),
                           _buildStatRow(
                             'Estudiantes inscritos',
-                            '${controller.studentCount.value}',
+                            '${controller.studentCount.value-1}',
                             Icons.people,
                             Colors.green,
                           ),
