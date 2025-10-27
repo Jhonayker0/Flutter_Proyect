@@ -1,4 +1,4 @@
-# Flutter_Proyect
+# Flutter_Project
 
 # Run flutter pub get en la consola
 
